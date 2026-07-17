@@ -1,0 +1,19 @@
+# Node
+node_modules
+npm-debug.log
+dist
+coverage
+
+# Local env (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+
+# Prisma generated (if custom output)
+/generated

@@ -1,5 +1,5 @@
-import { TelegramAppShell } from "@/components/app/TelegramAppShell/TelegramAppShell";
+import { AppShell } from "@/components/shell/AppShell";
 
 export default function Home() {
-  return <TelegramAppShell />;
+  return <AppShell />;
 }
