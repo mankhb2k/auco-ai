@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { AgentRole } from './agent-catalog';
 import { McpGatewayService } from '../mcp-client/mcp-gateway.service';
 import type { TaskStepPlan } from '../planning/task-plan.schema';
+import { RagService } from '../rag/rag.service';
 
 export type SpecialistResult = {
   output: Record<string, unknown>;
@@ -11,7 +12,10 @@ export type SpecialistResult = {
 
 @Injectable()
 export class SpecialistService {
-  constructor(private readonly mcp: McpGatewayService) {}
+  constructor(
+    private readonly mcp: McpGatewayService,
+    private readonly rag: RagService,
+  ) {}
 
   async run(
     step: TaskStepPlan,
@@ -74,6 +78,15 @@ export class SpecialistService {
       }),
     );
 
+    const kb = await this.rag.kbTool('credit_kb_search', {
+      bankCode,
+      query: step.goal.includes('LTV') || step.goal.includes('nhà máy')
+        ? 'LTV nhà xưởng DTI CIC'
+        : 'DTI CIC hạn mức vay mua nhà',
+      limit: 3,
+      includeSuperseded: true,
+    });
+
     const scoreOut = results[0]?.output as { score?: number } | undefined;
     const eligOut = results[2]?.output as {
       eligible?: boolean;
@@ -83,25 +96,37 @@ export class SpecialistService {
 
     return {
       mode: 'spawn_workers',
-      toolCalls: results.map((r) => ({
-        id: r.id,
-        tool: r.tool,
-        mcp: r.mcp,
-        capability: r.capability,
-        mutates: r.mutates,
-        bankCode: r.bankCode,
-        latencyMs: r.latencyMs,
-        output: r.output,
-      })),
+      toolCalls: [
+        ...results.map((r) => ({
+          id: r.id,
+          tool: r.tool,
+          mcp: r.mcp,
+          capability: r.capability,
+          mutates: r.mutates,
+          bankCode: r.bankCode,
+          latencyMs: r.latencyMs,
+          output: r.output,
+        })),
+        {
+          id: 'w-rag',
+          tool: kb.tool,
+          mcp: 'rag',
+          capability: 'rag',
+          mutates: false,
+          mode: kb.mode,
+          output: { summary: kb.summary, citations: kb.citations },
+        },
+      ],
       output: {
         summary: eligOut?.eligible
-          ? `Credit: đủ điều kiện sơ bộ, điểm ${scoreOut?.score ?? '—'}, hạn mức ~${eligOut.maxAmountVnd?.toLocaleString('vi-VN') ?? '—'} VND (spawn ≤3 worker qua MCP).`
-          : `Credit: cần review — điểm ${scoreOut?.score ?? '—'} (MCP workers).`,
+          ? `Credit: đủ điều kiện sơ bộ, điểm ${scoreOut?.score ?? '—'}, hạn mức ~${eligOut.maxAmountVnd?.toLocaleString('vi-VN') ?? '—'} VND (MCP + RAG citation).`
+          : `Credit: cần review — điểm ${scoreOut?.score ?? '—'} (MCP + RAG).`,
         eligible: eligOut?.eligible ?? false,
         score: scoreOut?.score ?? null,
         maxAmountVnd: eligOut?.maxAmountVnd ?? null,
         recommendation: eligOut?.recommendation ?? 'refer_manual_review',
         workers: results.map((r) => r.id),
+        citations: kb.citations,
         stepGoal: step.goal,
       },
     };
@@ -118,15 +143,27 @@ export class SpecialistService {
       tool: 'run_aml_check',
       args: { bankCode, ...customer },
     });
+
+    const kbQuery = step.goal.includes('39')
+      ? 'Thông tư 39 LTV tài sản bảo đảm'
+      : step.goal.toLowerCase().includes('fx') ||
+          step.goal.toLowerCase().includes('ngoại')
+        ? 'AML KYC ngoại tệ'
+        : 'AML KYC cấp tín dụng';
+
+    const kb = await this.rag.kbTool('legal_kb_search', {
+      bankCode,
+      query: kbQuery,
+      limit: 3,
+      includeSuperseded: false,
+    });
+
+    // Keep MCP keyword search as secondary audit trail
     const reg = await this.mcp.callTool({
       bankCode,
       agentRole: 'legal',
       tool: 'search_regulation',
-      args: {
-        bankCode,
-        query: step.goal.includes('39') ? 'Thông tư 39 LTV' : 'AML KYC',
-        limit: 3,
-      },
+      args: { bankCode, query: kbQuery, limit: 3 },
     });
 
     const amlOut = aml.output as {
@@ -134,6 +171,8 @@ export class SpecialistService {
       risk?: string;
       flags?: string[];
     };
+
+    const topCite = kb.citations[0];
 
     return {
       mode: 'direct',
@@ -148,6 +187,15 @@ export class SpecialistService {
           output: aml.output,
         },
         {
+          id: 'tc-rag-legal',
+          tool: kb.tool,
+          mcp: 'rag',
+          capability: 'rag',
+          mutates: false,
+          mode: kb.mode,
+          output: { summary: kb.summary, citations: kb.citations },
+        },
+        {
           id: 'tc-reg',
           tool: reg.tool,
           mcp: reg.mcp,
@@ -158,10 +206,13 @@ export class SpecialistService {
         },
       ],
       output: {
-        summary: `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); đã tra cứu quy định (MCP compliance).`,
+        summary: topCite
+          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.`
+          : `Legal: AML ${amlOut.status ?? 'unknown'}; chưa có citation RAG.`,
         amlStatus: amlOut.status ?? null,
         risk: amlOut.risk ?? null,
         flags: amlOut.flags ?? [],
+        citations: kb.citations,
         stepGoal: step.goal,
       },
     };

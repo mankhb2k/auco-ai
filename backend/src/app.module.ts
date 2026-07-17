@@ -5,6 +5,7 @@ import { LlmModule } from './llm/llm.module';
 import { McpClientModule } from './mcp-client/mcp-client.module';
 import { PlanningModule } from './planning/planning.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RagModule } from './rag/rag.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -18,8 +19,9 @@ import { RedisModule } from './redis/redis.module';
     HealthModule,
     LlmModule,
     McpClientModule,
+    RagModule,
     PlanningModule,
-    // Phase 6+: RagModule, ApprovalsModule, AutomationsModule, RealtimeModule
+    // Phase 7+: ApprovalsModule, AutomationsModule, RealtimeModule
   ],
 })
 export class AppModule {}

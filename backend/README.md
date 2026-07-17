@@ -79,7 +79,8 @@ npm run prisma:seed:railway
 | Phase 2 — Seed từ FE mock | |
 | Phase 3 — LLM gateway OpenAI + Gemini fallback | |
 | Phase 4 — Planner / Orchestrator + TaskRun API | |
-| Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | Phase 6+ RAG / Approval / WS |
+| Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | |
+| Phase 6 — RAG hybrid (pgvector + FTS + citations) | Phase 7 Approval + WS |
 | | Automations |
 
 ### Phase 4 API
@@ -113,3 +114,13 @@ Servers under `mcp-servers/` (stdio, `@modelcontextprotocol/sdk`):
 | `mcp-ops` | stub | `create_service_ticket`⚠️, `get_ticket_status`, `assign_department` |
 
 Nest gateway spawns stdio (compiled `dist/mcp-servers` or `tsx` in dev). Specialists call tools via allowlist — Credit spawn workers = real MCP.
+
+### Phase 6 — RAG
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/api/rag/status` | Embedding provider |
+| `POST` | `/api/rag/ingest` | Re-embed KnowledgeDocument → KnowledgeChunk (pgvector) |
+| `POST` | `/api/rag/search` | `{ domain, query, includeSuperseded? }` → citations |
+
+Hybrid: vector cosine + Postgres `ts_rank`; default filter `status=active`; join `DocumentRelation` notes. Specialists expose `credit_kb_search` / `legal_kb_search` in `TaskStep.toolCalls` (`mcp: "rag"`).
