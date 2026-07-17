@@ -40,10 +40,10 @@ export class TaskRunsService {
         planJson: planned.plan as unknown as Prisma.InputJsonValue,
         steps: {
           create: planned.plan.steps.map((s) => ({
-            id: s.id,
             agentRole: s.agentRole,
             mode: s.mode ?? (s.agentRole === 'credit' ? 'spawn_workers' : 'direct'),
             input: {
+              planStepId: s.id,
               goal: s.goal,
               requiredCapabilities: s.requiredCapabilities ?? [],
             } as Prisma.InputJsonValue,

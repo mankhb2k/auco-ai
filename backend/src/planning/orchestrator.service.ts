@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { SpecialistStubService } from '../agents/specialist-stub.service';
+import { SpecialistService } from '../agents/specialist.service';
 import { readySteps } from './plan-validator';
 import { PlannerService } from './planner.service';
 import type { TaskPlan, TaskStepPlan } from './task-plan.schema';
@@ -15,7 +15,7 @@ export class OrchestratorService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly planner: PlannerService,
-    private readonly specialists: SpecialistStubService,
+    private readonly specialists: SpecialistService,
   ) {}
 
   async runTaskRun(taskRunId: string): Promise<void> {
@@ -25,7 +25,13 @@ export class OrchestratorService {
     });
 
     const plan = task.planJson as unknown as TaskPlan;
-    const stepById = new Map(task.steps.map((s) => [s.id, s]));
+    const stepByPlanId = new Map(
+      task.steps.map((s) => {
+        const input = s.input as { planStepId?: string } | null;
+        const planStepId = input?.planStepId ?? s.id;
+        return [planStepId, s] as const;
+      }),
+    );
 
     await this.prisma.taskRun.update({
       where: { id: taskRunId },
@@ -37,16 +43,16 @@ export class OrchestratorService {
     const startedOrDone = new Set<string>();
     const priorOutputs: Record<string, unknown> = {};
 
-    // Mark already-done steps (resume support)
-    for (const s of task.steps) {
+    // Mark already-done steps (resume support) — keys are plan step ids
+    for (const [planStepId, s] of stepByPlanId) {
       if (s.status === 'done') {
-        doneIds.add(s.id);
-        startedOrDone.add(s.id);
-        if (s.output) priorOutputs[s.id] = s.output;
+        doneIds.add(planStepId);
+        startedOrDone.add(planStepId);
+        if (s.output) priorOutputs[planStepId] = s.output;
       }
       if (s.status === 'failed') {
-        failedIds.add(s.id);
-        startedOrDone.add(s.id);
+        failedIds.add(planStepId);
+        startedOrDone.add(planStepId);
       }
     }
 
@@ -64,17 +70,22 @@ export class OrchestratorService {
         for (const s of batch) startedOrDone.add(s.id);
 
         await Promise.all(
-          batch.map((stepPlan) =>
-            this.dispatchStep({
+          batch.map((stepPlan) => {
+            const dbStep = stepByPlanId.get(stepPlan.id);
+            if (!dbStep) {
+              throw new Error(`Missing DB step for plan id ${stepPlan.id}`);
+            }
+            return this.dispatchStep({
               taskRunId,
               goal: task.goal,
+              bankCode: task.bankCode,
               stepPlan,
-              dbStepId: stepById.get(stepPlan.id)?.id ?? stepPlan.id,
+              dbStepId: dbStep.id,
               priorOutputs,
               doneIds,
               failedIds,
-            }),
-          ),
+            });
+          }),
         );
       }
 
@@ -121,6 +132,7 @@ export class OrchestratorService {
   private async dispatchStep(opts: {
     taskRunId: string;
     goal: string;
+    bankCode: string;
     stepPlan: TaskStepPlan;
     dbStepId: string;
     priorOutputs: Record<string, unknown>;
@@ -138,6 +150,7 @@ export class OrchestratorService {
     try {
       const result = await this.specialists.run(stepPlan, {
         goal: opts.goal,
+        bankCode: opts.bankCode,
         priorOutputs,
       });
 

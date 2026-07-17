@@ -1,12 +1,18 @@
 {
   "name": "backend",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && npm run build:mcp",
+    "build:mcp": "tsc -p mcp-servers/tsconfig.json",
+    "mcp:los": "tsx mcp-servers/mcp-los/index.ts",
+    "mcp:compliance": "tsx mcp-servers/mcp-compliance/index.ts",
+    "mcp:core-banking": "tsx mcp-servers/mcp-core-banking/index.ts",
+    "mcp:product": "tsx mcp-servers/mcp-product/index.ts",
+    "mcp:ops": "tsx mcp-servers/mcp-ops/index.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -34,6 +40,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.18",
     "@ai-sdk/openai": "^4.0.16",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",

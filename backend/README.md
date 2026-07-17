@@ -78,8 +78,9 @@ npm run prisma:seed:railway
 | Phase 1 — Nest + Docker + Prisma + Redis | |
 | Phase 2 — Seed từ FE mock | |
 | Phase 3 — LLM gateway OpenAI + Gemini fallback | |
-| Phase 4 — Planner / Orchestrator + TaskRun API | Phase 5 MCP Suite |
-| | RAG, Approval, WS, Automations |
+| Phase 4 — Planner / Orchestrator + TaskRun API | |
+| Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | Phase 6+ RAG / Approval / WS |
+| | Automations |
 
 ### Phase 4 API
 
@@ -94,3 +95,21 @@ Demo goal examples (pinned DAG, no LLM required):
 - Vay nhà: `"KH Nguyễn Văn An muốn vay mua nhà 2 tỷ"`
 - DN: `"SHB Mekong vay 50 tỷ nhà máy — Thông tư 39"`
 - FX: `"Trần Thị Bình nắm giữ USD lớn"`
+
+### Phase 5 — SHB MCP Suite
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/api/mcp/suite` | Status “Connected: SHB MCP Suite” + connectors/tools |
+
+Servers under `mcp-servers/` (stdio, `@modelcontextprotocol/sdk`):
+
+| Server | Impl | Tools |
+|---|---|---|
+| `mcp-los` | real | `check_loan_eligibility`, `submit_loan_application`⚠️, `get_loan_application_status` |
+| `mcp-compliance` | real | `run_aml_check`, `search_regulation`, `flag_transaction`⚠️ |
+| `mcp-core-banking` | stub | `get_credit_score`, `get_transaction_history`, `get_account_balance` |
+| `mcp-product` | stub | `list_products`, `check_product_eligibility`, `compare_products` |
+| `mcp-ops` | stub | `create_service_ticket`⚠️, `get_ticket_status`, `assign_department` |
+
+Nest gateway spawns stdio (compiled `dist/mcp-servers` or `tsx` in dev). Specialists call tools via allowlist — Credit spawn workers = real MCP.
