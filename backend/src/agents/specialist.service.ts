@@ -4,10 +4,21 @@ import { McpGatewayService } from '../mcp-client/mcp-gateway.service';
 import type { TaskStepPlan } from '../planning/task-plan.schema';
 import { RagService } from '../rag/rag.service';
 
+export type PendingApproval = {
+  reason: 'mutates';
+  preview: string;
+  tool: string;
+  args: Record<string, unknown>;
+  agentRole: AgentRole;
+  mcp?: string;
+  capability?: string;
+};
+
 export type SpecialistResult = {
   output: Record<string, unknown>;
   toolCalls: Array<Record<string, unknown>>;
   mode: 'direct' | 'spawn_workers';
+  pendingApproval?: PendingApproval;
 };
 
 @Injectable()
@@ -94,6 +105,29 @@ export class SpecialistService {
       recommendation?: string;
     } | undefined;
 
+    const amountVnd =
+      Number(customer.requestedHint) ||
+      eligOut?.maxAmountVnd ||
+      1_600_000_000;
+
+    const pendingApproval: PendingApproval = {
+      reason: 'mutates',
+      preview: `Đề xuất gửi hồ sơ vay ${amountVnd.toLocaleString('vi-VN')} VND cho ${customer.customerNo ?? customer.fullName ?? 'KH'} qua mcp-los.submit_loan_application — chờ duyệt.`,
+      tool: 'submit_loan_application',
+      agentRole: 'credit',
+      mcp: 'mcp-los-shb',
+      capability: 'los',
+      args: {
+        bankCode,
+        customerNo: customer.customerNo,
+        customerId: customer.customerId,
+        fullName: customer.fullName,
+        amountVnd,
+        productId: 'shb-home-standard',
+        note: step.goal.slice(0, 200),
+      },
+    };
+
     return {
       mode: 'spawn_workers',
       toolCalls: [
@@ -116,17 +150,28 @@ export class SpecialistService {
           mode: kb.mode,
           output: { summary: kb.summary, citations: kb.citations },
         },
+        {
+          id: 'pending-submit',
+          tool: pendingApproval.tool,
+          mcp: pendingApproval.mcp,
+          capability: pendingApproval.capability,
+          mutates: true,
+          requiresApproval: true,
+          status: 'pending_approval',
+          args: pendingApproval.args,
+        },
       ],
+      pendingApproval,
       output: {
-        summary: eligOut?.eligible
-          ? `Credit: đủ điều kiện sơ bộ, điểm ${scoreOut?.score ?? '—'}, hạn mức ~${eligOut.maxAmountVnd?.toLocaleString('vi-VN') ?? '—'} VND (MCP + RAG citation).`
-          : `Credit: cần review — điểm ${scoreOut?.score ?? '—'} (MCP + RAG).`,
+        summary: `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'}; ${pendingApproval.preview}`,
         eligible: eligOut?.eligible ?? false,
         score: scoreOut?.score ?? null,
         maxAmountVnd: eligOut?.maxAmountVnd ?? null,
         recommendation: eligOut?.recommendation ?? 'refer_manual_review',
         workers: results.map((r) => r.id),
         citations: kb.citations,
+        approvalReason: 'mutates',
+        approvalPreview: pendingApproval.preview,
         stepGoal: step.goal,
       },
     };
@@ -173,6 +218,28 @@ export class SpecialistService {
     };
 
     const topCite = kb.citations[0];
+    const needsFlag =
+      amlOut.status === 'review' ||
+      amlOut.status === 'block' ||
+      /fx|ngoại|usd/i.test(`${step.goal}`);
+
+    const pendingApproval: PendingApproval | undefined = needsFlag
+      ? {
+          reason: 'mutates',
+          preview: `Đề xuất gắn cờ giao dịch / hồ sơ ${customer.customerNo ?? 'KH'} (AML ${amlOut.status}) qua mcp-compliance.flag_transaction — chờ duyệt.`,
+          tool: 'flag_transaction',
+          agentRole: 'legal',
+          mcp: 'mcp-compliance-shb',
+          capability: 'compliance',
+          args: {
+            bankCode,
+            customerNo: customer.customerNo,
+            fullName: customer.fullName,
+            reason: `AML ${amlOut.status}: ${(amlOut.flags ?? []).join(', ') || step.goal.slice(0, 120)}`,
+            currency: 'USD',
+          },
+        }
+      : undefined;
 
     return {
       mode: 'direct',
@@ -204,15 +271,36 @@ export class SpecialistService {
           latencyMs: reg.latencyMs,
           output: reg.output,
         },
+        ...(pendingApproval
+          ? [
+              {
+                id: 'pending-flag',
+                tool: pendingApproval.tool,
+                mcp: pendingApproval.mcp,
+                capability: pendingApproval.capability,
+                mutates: true,
+                requiresApproval: true,
+                status: 'pending_approval',
+                args: pendingApproval.args,
+              },
+            ]
+          : []),
       ],
+      pendingApproval,
       output: {
         summary: topCite
-          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.`
+          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.${pendingApproval ? ` ${pendingApproval.preview}` : ''}`
           : `Legal: AML ${amlOut.status ?? 'unknown'}; chưa có citation RAG.`,
         amlStatus: amlOut.status ?? null,
         risk: amlOut.risk ?? null,
         flags: amlOut.flags ?? [],
         citations: kb.citations,
+        ...(pendingApproval
+          ? {
+              approvalReason: 'mutates',
+              approvalPreview: pendingApproval.preview,
+            }
+          : {}),
         stepGoal: step.goal,
       },
     };
@@ -269,36 +357,40 @@ export class SpecialistService {
     customer: Record<string, string>,
     step: TaskStepPlan,
   ): Promise<SpecialistResult> {
-    const create = await this.mcp.callTool({
-      bankCode,
-      agentRole: 'ops',
+    const pendingApproval: PendingApproval = {
+      reason: 'mutates',
+      preview: `Đề xuất tạo ticket vận hành: "${step.goal.slice(0, 80)}" — chờ duyệt trước khi gọi mcp-ops.create_service_ticket.`,
       tool: 'create_service_ticket',
+      agentRole: 'ops',
+      mcp: 'mcp-ops-shb',
+      capability: 'ops',
       args: {
         subject: step.goal.slice(0, 120),
         department: 'ops',
         customerNo: customer.customerNo,
         priority: 'medium',
       },
-    });
-    const out = create.output as { ticketId?: string; status?: string };
+    };
 
     return {
       mode: 'direct',
       toolCalls: [
         {
-          id: 'tc-ops',
-          tool: create.tool,
-          mcp: create.mcp,
-          capability: create.capability,
-          mutates: create.mutates,
-          requiresApproval: create.requiresApproval,
-          latencyMs: create.latencyMs,
-          output: create.output,
+          id: 'pending-ticket',
+          tool: pendingApproval.tool,
+          mcp: pendingApproval.mcp,
+          capability: pendingApproval.capability,
+          mutates: true,
+          requiresApproval: true,
+          status: 'pending_approval',
+          args: pendingApproval.args,
         },
       ],
+      pendingApproval,
       output: {
-        summary: `Ops: tạo ticket ${out.ticketId ?? '—'} (${out.status ?? 'open'}) qua MCP ops.`,
-        ticketId: out.ticketId ?? null,
+        summary: pendingApproval.preview,
+        approvalReason: 'mutates',
+        approvalPreview: pendingApproval.preview,
         stepGoal: step.goal,
       },
     };

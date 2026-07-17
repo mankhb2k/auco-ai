@@ -196,8 +196,9 @@ export const ROLE_TOOL_ALLOWLIST: Record<string, string[]> = {
     'get_transaction_history',
     'get_account_balance',
     'check_loan_eligibility',
+    'submit_loan_application',
   ],
-  legal: ['run_aml_check', 'search_regulation'],
+  legal: ['run_aml_check', 'search_regulation', 'flag_transaction'],
   product: [
     'list_products',
     'check_product_eligibility',

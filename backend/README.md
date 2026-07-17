@@ -80,8 +80,8 @@ npm run prisma:seed:railway
 | Phase 3 — LLM gateway OpenAI + Gemini fallback | |
 | Phase 4 — Planner / Orchestrator + TaskRun API | |
 | Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | |
-| Phase 6 — RAG hybrid (pgvector + FTS + citations) | Phase 7 Approval + WS |
-| | Automations |
+| Phase 6 — RAG hybrid (pgvector + FTS + citations) | |
+| Phase 7 — Approval HITL + WebSocket | Phase 8 Automations |
 
 ### Phase 4 API
 
@@ -124,3 +124,14 @@ Nest gateway spawns stdio (compiled `dist/mcp-servers` or `tsx` in dev). Special
 | `POST` | `/api/rag/search` | `{ domain, query, includeSuperseded? }` → citations |
 
 Hybrid: vector cosine + Postgres `ts_rank`; default filter `status=active`; join `DocumentRelation` notes. Specialists expose `credit_kb_search` / `legal_kb_search` in `TaskStep.toolCalls` (`mcp: "rag"`).
+### Phase 7 — Approval + WebSocket
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | /api/approvals | Pending waiting_approval steps (?taskRunId=) |
+| POST | /api/approvals/:stepId/approve | Execute pending mutate MCP tool, resume DAG |
+| POST | /api/approvals/:stepId/reject | Fail step + TaskRun; no MCP side-effect |
+| WS | 
+amespace /ws | subscribe { taskRunId } → 	ask.updated / step.updated / pproval.needed |
+
+Credit proposes submit_loan_application (no call until approve). Legal FX may propose lag_transaction. Ops proposes create_service_ticket.
