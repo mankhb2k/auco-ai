@@ -41,6 +41,7 @@
 | 21 | **Agent × MCP là catalog ship sẵn (4 chuyên gia cấu hình đầy đủ)** — không có UI cho user cuối tự thêm/xóa tool; admin config = roadmap sau demo (§3.5) | Đúng tinh thần "dùng chuyên gia", không "lắp ráp agent"; giữ nguyên guardrail routing đã chốt ở §2.5 |
 | 22 | **RAG nâng cấp "lite":** hybrid vector + Postgres full-text, bảng `DocumentRelation` (amends/supersedes), `effectiveFrom/To` versioning trên `KnowledgeDocument` — **không** xây Graph DB / BM25 engine / Conflict Detector NLP riêng (§4.3) | Giải đúng bài toán "quy định sửa đổi nhiều lần" với chi phí thấp, tránh rủi ro tích hợp hệ thống R&D riêng trong 48h |
 | 23 | **Không có Group / multi-session như Aucobot** — "session" = 1 `TaskRun`; chỉ cần 1 Planner (hạ tầng, ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) | Chọn chuyên gia là việc của Planner có kiểm soát, không phải user tự ráp bot; giữ UX tối giản đúng scope 48h |
+| 24 | **Không cho user tự tạo session gọi thẳng 1 agent / chat trực tiếp bỏ qua Planner** — nhu cầu "hỏi nhanh 1 miền" giải bằng **Planner triage** (TaskPlan 1 step khi đơn miền); nhu cầu "chat bỏ qua Planner" giải bằng **lộ baseline single-agent (§8) thành toggle UI** (§2.9) | Giữ Planner là điểm vào duy nhất — đúng trọng tâm deliverable #2/#5; không xây thêm hệ thống session/agent-routing song song |
 
 **Đã cân nhắc và loại bỏ:**
 
@@ -86,6 +87,18 @@ Dùng cho slide pitch — ai dùng hệ thống và ai hưởng lợi, khớp v�
 ## 2. Mô hình multi-agent đã chốt — Planner + Specialist + Worker
 
 Topology: **planner-executor** + Specialist tự spawn worker. Hình sao lồng 1 cấp (fractal star) — không mesh.
+
+> **✅ Chốt UX gốc (áp dụng toàn bộ tài liệu):** User **chỉ chat với đúng 1 điểm vào — Planner/Orchestrator**. Bên trong, 4 Specialist (Credit/Legal/Product/Ops) đã **ship sẵn, cấu hình cố định** (§3.5) — user không thấy, không chọn, không tự thêm agent. Planner tự động điều phối 1 hoặc nhiều Specialist tuỳ độ phức tạp câu hỏi (§2.9), rồi trả **1 câu trả lời tổng hợp duy nhất**. Không có agent picker, không có session-per-agent, không có Group (§2.8).
+
+```text
+User ←→ [ 1 Ô CHAT DUY NHẤT — Planner/Orchestrator ]
+                        │
+          tự động điều phối bên trong (ẩn với user)
+                        │
+        ┌───────────────┼───────────────┬───────────────┐
+     Credit          Legal          Product           Ops
+   (ship sẵn)      (ship sẵn)      (ship sẵn)      (ship sẵn)
+```
 
 **Ví dụ demo chính:**
 
@@ -465,6 +478,37 @@ Worker       — không phải "agent cố định" phải quản lý; chỉ sin
 #### Tóm tắt trả lời giám khảo
 
 > Hệ thống không có khái niệm "group" như nền tảng chat-bot thông thường — chọn chuyên gia là việc của Planner có kiểm soát, không phải người dùng tự lắp bot vào phòng. "Session" ở đây tương đương 1 `TaskRun`: gửi yêu cầu mới = tạo TaskRun mới, không cần hệ thống quản lý thread phức tạp. Toàn bộ demo chỉ cần 1 Planner (hạ tầng, ẩn) + 4 chuyên gia cố định, kịch bản chính chạy 3.
+
+### 2.9 "User tạo nhiều session, mỗi session gọi thẳng 1 agent expert" — ❌ Phản biện
+
+Ý này **mâu thuẫn trực tiếp** với §2.8 vừa chốt và **tái tạo đúng mô hình Group** của Aucobot đã đánh giá và loại. Cần nói thẳng 3 vấn đề trước khi đi tiếp:
+
+1. **Xóa mất chính giá trị cốt lõi của đề bài.** Deliverable #2 (Planner chia việc cho executor) và #5 (so sánh single vs multi) giả định: hệ thống **chính** là multi-agent orchestrated. Nếu user tự chọn 1 agent rồi chat thẳng, đó **chính là single-agent chatbot** — thứ cần dùng làm **baseline để so sánh** (§8), không phải trải nghiệm chính. Nếu UX chính trở thành "chọn agent rồi chat", Planner bị chôn thành nút phụ — lệch trọng tâm lúc pitch với giám khảo.
+2. **Gấp đôi bề mặt phải build trong 48h.** Cần thêm: session↔agent binding, agent picker UI, context/lịch sử riêng theo mỗi session-agent — cùng lúc vẫn phải giữ luồng Planner-orchestrated cho case multi-agent. Rủi ro lớn cho AI Agent build trong thời gian ngắn, đúng kiểu phức tạp đã loại ở §2.8.
+3. **Phá guardrail chống điều phối nhầm.** Toàn bộ §2.5 (Agent Catalog + Zod enum + validation) tồn tại để *hệ thống* luôn chọn đúng chuyên gia. Nếu user tự chọn agent để chat trực tiếp, không gì đảm bảo họ chọn đúng domain — quay lại rủi ro điều phối nhầm, nhưng lần này do người dùng gây ra.
+
+**Nhu cầu thật phía sau ý tưởng — vẫn hợp lý, chỉ cần giải đúng cách.** Nếu mục đích là "câu hỏi đơn giản, đơn miền thì muốn nhanh gọn như hỏi thẳng 1 chuyên gia, không cần cả dàn multi-agent phản hồi rườm rà" — **đúng nhu cầu, không cần session/agent picker để giải:**
+
+```text
+User luôn gõ vào CÙNG 1 ô nhập — không chọn agent, không chọn "session cho agent nào"
+  → Planner luôn nhận goal, phân tích trước (đã có ở §2.2)
+  → Chỉ 1 domain liên quan → TaskPlan CHỈ 1 TaskStep
+       → UI hiện gọn như "câu trả lời từ 1 chuyên gia" (1 card, không cần vẽ DAG rườm rà)
+  → Nhiều domain liên quan → TaskPlan nhiều TaskStep song song
+       → UI hiện DAG + trace đầy đủ (đúng câu chuyện multi-agent)
+```
+
+→ Cảm giác **giống** "chat thẳng 1 chuyên gia" khi câu hỏi đơn giản, nhưng **luôn đi qua Planner** — không agent picker, không session-per-agent, không phá guardrail routing. Một luồng duy nhất, độ phức tạp UI co giãn theo độ phức tạp câu hỏi — không phải hai hệ thống song song.
+
+**Nếu vẫn cần tính năng "chat trực tiếp 1 agent, bỏ qua Planner" thật sự:** hệ thống **đã có sẵn** khái niệm này — chính là **baseline single-agent** ở §8 (dùng để so sánh). Đề xuất: lộ `POST /api/compare` (hoặc route tương đương) ra UI thành 1 toggle thật — *"Chế độ: Multi-agent (khuyến nghị) / Single-agent (baseline so sánh)"* — thay vì xây hệ thống session/agent-routing mới. Vừa thoả nhu cầu "nói thẳng với model, không qua planner", vừa đúng khung **so sánh** (đúng deliverable #5), tái dùng 100% thiết kế đã có.
+
+**Chốt lại:**
+
+| Ý tưởng | Quyết định |
+|---|---|
+| Nhiều session, mỗi session gọi thẳng 1 agent, user tự chat với agent đó | ❌ **Không làm** — mâu thuẫn §2.8, tái tạo Group, phá guardrail routing, gấp đôi bề mặt build |
+| Planner triage: câu hỏi đơn miền → TaskPlan 1 step → UI gọn như "1 chuyên gia trả lời" | ✅ **Làm** — cùng 1 luồng đã có, không thêm hệ thống mới |
+| Muốn "chat trực tiếp, bỏ qua Planner" đúng nghĩa | ✅ Lộ baseline single-agent (§8) ra UI thành toggle so sánh — không phải feature "session gọi agent" |
 
 ---
 
@@ -896,6 +940,8 @@ Cùng bộ N câu hỏi cross-functional → so sánh:
   - Thời gian phản hồi (multi chậm hơn — nói rõ trade-off)
 ```
 
+**UX:** đây **không phải** endpoint chỉ dùng nội bộ để eval — lộ thành **1 toggle thật trên UI**: *"Chế độ: Multi-agent (khuyến nghị) / Single-agent (baseline)"*. Đây cũng là câu trả lời đúng cho nhu cầu "muốn chat thẳng, bỏ qua Planner" (§2.9) — không cần xây thêm hệ thống session/agent-picker riêng, tái dùng đúng 1 tính năng đã có sẵn trong deliverable #5.
+
 ---
 
 ## 9. Giám sát, Đánh giá & Bảo mật
@@ -1087,6 +1133,7 @@ Giai đoạn 2: FE trỏ NEXT_PUBLIC_API_URL → backend thật
 | 25 | Agent có quyền gọi API/tool nào — user tự cấu hình hay ship sẵn? | ✅ Đã chốt — **ship sẵn 4 chuyên gia cấu hình đầy đủ**; không có UI cấu hình cho end-user; admin config là roadmap (§3.5) |
 | 26 | Có xây Graph DB / BM25 engine / Conflict Detector riêng cho văn bản sửa đổi không? | ✅ Đã chốt — **không**; dùng bản lite: Postgres full-text + `DocumentRelation` + versioning field + prompt engineering (§4.3) |
 | 27 | Có cần Group / multi-session như Aucobot không? | ✅ Đã chốt — **không**; "session" = 1 `TaskRun`; chỉ 1 Planner (ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) |
+| 28 | User tự tạo session gọi thẳng 1 agent, chat trực tiếp bỏ qua Planner? | ✅ Đã chốt — **không**; giải bằng Planner triage (1-step fast path) + lộ baseline single-agent (§8) thành toggle UI (§2.9) |
 
 ---
 
@@ -1197,6 +1244,10 @@ Ba tiêu chí nhấn mạnh:
 ### 12.16i “Có cần chức năng Group hay tạo session mới như Aucobot không?”
 
 > Không. Aucobot cho user tự thêm nhiều bot vào 1 room (Group) và quản lý nhiều thread song song. Ở đây, chọn chuyên gia là việc của **Planner có kiểm soát** (§2, §2.5) — người dùng không tự lắp bot vào phòng, nên khái niệm Group không áp dụng. "Session" tương đương 1 `TaskRun`: gửi yêu cầu mới là tạo TaskRun mới, không cần hệ thống thread/rename/archive. Toàn bộ hệ thống chỉ cần dựng **1 Planner (hạ tầng, ẩn) + 4 Specialist cố định** (Credit/Legal/Product/Ops); kịch bản demo chính chạy 3 (Credit ‖ Legal → Product), Ops là off-script/optional (§2.8).
+
+### 12.16j “Cho user tạo nhiều session, mỗi session chat thẳng với 1 agent expert — có nên không?”
+
+> Không nên. Ý này tái tạo đúng mô hình Group đã đánh giá và loại (§2.8): cần thêm session↔agent binding, agent picker UI, lịch sử riêng theo từng session-agent — gấp đôi bề mặt phải build trong 48h, và quan trọng hơn, nó **xóa mất chính giá trị đề bài chấm** (Planner điều phối, so sánh single vs multi) vì bản chất "chat thẳng 1 agent" chính là baseline single-agent, không phải trải nghiệm chính. Nhu cầu thật phía sau — muốn hỏi nhanh câu đơn miền, hoặc muốn thử chat bỏ qua Planner — giải đúng bằng hai cơ chế đã có sẵn: (1) Planner tự sinh `TaskPlan` chỉ 1 step khi câu hỏi đơn miền, UI hiện gọn như "1 chuyên gia trả lời"; (2) lộ baseline single-agent (đã thiết kế cho deliverable so sánh, §8) thành 1 toggle UI thật, không cần xây hệ thống session/routing mới.
 
 ### 12.17 “Production-ready chưa?”
 
