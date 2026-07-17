@@ -47,6 +47,18 @@ export function ComparePanel() {
               <dt className="text-muted-foreground text-xs">Hành động thật (audit)</dt>
               <dd className="mt-1 text-lg font-semibold">{compare.realActions}</dd>
             </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <dt className="text-muted-foreground text-xs">Total tokens</dt>
+              <dd className="mt-1 text-lg font-semibold">
+                {compare.totalTokens.toLocaleString("en-US")}
+              </dd>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <dt className="text-muted-foreground text-xs">Cost (USD)</dt>
+              <dd className="mt-1 text-lg font-semibold">
+                ${compare.costUsd.toFixed(4)}
+              </dd>
+            </div>
           </dl>
           <ul className="space-y-2">
             {compare.notes.map((n) => (

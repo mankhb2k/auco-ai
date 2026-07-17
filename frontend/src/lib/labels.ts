@@ -1,6 +1,7 @@
 import type { AgentRole, TaskRunStatus, TaskStepStatus } from "@/lib/types/domain";
 
 export const AGENT_LABEL: Record<AgentRole, string> = {
+  planner: "Planner",
   credit: "Credit",
   legal: "Legal / Compliance",
   product: "Product",

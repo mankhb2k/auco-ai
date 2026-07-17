@@ -6,6 +6,7 @@ import { ComparePanel } from "@/components/compare/ComparePanel";
 import { DagView } from "@/components/dashboard/DagView";
 import { FinalAnswer } from "@/components/dashboard/FinalAnswer";
 import { TraceTimeline } from "@/components/dashboard/TraceTimeline";
+import { UsagePanel } from "@/components/dashboard/UsagePanel";
 import { GoalComposer } from "@/components/goal/GoalComposer";
 import { HistoryPanel } from "@/components/history/HistoryPanel";
 import { AppHeader } from "@/components/shell/AppHeader";
@@ -40,6 +41,7 @@ export function AppShell() {
                 <div className="space-y-4">
                   <GoalComposer />
                   <ApprovalPanel />
+                  <UsagePanel />
                   <FinalAnswer />
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">

@@ -8,9 +8,15 @@ import type {
   McpSuiteStatus,
   TaskRun,
 } from "@/lib/types/domain";
+import customersJson from "@/lib/mock/customers.json";
+import { SCENARIO_PRESETS, DEFAULT_SCENARIO } from "@/lib/mock/scenarios";
+import { emptyUsageSummary, makeUsage } from "@/lib/mock/usage";
+
+export { SCENARIO_PRESETS, DEFAULT_SCENARIO };
 
 export const DEMO_GOAL =
-  "Khách hàng Nguyễn Văn A muốn vay 2 tỷ mua nhà, kiểm tra đủ điều kiện tín dụng không, có vướng quy định AML/tuân thủ không, sản phẩm vay nào phù hợp nhất, và tạo hồ sơ vận hành nếu đủ điều kiện.";
+  SCENARIO_PRESETS.find((p) => p.id === DEFAULT_SCENARIO)?.goal ??
+  SCENARIO_PRESETS[0].goal;
 
 export const employees: Employee[] = [
   {
@@ -36,27 +42,28 @@ export const employees: Employee[] = [
   },
 ];
 
-export const customers: Customer[] = [
-  {
-    id: "cus-a",
-    bankCode: "SHB",
-    fullName: "Nguyễn Văn A",
-    customerNo: "SHB-KH-1001",
-    branchCode: "CN_CAU_GIAY",
-  },
-  {
-    id: "cus-out",
-    bankCode: "SHB",
-    fullName: "Phạm Thị Ngoài Danh Mục",
-    customerNo: "SHB-KH-9999",
-    branchCode: "CN_HA_DONG",
-  },
-];
+/** Full demo customer catalog (24 records). */
+export const customerCatalog = customersJson.customers;
 
-export const portfolios: CustomerPortfolio[] = [
-  { employeeId: "emp-credit-b", customerId: "cus-a" },
-  { employeeId: "emp-ops-c", customerId: "cus-a" },
-];
+export const customers: Customer[] = customerCatalog.map((c) => ({
+  id: c.id,
+  bankCode: c.bankCode,
+  fullName: c.fullName,
+  customerNo: c.customerNo,
+  branchCode: c.branchCode,
+}));
+
+/** Portfolio của nhân viên CN Cầu Giấy — không gồm KH Hà Đông (cus-004, cus-022). */
+export const portfolios: CustomerPortfolio[] = customerCatalog
+  .filter((c) => c.branchCode === "CN_CAU_GIAY")
+  .flatMap((c) => [
+    { employeeId: "emp-credit-b", customerId: c.id },
+    { employeeId: "emp-ops-c", customerId: c.id },
+  ]);
+
+export function findCustomerByDemoTag(tag: string) {
+  return customerCatalog.find((c) => c.demoTag === tag);
+}
 
 export const mcpSuite: McpSuiteStatus = {
   suite: "SHB MCP Suite",
@@ -105,10 +112,12 @@ export const compareByMode: Record<"multi" | "single", CompareMetrics> = {
     toolAccuracy: 0.94,
     citationCount: 5,
     realActions: 1,
+    totalTokens: 12480,
+    costUsd: 0.0142,
     notes: [
       "Planner chia Credit ‖ Legal → Product",
       "Tool đúng domain qua allowlist",
-      "Side-effect qua Approval",
+      "Side-effect qua Approval · log token/cost đầy đủ",
     ],
   },
   single: {
@@ -117,23 +126,31 @@ export const compareByMode: Record<"multi" | "single", CompareMetrics> = {
     toolAccuracy: 0.61,
     citationCount: 1,
     realActions: 0,
+    totalTokens: 4100,
+    costUsd: 0.0051,
     notes: [
       "1 agent full tool — dễ gọi sai domain",
       "Ít citation / dễ bịa",
-      "Không có DAG cộng tác",
+      "Rẻ token hơn nhưng thiếu audit cộng tác",
     ],
   },
 };
 
 /** Snapshot lịch sử mẫu (đã hoàn tất trước đó). */
 export function buildHistorySample(): TaskRun {
+  const stepUsage = makeUsage({
+    promptTokens: 900,
+    completionTokens: 320,
+    latencyMs: 700,
+  });
   return {
     id: "tr-history-1",
     bankCode: "SHB",
     employeeId: "emp-credit-b",
-    goal: "Kiểm tra nhanh hạn mức thẻ tín dụng của Nguyễn Văn A",
+    goal: "Kiểm tra nhanh hạn mức thẻ tín dụng của Ngô Thanh Mai (SHB-KH-1010)",
     status: "done",
     mode: "multi",
+    scenario: "home",
     planJson: { summary: "Triage 1 step — Credit Agent" },
     finalAnswer:
       "Hạn mức hiện tại 80 triệu VND, dư nợ 12 triệu. Không phát hiện cảnh báo tuân thủ.",
@@ -144,6 +161,25 @@ export function buildHistorySample(): TaskRun {
         score: 0.88,
       },
     ],
+    usage: {
+      ...emptyUsageSummary(),
+      promptTokens: 900,
+      completionTokens: 320,
+      totalTokens: 1220,
+      costUsd: stepUsage.costUsd,
+      wallClockMs: 8200,
+      events: [
+        {
+          id: "ue-hist-1",
+          at: "2026-07-15T10:20:02+07:00",
+          kind: "llm_specialist",
+          agentRole: "credit",
+          stepId: "hist-s1",
+          label: "Credit · tra cứu hạn mức thẻ",
+          usage: stepUsage,
+        },
+      ],
+    },
     createdAt: "2026-07-15T10:20:00+07:00",
     steps: [
       {
@@ -152,7 +188,7 @@ export function buildHistorySample(): TaskRun {
         agentRole: "credit",
         mode: "direct",
         label: "Tra cứu hạn mức thẻ",
-        input: { customerId: "cus-a" },
+        input: { customerId: "cus-010" },
         output: { limit: 80_000_000, outstanding: 12_000_000 },
         status: "done",
         dependsOn: [],
@@ -162,12 +198,13 @@ export function buildHistorySample(): TaskRun {
             tool: "get_credit_score",
             mcp: "mcp-core-banking",
             mutates: false,
-            input: { customerId: "cus-a" },
+            input: { customerId: "cus-010" },
             output: { score: 720 },
             latencyMs: 420,
           },
         ],
         citations: [],
+        usage: stepUsage,
         startedAt: "2026-07-15T10:20:01+07:00",
         finishedAt: "2026-07-15T10:20:08+07:00",
       },

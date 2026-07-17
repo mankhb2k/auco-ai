@@ -9,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { SCENARIO_PRESETS } from "@/lib/mock/scenarios";
+import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app.store";
 import { Loader2, Send } from "lucide-react";
 
@@ -18,6 +20,8 @@ export function GoalComposer() {
   const submitGoal = useAppStore((s) => s.submitGoal);
   const isSimulating = useAppStore((s) => s.isSimulating);
   const mode = useAppStore((s) => s.mode);
+  const scenarioId = useAppStore((s) => s.scenarioId);
+  const applyScenarioPreset = useAppStore((s) => s.applyScenarioPreset);
 
   return (
     <Card>
@@ -29,10 +33,29 @@ export function GoalComposer() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {SCENARIO_PRESETS.map((p) => (
+            <Button
+              key={p.id}
+              type="button"
+              size="sm"
+              variant={scenarioId === p.id ? "default" : "outline"}
+              className={cn("h-auto py-1.5 text-left text-xs")}
+              disabled={isSimulating}
+              onClick={() => applyScenarioPreset(p.id, p.goal)}
+              title={p.description}
+            >
+              {p.shortLabel}
+            </Button>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {SCENARIO_PRESETS.find((p) => p.id === scenarioId)?.description}
+        </p>
         <Textarea
           value={goalDraft}
           onChange={(e) => setGoalDraft(e.target.value)}
-          rows={6}
+          rows={7}
           placeholder="Nhập mục tiêu nghiệp vụ…"
           disabled={isSimulating}
         />

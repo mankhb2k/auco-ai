@@ -131,7 +131,11 @@ export function DagView() {
         <CardTitle className="text-base">DAG · TaskStep</CardTitle>
         <CardDescription>
           {activeRun.mode === "multi"
-            ? "Credit ‖ Legal → Product (Credit spawn ≤3 worker)"
+            ? activeRun.scenario === "corporate"
+              ? "Credit ‖ Legal → Product · DN / TT39"
+              : activeRun.scenario === "fx"
+                ? "Credit ‖ Legal → Product · FX / IMF"
+                : "Credit ‖ Legal → Product (Credit spawn ≤3 worker)"
             : "Baseline single-agent — 1 step"}
         </CardDescription>
       </CardHeader>

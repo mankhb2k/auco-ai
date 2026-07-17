@@ -1,4 +1,4 @@
-export type AgentRole = "credit" | "legal" | "product" | "ops";
+export type AgentRole = "credit" | "legal" | "product" | "ops" | "planner";
 
 export type TaskRunStatus = "planning" | "running" | "done" | "failed";
 
@@ -11,9 +11,46 @@ export type TaskStepStatus =
 
 export type OrchestrationMode = "multi" | "single";
 
-export type ApprovalReason =
-  | "mutates"
-  | "out_of_portfolio_access";
+export type ScenarioId = "corporate" | "fx" | "home";
+
+export type ApprovalReason = "mutates" | "out_of_portfolio_access";
+
+export type UsageKind =
+  | "llm_plan"
+  | "llm_specialist"
+  | "llm_worker"
+  | "llm_synthesize"
+  | "rag"
+  | "tool";
+
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  /** USD mock — OpenAI-style pricing */
+  costUsd: number;
+  model: string;
+  latencyMs: number;
+}
+
+export interface UsageEvent {
+  id: string;
+  at: string;
+  kind: UsageKind;
+  agentRole: AgentRole;
+  stepId?: string;
+  label: string;
+  usage: TokenUsage;
+}
+
+export interface RunUsageSummary {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  wallClockMs: number;
+  events: UsageEvent[];
+}
 
 export interface ToolCallRecord {
   id: string;
@@ -41,7 +78,7 @@ export interface WorkerSpawn {
 export interface TaskStep {
   id: string;
   taskRunId: string;
-  agentRole: AgentRole;
+  agentRole: Exclude<AgentRole, "planner">;
   mode: "direct" | "spawn_workers";
   label: string;
   input: Record<string, unknown>;
@@ -53,6 +90,7 @@ export interface TaskStep {
   workers?: WorkerSpawn[];
   approvalReason?: ApprovalReason;
   approvalPreview?: string;
+  usage?: TokenUsage;
   startedAt?: string;
   finishedAt?: string;
 }
@@ -64,9 +102,11 @@ export interface TaskRun {
   goal: string;
   status: TaskRunStatus;
   mode: OrchestrationMode;
+  scenario: ScenarioId;
   planJson: { summary: string };
   finalAnswer?: string;
   citations: RagCitation[];
+  usage: RunUsageSummary;
   createdAt: string;
   steps: TaskStep[];
 }
@@ -102,7 +142,7 @@ export interface Automation {
   id: string;
   name: string;
   description?: string;
-  createdByAgentRole: AgentRole;
+  createdByAgentRole: Exclude<AgentRole, "planner">;
   triggerType: "schedule" | "manual";
   cronExpr?: string;
   timezone: string;
@@ -141,5 +181,22 @@ export interface CompareMetrics {
   toolAccuracy: number;
   citationCount: number;
   realActions: number;
+  totalTokens: number;
+  costUsd: number;
   notes: string[];
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  title: string;
+  section: string;
+  content: string;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  status: "active" | "superseded";
+  relation?: {
+    type: "amends" | "supersedes";
+    targetId: string;
+  };
+  ltvMaxPct?: number;
 }

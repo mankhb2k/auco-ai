@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AGENT_LABEL, formatTime, statusLabel, statusVariant } from "@/lib/labels";
+import { formatTokens, formatUsd } from "@/lib/mock/usage";
 import { useAppStore } from "@/stores/app.store";
 
 export function TraceTimeline() {
@@ -20,7 +21,9 @@ export function TraceTimeline() {
       <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-base">Timeline / Trace</CardTitle>
-          <CardDescription>Gửi một yêu cầu để xem tool call & citation.</CardDescription>
+          <CardDescription>
+            Tool call, citation, token/latency — gửi yêu cầu để xem.
+          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -32,7 +35,7 @@ export function TraceTimeline() {
       title: string;
       detail: string;
       time?: string;
-      kind: "step" | "tool" | "citation";
+      kind: "step" | "tool" | "citation" | "usage";
     }[] = [
       {
         key: `${step.id}-status`,
@@ -42,6 +45,14 @@ export function TraceTimeline() {
         kind: "step",
       },
     ];
+    if (step.usage) {
+      rows.push({
+        key: `${step.id}-usage`,
+        title: `Tokens · ${formatTokens(step.usage.totalTokens)}`,
+        detail: `${formatUsd(step.usage.costUsd)} · ${step.usage.latencyMs}ms · ${step.usage.model}`,
+        kind: "usage",
+      });
+    }
     for (const tc of step.toolCalls) {
       rows.push({
         key: tc.id,
@@ -64,13 +75,21 @@ export function TraceTimeline() {
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Timeline / Trace</CardTitle>
-          <Badge variant={statusVariant(activeRun.status)}>
-            {statusLabel(activeRun.status)}
-          </Badge>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge variant="outline">{activeRun.scenario}</Badge>
+            <Badge variant={statusVariant(activeRun.status)}>
+              {statusLabel(activeRun.status)}
+            </Badge>
+          </div>
         </div>
-        <CardDescription className="line-clamp-2">{activeRun.planJson.summary}</CardDescription>
+        <CardDescription className="line-clamp-2">
+          {activeRun.planJson.summary}
+          {activeRun.usage.totalTokens > 0
+            ? ` · ${formatTokens(activeRun.usage.totalTokens)} tok · ${formatUsd(activeRun.usage.costUsd)}`
+            : ""}
+        </CardDescription>
       </CardHeader>
       <CardContent className="min-h-0 flex-1">
         <ScrollArea className="h-[320px] pr-3">

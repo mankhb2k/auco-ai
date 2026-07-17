@@ -5,6 +5,7 @@ import {
   buildHistorySample,
   compareByMode,
   DEMO_GOAL,
+  DEFAULT_SCENARIO,
   employees,
   mcpSuite,
   seedAutomationRuns,
@@ -18,6 +19,7 @@ import type {
   Employee,
   McpSuiteStatus,
   OrchestrationMode,
+  ScenarioId,
   TaskRun,
 } from "@/lib/types/domain";
 
@@ -27,6 +29,7 @@ interface AppState {
   employeeId: string;
   employees: Employee[];
   mode: OrchestrationMode;
+  scenarioId: ScenarioId;
   mainTab: MainTab;
   activeRun: TaskRun | null;
   history: TaskRun[];
@@ -40,6 +43,8 @@ interface AppState {
 
   setEmployeeId: (id: string) => void;
   setMode: (mode: OrchestrationMode) => void;
+  setScenarioId: (id: ScenarioId) => void;
+  applyScenarioPreset: (id: ScenarioId, goal: string) => void;
   setMainTab: (tab: MainTab) => void;
   setGoalDraft: (goal: string) => void;
   setOutOfPortfolioDemo: (v: boolean) => void;
@@ -58,6 +63,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   employeeId: employees[0].id,
   employees,
   mode: "multi",
+  scenarioId: DEFAULT_SCENARIO,
   mainTab: "workspace",
   activeRun: null,
   history: [buildHistorySample()],
@@ -77,13 +83,29 @@ export const useAppStore = create<AppState>((set, get) => ({
       compare: compareByMode[mode],
     }),
 
+  setScenarioId: (id) => set({ scenarioId: id }),
+
+  applyScenarioPreset: (id, goal) =>
+    set({
+      scenarioId: id,
+      goalDraft: goal,
+      outOfPortfolioDemo: false,
+    }),
+
   setMainTab: (tab) => set({ mainTab: tab }),
   setGoalDraft: (goal) => set({ goalDraft: goal }),
   setOutOfPortfolioDemo: (v) => set({ outOfPortfolioDemo: v }),
 
   submitGoal: () => {
-    const { goalDraft, employeeId, mode, outOfPortfolioDemo, history, activeRun } =
-      get();
+    const {
+      goalDraft,
+      employeeId,
+      mode,
+      scenarioId,
+      outOfPortfolioDemo,
+      history,
+      activeRun,
+    } = get();
     const goal = goalDraft.trim();
     if (!goal) return;
 
@@ -98,6 +120,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       goal,
       employeeId,
       mode,
+      scenario: scenarioId,
       outOfPortfolio: outOfPortfolioDemo,
     });
 
@@ -107,6 +130,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       isSimulating: true,
       mainTab: "workspace",
       compare: compareByMode[mode],
+      scenarioId: run.scenario,
     });
 
     simulator = new TaskRunSimulator(
@@ -120,6 +144,18 @@ export const useAppStore = create<AppState>((set, get) => ({
           set((s) => ({
             history: [next, ...s.history.filter((h) => h.id !== next.id)],
             isSimulating: false,
+            compare: {
+              ...compareByMode[next.mode],
+              latencyMs: next.usage.wallClockMs,
+              totalTokens: next.usage.totalTokens,
+              costUsd: next.usage.costUsd,
+              citationCount: next.citations.length,
+              realActions: next.steps.some((st) =>
+                st.toolCalls.some((t) => t.mutates),
+              )
+                ? 1
+                : 0,
+            },
           }));
         }
       },
@@ -135,6 +171,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeRun: null,
       isSimulating: false,
       goalDraft: DEMO_GOAL,
+      scenarioId: DEFAULT_SCENARIO,
       mainTab: "workspace",
     });
   },
@@ -149,7 +186,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       isSimulating: false,
       mainTab: "workspace",
       mode: item.mode,
-      compare: compareByMode[item.mode],
+      scenarioId: item.scenario,
+      compare: {
+        ...compareByMode[item.mode],
+        latencyMs: item.usage.wallClockMs,
+        totalTokens: item.usage.totalTokens,
+        costUsd: item.usage.costUsd,
+        citationCount: item.citations.length,
+      },
     });
   },
 
