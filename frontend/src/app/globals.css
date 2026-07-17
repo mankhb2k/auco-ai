@@ -369,14 +369,10 @@ html[data-theme="dark"] {
     background: var(--landing-blob-3);
   }
 
-  /* Chat wallpaper */
   .chat-wallpaper {
     --chat-wallpaper-solid: #a4cbd6;
 
     background: linear-gradient(135deg, #a4cbd6 0%, #d5e9bf 50%, #f6f0cf 100%);
-    background-image: url("/telegram-doodle.svg"), linear-gradient(135deg, #a4cbd6 0%, #d5e9bf 50%, #f6f0cf 100%);
-    background-size: 375px 812px, cover;
-    background-repeat: repeat, no-repeat;
   }
 }
 
