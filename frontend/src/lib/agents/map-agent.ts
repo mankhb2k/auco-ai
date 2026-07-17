@@ -68,7 +68,7 @@ export function mapMotherDmToChat(dm: MotherDmResponse): Chat {
       mother.bio ??
       mother.description ??
       conversation.description ??
-      "Coach tuyển user agent",
+      "Điều phối chuyên gia nghiệp vụ SHB",
     conversationType: "session",
   };
 }

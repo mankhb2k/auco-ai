@@ -4,27 +4,27 @@ export const initialChats: Chat[] = [
   // --- WORKFLOW CHATS ---
   {
     id: "wf_1",
-    name: "Tự động đăng bài Facebook Q1 🤖",
+    name: "Thẩm định hồ sơ doanh nghiệp Q1 📊",
     status: "idle",
     avatarText: "WF",
     avatarBg: "bg-avatar-blue",
     notifications: true,
     category: "workflow",
-    description: "Tự động soạn thảo nội dung PR và đăng bài viết hàng ngày lên Fanpage.",
-    trigger: "Hàng ngày lúc 14:00",
+    description: "Tự động phân tích báo cáo tài chính, thẩm định dòng tiền và đề xuất hạn mức tín dụng.",
+    trigger: "Khi nhận hồ sơ mới từ LOS",
     lastRun: "10 phút trước",
     messages: [
       {
         id: "wfm1_1",
         sender: "them",
-        text: "Chào sếp! Em là Workflow Assistant. Em đã dựng cấu trúc tự động đăng bài Facebook Q1 theo ý sếp. Sếp xem sơ đồ chi tiết bên dưới nhé.",
+        text: "Chào chuyên viên! Em là Trợ Lý Điều Phối. Em đã dựng quy trình tự động thẩm định tín dụng doanh nghiệp Q1 theo chính sách SHB. Sếp xem sơ đồ chi tiết bên dưới nhé.",
         time: "10:00",
         read: true
       },
       {
         id: "wfm1_2",
         sender: "them",
-        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ lắp ráp:\nTrigger Lịch Giờ -> Content Creator AI -> Publisher AI.\nSếp xem chi tiết bên dưới nhé.",
+        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ xử lý:\nNhận Hồ Sơ -> Planner Agent -> Credit Agent -> Legal Agent.\nSếp xem chi tiết bên dưới nhé.",
         time: "10:01",
         read: true
       }
@@ -33,27 +33,27 @@ export const initialChats: Chat[] = [
   },
   {
     id: "wf_2",
-    name: "Quét tin nhắn Page & Báo cáo 💬",
+    name: "Phê duyệt khoản vay tiêu dùng 🚗",
     status: "running",
     avatarText: "WF",
     avatarBg: "bg-avatar-green",
     notifications: true,
     category: "workflow",
-    description: "Quét tin nhắn mới của Fanpage, tự động phản hồi và tổng hợp báo cáo.",
-    trigger: "Khi có tin nhắn mới",
+    description: "Quét điểm tín dụng CIC, tự động kiểm tra điều kiện thu nhập và ra quyết định sơ bộ.",
+    trigger: "Khi khách hàng nộp hồ sơ trực tuyến",
     lastRun: "Đang chạy...",
     messages: [
       {
         id: "wfm2_1",
         sender: "them",
-        text: "Chào sếp! Em đang theo dõi hòm thư Fanpage. Khi có tin nhắn mới, em sẽ kích hoạt CS Bot để trả lời và thông báo cho sếp.",
+        text: "Chào chuyên viên! Em đang theo dõi cổng hồ sơ vay tiêu dùng trực tuyến. Khi có hồ sơ mới, em sẽ kích hoạt Planner Agent để phân tích ban đầu.",
         time: "Yesterday",
         read: true
       },
       {
         id: "wfm2_2",
         sender: "them",
-        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ lắp ráp có nhánh If/Else:\nTin nhắn mới → Phân loại → If/Else → (Có) Trả lời tự động | (Không) Báo sếp duyệt.\nSếp xem chi tiết bên dưới nhé.",
+        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ kiểm tra điều kiện:\nHồ sơ mới → Tra cứu CIC → If/Else → (Đủ điều kiện) Chuyển Credit Agent | (Không) Báo trả hồ sơ.\nSếp xem chi tiết bên dưới nhé.",
         time: "Yesterday",
         read: true
       }
@@ -62,27 +62,27 @@ export const initialChats: Chat[] = [
   },
   {
     id: "wf_3",
-    name: "Sync Affiliate Clip sang TikTok 🎥",
+    name: "Kiểm tra tuân thủ pháp lý 📜",
     status: "success",
     avatarText: "WF",
     avatarBg: "bg-avatar-orange",
     notifications: true,
     category: "workflow",
-    description: "Đồng bộ hóa video quảng cáo và tự động xuất bản lên kênh TikTok.",
-    trigger: "Mỗi thứ Hai lúc 08:00",
+    description: "Đối chiếu hồ sơ thế chấp với các văn bản quy định hiện hành của Ngân hàng Nhà nước.",
+    trigger: "Mỗi khi hoàn tất thẩm định tài chính",
     lastRun: "2 giờ trước",
     messages: [
       {
         id: "wfm3_1",
         sender: "them",
-        text: "Chào sếp! Sơ đồ đồng bộ Clip lên TikTok Affiliate đang hoạt động tốt.",
+        text: "Chào chuyên viên! Quy trình đối chiếu tuân thủ pháp lý tài sản bảo đảm đang hoạt động ổn định.",
         time: "Jul 13",
         read: true
       },
       {
         id: "wfm3_2",
         sender: "them",
-        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ lắp ráp:\nTrigger Lịch -> Google Drive -> Publisher AI.\nSếp xem chi tiết bên dưới nhé.",
+        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ kiểm tra pháp lý:\nThẩm định xong -> Legal & Compliance Agent -> Trình Ban phê duyệt.\nSếp xem chi tiết bên dưới nhé.",
         time: "Jul 13",
         read: true
       }
@@ -91,27 +91,27 @@ export const initialChats: Chat[] = [
   },
   {
     id: "wf_4",
-    name: "Theo dõi giá đối thủ & Cảnh báo 🔍",
+    name: "Giám sát rủi ro sau giải ngân 🚨",
     status: "success",
     avatarText: "WF",
     avatarBg: "bg-avatar-purple",
     notifications: true,
     category: "workflow",
-    description: "Theo dõi giá sản phẩm của đối thủ cạnh tranh và gửi cảnh báo khi có thay đổi.",
-    trigger: "Hàng giờ",
+    description: "Theo dõi tình hình dư nợ, cảnh báo kỳ trả nợ và nhắc nhở chuyên viên kiểm tra sau vay.",
+    trigger: "Hàng tháng vào ngày 25",
     lastRun: "Hôm qua lúc 18:00",
     messages: [
       {
         id: "wfm4_1",
         sender: "them",
-        text: "Chào sếp! Tôi đang theo dõi giá sản phẩm của đối thủ hàng giờ.",
+        text: "Chào chuyên viên! Tôi đang quét danh sách các khoản vay giải ngân trong tháng để lập lịch kiểm tra mục đích sử dụng vốn.",
         time: "Jul 12",
         read: true
       },
       {
         id: "wfm4_2",
         sender: "them",
-        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ lắp ráp:\nTrigger Giờ -> Research AI -> Slack Notification.\nSếp xem chi tiết bên dưới nhé.",
+        text: "[WORKFLOW_PREVIEW] Em đã dựng xong sơ đồ giám sát:\nĐến kỳ kiểm tra -> Operations Agent -> Tạo phiếu nhắc việc chuyên viên.\nSếp xem chi tiết bên dưới nhé.",
         time: "Jul 12",
         read: true
       }
@@ -121,9 +121,9 @@ export const initialChats: Chat[] = [
   // --- TIN NHẮN (ROOMS & SESSIONS) ---
   {
     id: "room_marketing",
-    name: "Phòng Marketing Tổng Lực 🚀",
-    status: "4 agents active",
-    avatarText: "M",
+    name: "Ban Thẩm Định Tín Dụng Q1 🏦",
+    status: "5 agents active",
+    avatarText: "B",
     avatarBg: "bg-avatar-blue",
     notifications: true,
     category: "chat",
@@ -131,56 +131,56 @@ export const initialChats: Chat[] = [
       {
         id: "rm1",
         sender: "them",
-        text: "Hệ thống: Phòng Marketing Tổng Lực đã khởi tạo thành công.",
+        text: "Hệ thống: Ban Thẩm Định Tín Dụng Doanh Nghiệp Q1 đã khởi tạo thành công.",
         time: "10:00",
         read: true
       },
       {
         id: "rm2",
         sender: "them",
-        text: "CS Bot: Chào sếp, em đã kết nối API fanpage và sẵn sàng phản hồi khách hàng.",
+        text: "Planner Agent: Chào chuyên viên, em đã tiếp nhận hồ sơ vay của Công ty Cổ phần Thép Việt và sẵn sàng phân tích hồ sơ ban đầu.",
         time: "10:02",
         read: true
       },
       {
         id: "rm3",
         sender: "them",
-        text: "Content Creator AI: Em vừa soạn xong bài viết nháp về tính năng mới của sản phẩm. Sếp duyệt giúp em nhé!",
+        text: "Credit Agent: Em vừa hoàn tất chạy mô hình xếp hạng tín dụng nội bộ. Khách hàng đạt hạng A-, đề xuất hạn mức vay 50 tỷ đồng. Sếp duyệt đề xuất xếp hạng giúp em nhé!",
         time: "10:15",
         read: true
       },
       {
         id: "rm4",
         sender: "me",
-        text: "Duyệt em nhé. Nội dung rất tốt! Hãy lên lịch đăng lên Page lúc 14:00 hôm nay.",
+        text: "Duyệt em nhé. Kết quả xếp hạng hợp lý! Hãy chuyển Legal Agent kiểm tra tính pháp lý tài sản thế chấp.",
         time: "10:20",
         read: true
       },
       {
         id: "rm5",
         sender: "them",
-        text: "Trợ Lý: @Content Creator AI Đã duyệt bài viết. @Publisher AI Bắt đầu lên lịch đăng bài lúc 14:00.",
+        text: "Trợ Lý: @Credit Agent Đã duyệt báo cáo tài chính. @Legal & Compliance Agent Bắt đầu rà soát hồ sơ thế chấp nhà xưởng.",
         time: "10:21",
         read: true
       },
       {
         id: "rm6",
         sender: "them",
-        text: "Publisher AI: Báo cáo sếp, em đã xếp lịch đăng bài thành công lên Facebook Graph API. ✅",
+        text: "Legal & Compliance Agent: Báo cáo sếp, tài sản thế chấp hợp lệ, không có tranh chấp quy hoạch. Hồ sơ đủ điều kiện pháp lý giải ngân. ✅",
         time: "10:25",
         read: true
       },
       {
         id: "rm7",
         sender: "me",
-        text: "@Trợ Lý Soạn caption Tết đăng Facebook giúp em, lịch 09:00 ngày 28/1",
+        text: "@Trợ Lý Dự thảo tờ trình phê duyệt khoản vay, lãi suất ưu đãi 6.5%/năm",
         time: "13:42",
         read: true
       },
       {
         id: "rm8",
         sender: "them",
-        text: "Trợ Lý:\n\nCaption đăng Facebook:\n\nTết sum vầy bắt đầu từ món ngon… 🧧\n\nLên lịch 09:00 ngày 28/1 sau khi bạn duyệt giúp em nhé!",
+        text: "Trợ Lý:\n\nTờ trình phê duyệt:\n\nĐề xuất cấp hạn mức 50 tỷ đồng – Lãi suất 6.5%/năm – Thời hạn 12 tháng… 🧧\n\nXem chi tiết tờ trình tại bảng bên phải sau khi bạn duyệt giúp em nhé!",
         time: "13:50",
         read: true
       }
@@ -189,9 +189,9 @@ export const initialChats: Chat[] = [
   },
   {
     id: "room_tiktok",
-    name: "TikTok Video Campaign 🎬",
+    name: "Duyệt Vay Tiêu Dùng SHB 🚗",
     status: "3 agents active",
-    avatarText: "T",
+    avatarText: "V",
     avatarBg: "bg-avatar-orange",
     notifications: true,
     category: "chat",
@@ -199,21 +199,21 @@ export const initialChats: Chat[] = [
       {
         id: "rt1",
         sender: "them",
-        text: "System: Khởi tạo phòng biên tập clip ngắn TikTok.",
+        text: "Hệ thống: Khởi tạo phòng xử lý vay tiêu dùng cá nhân trực tuyến.",
         time: "Yesterday",
         read: true
       },
       {
         id: "rt2",
         sender: "them",
-        text: "Designer AI: Em đã render xong ảnh bìa cho video review ngày hôm nay.",
+        text: "Planner Agent: Em đã tự động đối chiếu thông tin định danh eKYC của khách hàng Nguyễn Văn A, kết quả khớp 100%.",
         time: "Yesterday",
         read: true
       },
       {
         id: "rt3",
         sender: "them",
-        text: "Publisher AI: Video review đã được đăng lên tài khoản TikTok Affiliate. Link click đang tăng mạnh ạ!",
+        text: "Product Agent: Khách hàng vay mua ô tô, gói sản phẩm áp dụng: Vay mua xe ưu đãi SHB 2026. Lãi suất đề xuất 7.2%/năm.",
         time: "Yesterday",
         read: true
       }
@@ -222,9 +222,9 @@ export const initialChats: Chat[] = [
   },
   {
     id: "session_translate",
-    name: "Dịch thuật nhanh 💬",
+    name: "Tra cứu CIC nhanh 🔍",
     status: "Quick Assistant",
-    avatarText: "QA",
+    avatarText: "CC",
     avatarBg: "bg-avatar-pink",
     notifications: false,
     category: "chat",
@@ -232,14 +232,14 @@ export const initialChats: Chat[] = [
       {
         id: "st1",
         sender: "me",
-        text: "Dịch giúp mình câu này sang tiếng Anh: 'Xây dựng phòng marketing ảo của riêng bạn'",
+        text: "Tra cứu thông tin tín dụng CIC khách hàng Lê Văn B, CCCD số 012345678901",
         time: "09:30",
         read: true
       },
       {
         id: "st2",
         sender: "them",
-        text: "Quick Assistant: 'Build your own virtual marketing department.'",
+        text: "Quick Assistant: Khách hàng Lê Văn B, CCCD 012345678901. Lịch sử tín dụng: Nhóm 1 (Tốt), tổng dư nợ hiện tại 150 triệu đồng tại 2 TCTD. Không có nợ xấu.",
         time: "09:31",
         read: true
       }
@@ -248,9 +248,9 @@ export const initialChats: Chat[] = [
   },
   {
     id: "session_copywriting",
-    name: "Viết bài PR mẫu ✍️",
+    name: "Hỏi đáp chính sách SHB 📖",
     status: "Quick Assistant",
-    avatarText: "PR",
+    avatarText: "CS",
     avatarBg: "bg-avatar-green",
     notifications: false,
     category: "chat",
@@ -258,14 +258,14 @@ export const initialChats: Chat[] = [
       {
         id: "sc1",
         sender: "me",
-        text: "Gợi ý cho mình 3 tiêu đề giật gân bán khóa học AI.",
+        text: "Hạn mức cho vay tối đa đối với sản phẩm Vay mua nhà dự án là bao nhiêu?",
         time: "Friday",
         read: true
       },
       {
         id: "sc2",
         sender: "them",
-        text: "Quick Assistant:\n1. 'Đừng để bị sa thải: Học AI hoặc bị thay thế trong 6 tháng tới!'\n2. 'Bí mật x10 hiệu suất làm việc bằng AI chỉ với 2 giờ học'\n3. 'Làm chủ AI ngay hôm nay: Kỹ năng bắt buộc để dẫn đầu năm 2026'",
+        text: "Quick Assistant:\nTheo quy định hiện hành của SHB:\n1. Tỷ lệ cho vay tối đa lên tới 85% giá trị tài sản bảo đảm.\n2. Thời hạn vay tối đa lên tới 25 năm.\n3. Tài sản bảo đảm có thể là chính căn hộ/nhà đất dự án định mua hoặc tài sản độc lập khác.",
         time: "Friday",
         read: true
       }
@@ -284,12 +284,12 @@ export const initialChats: Chat[] = [
     category: "agent",
     pinned: true,
     verified: true,
-    description: "Khởi tạo, cấu hình và quản lý các Agent trong hệ thống",
+    description: "Hệ thống điều phối các chuyên gia nghiệp vụ ngân hàng SHB. Giúp khởi tạo, liên kết quy trình và giám sát các tác tử tín dụng, pháp lý, sản phẩm.",
     messages: [
       {
         id: "mth1",
         sender: "them",
-        text: "Chào sếp! Em là AucoMother. Em chịu trách nhiệm khởi tạo, cấu hình và phân phối công việc cho các Agent khác trong phòng marketing. Sếp có muốn thiết lập thêm trợ lý mới nào không?",
+        text: "Chào chuyên viên! Em là AucoMother - Trợ lý điều phối ngân hàng SHB. Em chịu trách nhiệm khởi tạo, cấu hình và phân phối hồ sơ cho các Agent nghiệp vụ tín dụng. Sếp có muốn thiết lập luồng thẩm định hồ sơ mới nào không?",
         time: "13:38",
         read: true
       }
@@ -298,32 +298,32 @@ export const initialChats: Chat[] = [
   },
   {
     id: "agent_content",
-    name: "Content Creator AI 📝",
+    name: "Planner Agent 📋",
     status: "last seen recently",
-    avatarText: "CA",
+    avatarText: "PL",
     avatarBg: "bg-avatar-pink",
     notifications: false,
     category: "agent",
-    description: "Chuyên viết copy, viết bài PR, biên dịch và sáng tạo nội dung",
+    description: "Lập kế hoạch thẩm định, phân tích hồ sơ ban đầu và điều phối luồng xử lý tín dụng.",
     messages: [
       {
         id: "ac1",
         sender: "them",
-        text: "Content Creator AI: Chào sếp, em chuyên viết copy, bài đăng social, bài PR và dịch thuật. Em có thể điều chỉnh văn phong theo yêu cầu của sếp.",
+        text: "Planner Agent: Chào sếp, em phụ trách tiếp nhận hồ sơ, kiểm tra tính đầy đủ của giấy tờ pháp lý/tài chính ban đầu và lập kế hoạch rà soát chi tiết cho các Agent tiếp theo.",
         time: "11:22",
         read: true
       },
       {
         id: "ac2",
         sender: "me",
-        text: "Soạn giúp em 1 caption bán hàng cho campaign Tết nhé",
+        text: "Khách hàng nộp hồ sơ vay doanh nghiệp cần những tài liệu cốt lõi nào?",
         time: "13:45",
         read: true
       },
       {
         id: "ac3",
         sender: "them",
-        text: "Content Creator AI:\n\nCaption đề xuất:\n\nTết sum vầy bắt đầu từ món ngon… 🧧\nMâm cỗ đủ đầy – nhà cửa ấm cúng – mãi bên nhau!\n\nCTA: Đặt trước combo Tết trước 28/1 để nhận quà.\n\nSếp duyệt giúp em nhé!",
+        text: "Planner Agent:\n\nDanh mục tài liệu cốt lõi cần thu thập:\n1. Hồ sơ pháp lý: ĐKKD, Điều lệ, Nghị quyết bổ nhiệm người đại diện pháp luật.\n2. Hồ sơ tài chính: Báo cáo tài chính 2 năm gần nhất, Tờ khai thuế VAT, Sổ chi tiết công nợ.\n3. Hồ sơ phương án vay: Hợp đồng đầu vào/đầu ra chứng minh phương án sử dụng vốn.\n\nSếp cần em lập check-list chi tiết gửi khách hàng không?",
         time: "13:48",
         read: true
       }
@@ -332,18 +332,18 @@ export const initialChats: Chat[] = [
   },
   {
     id: "agent_designer",
-    name: "Designer AI 🎨",
+    name: "Credit Agent 💳",
     status: "last seen recently",
-    avatarText: "DA",
+    avatarText: "CR",
     avatarBg: "bg-avatar-blue",
     notifications: false,
     category: "agent",
-    description: "Thiết kế banner, ảnh bìa, infographic và hình ảnh chiến dịch",
+    description: "Thực hiện thẩm định tài chính, phân tích dòng tiền, đánh giá khả năng trả nợ và đề xuất hạn mức tín dụng.",
     messages: [
       {
         id: "ad1",
         sender: "them",
-        text: "Designer AI: Em chuyên thiết kế banner, ảnh bìa, infographic và thumbnail Youtube bằng các model sinh ảnh tốt nhất. Sếp cần làm ấn phẩm gì ạ?",
+        text: "Credit Agent: Em chuyên phân tích khả năng tài chính của doanh nghiệp và cá nhân, tính toán các chỉ số tài chính (DSCR, Leverage, EBITDA) và đưa ra mức tín dụng an toàn đề xuất.",
         time: "10:15",
         read: true
       }
@@ -352,18 +352,18 @@ export const initialChats: Chat[] = [
   },
   {
     id: "agent_research",
-    name: "Research AI 🔍",
+    name: "Legal & Compliance Agent ⚖️",
     status: "online",
-    avatarText: "RA",
+    avatarText: "LE",
     avatarBg: "bg-avatar-green",
     notifications: false,
     category: "agent",
-    description: "Tìm kiếm web, đọc hiểu tài liệu và phân tích đối thủ cạnh tranh",
+    description: "Kiểm tra tính pháp lý của hồ sơ khách hàng, đối chiếu quy định nội bộ SHB và quy định pháp luật của NHNN.",
     messages: [
       {
         id: "ar1",
         sender: "them",
-        text: "Research AI: Em hỗ trợ tìm kiếm web, tổng hợp tài liệu, phân tích đối thủ cạnh tranh và lập báo cáo. Hãy gửi từ khóa hoặc link tài liệu cho em nhé.",
+        text: "Legal & Compliance Agent: Em rà soát tính hợp pháp của tài sản thế chấp, tư cách pháp lý của bên vay/bên bảo lãnh và đảm bảo mọi quy trình tuân thủ đúng Luật các Tổ chức tín dụng.",
         time: "Yesterday",
         read: true
       }
@@ -372,18 +372,18 @@ export const initialChats: Chat[] = [
   },
   {
     id: "agent_publisher",
-    name: "Publisher AI ✈️",
+    name: "Product Agent 📦",
     status: "last seen recently",
-    avatarText: "PA",
+    avatarText: "PR",
     avatarBg: "bg-avatar-orange",
     notifications: false,
     category: "agent",
-    description: "Lên lịch đăng bài và tự động xuất bản lên Facebook/TikTok",
+    description: "Đề xuất cấu trúc gói sản phẩm vay phù hợp, áp dụng biểu lãi suất ưu đãi và các điều kiện đi kèm.",
     messages: [
       {
         id: "ap1",
         sender: "them",
-        text: "Publisher AI: Em kết nối trực tiếp với các kênh Facebook Page, TikTok Shop, Group và Telegram. Em sẽ lên lịch đăng bài và tự động xuất bản theo lệnh của sếp.",
+        text: "Product Agent: Em hỗ trợ đề xuất các gói sản phẩm của SHB (như tài trợ xích đu, thấu chi doanh nghiệp, vay mua ô tô ưu đãi) kèm theo các điều kiện giải ngân và quản lý rủi ro.",
         time: "Jul 12",
         read: true
       }
