@@ -95,14 +95,21 @@ export class McpGatewayService implements OnModuleDestroy {
     agentRole: AgentRole;
     tool: string;
     args?: Record<string, unknown>;
+    /** Phase 9 baseline single-agent — intentionally bypass role allowlist */
+    skipAllowlist?: boolean;
   }): Promise<McpCallResult> {
     if (!this.enabled) {
       throw new Error('MCP suite disabled (MCP_SUITE_ENABLED=false)');
     }
 
-    this.assertAllowed(opts.agentRole, opts.tool);
+    if (!opts.skipAllowlist) {
+      this.assertAllowed(opts.agentRole, opts.tool);
+    }
     const bankCode = opts.bankCode?.trim() || 'SHB';
-    const capability = toolCapability(opts.tool)!;
+    const capability = toolCapability(opts.tool);
+    if (!capability) {
+      throw new Error(`Unknown MCP tool: ${opts.tool}`);
+    }
     const connector = this.registry.resolve(bankCode, capability);
     const toolMeta = connector.tools.find((t) => t.name === opts.tool);
 
@@ -116,7 +123,7 @@ export class McpGatewayService implements OnModuleDestroy {
     const latencyMs = Date.now() - started;
 
     this.logger.log(
-      `MCP ${connector.serverName}.${opts.tool} ${latencyMs}ms role=${opts.agentRole}`,
+      `MCP ${connector.serverName}.${opts.tool} ${latencyMs}ms role=${opts.agentRole}${opts.skipAllowlist ? ' [baseline]' : ''}`,
     );
 
     return {

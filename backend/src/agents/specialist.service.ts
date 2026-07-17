@@ -34,36 +34,123 @@ export class SpecialistService {
       goal: string;
       bankCode?: string;
       priorOutputs: Record<string, unknown>;
+      /** Phase 9 compare: finish DAG without parking on mutate propose */
+      skipApprovalPropose?: boolean;
+      /** Phase 9 baseline: one generalist with full tools, no Planner */
+      baseline?: boolean;
     },
   ): Promise<SpecialistResult> {
-    const role = step.agentRole as AgentRole;
-    const mode =
-      step.mode ?? (role === 'credit' ? 'spawn_workers' : 'direct');
     const bankCode = ctx.bankCode ?? 'SHB';
     const customer = this.extractCustomerHints(ctx.goal, step.goal);
 
+    if (ctx.baseline) {
+      return this.runBaseline(bankCode, customer, step, ctx.goal);
+    }
+
+    const role = step.agentRole as AgentRole;
+    const mode =
+      step.mode ?? (role === 'credit' ? 'spawn_workers' : 'direct');
+
     if (mode === 'spawn_workers' && role === 'credit') {
-      return this.runCreditWorkers(bankCode, customer, step);
+      return this.runCreditWorkers(bankCode, customer, step, ctx.skipApprovalPropose);
     }
 
     if (role === 'legal') {
-      return this.runLegal(bankCode, customer, step);
+      return this.runLegal(bankCode, customer, step, ctx.skipApprovalPropose);
     }
     if (role === 'product') {
       return this.runProduct(bankCode, customer, step, ctx.priorOutputs);
     }
     if (role === 'ops') {
-      return this.runOps(bankCode, customer, step);
+      return this.runOps(bankCode, customer, step, ctx.skipApprovalPropose);
     }
 
-    // credit direct fallback
-    return this.runCreditWorkers(bankCode, customer, step);
+    return this.runCreditWorkers(bankCode, customer, step, ctx.skipApprovalPropose);
+  }
+
+  /** Single-agent baseline: 1 step, full tools across domains, no allowlist, no Approval. */
+  private async runBaseline(
+    bankCode: string,
+    customer: Record<string, string>,
+    step: TaskStepPlan,
+    goal: string,
+  ): Promise<SpecialistResult> {
+    const args = { bankCode, ...customer };
+    const calls = await Promise.all([
+      this.mcp.callTool({
+        bankCode,
+        agentRole: 'credit',
+        tool: 'get_credit_score',
+        args,
+        skipAllowlist: true,
+      }),
+      this.mcp.callTool({
+        bankCode,
+        agentRole: 'legal',
+        tool: 'run_aml_check',
+        args,
+        skipAllowlist: true,
+      }),
+      this.mcp.callTool({
+        bankCode,
+        agentRole: 'product',
+        tool: 'compare_products',
+        args: { purpose: goal, segment: 'retail' },
+        skipAllowlist: true,
+      }),
+      // Wrong-domain call (credit persona listing products) — shows allowlist gap
+      this.mcp.callTool({
+        bankCode,
+        agentRole: 'credit',
+        tool: 'list_products',
+        args: {},
+        skipAllowlist: true,
+      }),
+    ]);
+
+    const kb = await this.rag.kbTool('legal_kb_search', {
+      bankCode,
+      query: goal.slice(0, 120),
+      limit: 1,
+    });
+
+    return {
+      mode: 'direct',
+      toolCalls: [
+        ...calls.map((r, i) => ({
+          id: `b${i + 1}`,
+          tool: r.tool,
+          mcp: r.mcp,
+          capability: r.capability,
+          mutates: r.mutates,
+          latencyMs: r.latencyMs,
+          baseline: true,
+          domainCorrect: false,
+          output: r.output,
+        })),
+        {
+          id: 'b-rag',
+          tool: kb.tool,
+          mcp: 'rag',
+          capability: 'rag',
+          mutates: false,
+          output: { summary: kb.summary, citations: kb.citations },
+        },
+      ],
+      output: {
+        summary: `Baseline single-agent: trả lời gộp Credit+Legal+Product trong 1 step (không Planner, không allowlist). Citation mỏng (${kb.citations.length}).`,
+        baseline: true,
+        citations: kb.citations,
+        stepGoal: step.goal,
+      },
+    };
   }
 
   private async runCreditWorkers(
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    skipApprovalPropose?: boolean,
   ): Promise<SpecialistResult> {
     const args = { bankCode, ...customer };
     const workers = [
@@ -110,23 +197,25 @@ export class SpecialistService {
       eligOut?.maxAmountVnd ||
       1_600_000_000;
 
-    const pendingApproval: PendingApproval = {
-      reason: 'mutates',
-      preview: `Đề xuất gửi hồ sơ vay ${amountVnd.toLocaleString('vi-VN')} VND cho ${customer.customerNo ?? customer.fullName ?? 'KH'} qua mcp-los.submit_loan_application — chờ duyệt.`,
-      tool: 'submit_loan_application',
-      agentRole: 'credit',
-      mcp: 'mcp-los-shb',
-      capability: 'los',
-      args: {
-        bankCode,
-        customerNo: customer.customerNo,
-        customerId: customer.customerId,
-        fullName: customer.fullName,
-        amountVnd,
-        productId: 'shb-home-standard',
-        note: step.goal.slice(0, 200),
-      },
-    };
+    const pendingApproval: PendingApproval | undefined = skipApprovalPropose
+      ? undefined
+      : {
+          reason: 'mutates',
+          preview: `Đề xuất gửi hồ sơ vay ${amountVnd.toLocaleString('vi-VN')} VND cho ${customer.customerNo ?? customer.fullName ?? 'KH'} qua mcp-los.submit_loan_application — chờ duyệt.`,
+          tool: 'submit_loan_application',
+          agentRole: 'credit',
+          mcp: 'mcp-los-shb',
+          capability: 'los',
+          args: {
+            bankCode,
+            customerNo: customer.customerNo,
+            customerId: customer.customerId,
+            fullName: customer.fullName,
+            amountVnd,
+            productId: 'shb-home-standard',
+            note: step.goal.slice(0, 200),
+          },
+        };
 
     return {
       mode: 'spawn_workers',
@@ -139,6 +228,7 @@ export class SpecialistService {
           mutates: r.mutates,
           bankCode: r.bankCode,
           latencyMs: r.latencyMs,
+          domainCorrect: true,
           output: r.output,
         })),
         {
@@ -148,30 +238,53 @@ export class SpecialistService {
           capability: 'rag',
           mutates: false,
           mode: kb.mode,
+          domainCorrect: true,
           output: { summary: kb.summary, citations: kb.citations },
         },
-        {
-          id: 'pending-submit',
-          tool: pendingApproval.tool,
-          mcp: pendingApproval.mcp,
-          capability: pendingApproval.capability,
-          mutates: true,
-          requiresApproval: true,
-          status: 'pending_approval',
-          args: pendingApproval.args,
-        },
+        ...(pendingApproval
+          ? [
+              {
+                id: 'pending-submit',
+                tool: pendingApproval.tool,
+                mcp: pendingApproval.mcp,
+                capability: pendingApproval.capability,
+                mutates: true,
+                requiresApproval: true,
+                status: 'pending_approval',
+                domainCorrect: true,
+                args: pendingApproval.args,
+              },
+            ]
+          : [
+              {
+                id: 'compare-submit-skipped',
+                tool: 'submit_loan_application',
+                mcp: 'mcp-los-shb',
+                capability: 'los',
+                mutates: true,
+                requiresApproval: true,
+                status: 'skipped_for_compare',
+                domainCorrect: true,
+              },
+            ]),
       ],
       pendingApproval,
       output: {
-        summary: `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'}; ${pendingApproval.preview}`,
+        summary: pendingApproval
+          ? `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'}; ${pendingApproval.preview}`
+          : `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'} (compare: bỏ qua propose mutate).`,
         eligible: eligOut?.eligible ?? false,
         score: scoreOut?.score ?? null,
         maxAmountVnd: eligOut?.maxAmountVnd ?? null,
         recommendation: eligOut?.recommendation ?? 'refer_manual_review',
         workers: results.map((r) => r.id),
         citations: kb.citations,
-        approvalReason: 'mutates',
-        approvalPreview: pendingApproval.preview,
+        ...(pendingApproval
+          ? {
+              approvalReason: 'mutates',
+              approvalPreview: pendingApproval.preview,
+            }
+          : {}),
         stepGoal: step.goal,
       },
     };
@@ -181,6 +294,7 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    skipApprovalPropose?: boolean,
   ): Promise<SpecialistResult> {
     const aml = await this.mcp.callTool({
       bankCode,
@@ -223,23 +337,38 @@ export class SpecialistService {
       amlOut.status === 'block' ||
       /fx|ngoại|usd/i.test(`${step.goal}`);
 
-    const pendingApproval: PendingApproval | undefined = needsFlag
-      ? {
-          reason: 'mutates',
-          preview: `Đề xuất gắn cờ giao dịch / hồ sơ ${customer.customerNo ?? 'KH'} (AML ${amlOut.status}) qua mcp-compliance.flag_transaction — chờ duyệt.`,
-          tool: 'flag_transaction',
-          agentRole: 'legal',
-          mcp: 'mcp-compliance-shb',
-          capability: 'compliance',
-          args: {
-            bankCode,
-            customerNo: customer.customerNo,
-            fullName: customer.fullName,
-            reason: `AML ${amlOut.status}: ${(amlOut.flags ?? []).join(', ') || step.goal.slice(0, 120)}`,
-            currency: 'USD',
-          },
-        }
-      : undefined;
+    const pendingApproval: PendingApproval | undefined =
+      needsFlag && !skipApprovalPropose
+        ? {
+            reason: 'mutates',
+            preview: `Đề xuất gắn cờ giao dịch / hồ sơ ${customer.customerNo ?? 'KH'} (AML ${amlOut.status}) qua mcp-compliance.flag_transaction — chờ duyệt.`,
+            tool: 'flag_transaction',
+            agentRole: 'legal',
+            mcp: 'mcp-compliance-shb',
+            capability: 'compliance',
+            args: {
+              bankCode,
+              customerNo: customer.customerNo,
+              fullName: customer.fullName,
+              reason: `AML ${amlOut.status}: ${(amlOut.flags ?? []).join(', ') || step.goal.slice(0, 120)}`,
+              currency: 'USD',
+            },
+          }
+        : undefined;
+
+    const skippedMutate =
+      needsFlag && skipApprovalPropose
+        ? {
+            id: 'compare-flag-skipped',
+            tool: 'flag_transaction',
+            mcp: 'mcp-compliance-shb',
+            capability: 'compliance',
+            mutates: true,
+            requiresApproval: true,
+            status: 'skipped_for_compare',
+            domainCorrect: true,
+          }
+        : null;
 
     return {
       mode: 'direct',
@@ -251,6 +380,7 @@ export class SpecialistService {
           capability: aml.capability,
           mutates: aml.mutates,
           latencyMs: aml.latencyMs,
+          domainCorrect: true,
           output: aml.output,
         },
         {
@@ -260,6 +390,7 @@ export class SpecialistService {
           capability: 'rag',
           mutates: false,
           mode: kb.mode,
+          domainCorrect: true,
           output: { summary: kb.summary, citations: kb.citations },
         },
         {
@@ -269,6 +400,7 @@ export class SpecialistService {
           capability: reg.capability,
           mutates: reg.mutates,
           latencyMs: reg.latencyMs,
+          domainCorrect: true,
           output: reg.output,
         },
         ...(pendingApproval
@@ -281,15 +413,17 @@ export class SpecialistService {
                 mutates: true,
                 requiresApproval: true,
                 status: 'pending_approval',
+                domainCorrect: true,
                 args: pendingApproval.args,
               },
             ]
           : []),
+        ...(skippedMutate ? [skippedMutate] : []),
       ],
       pendingApproval,
       output: {
         summary: topCite
-          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.${pendingApproval ? ` ${pendingApproval.preview}` : ''}`
+          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.${pendingApproval ? ` ${pendingApproval.preview}` : skippedMutate ? ' (compare: bỏ qua propose flag).' : ''}`
           : `Legal: AML ${amlOut.status ?? 'unknown'}; chưa có citation RAG.`,
         amlStatus: amlOut.status ?? null,
         risk: amlOut.risk ?? null,
@@ -337,6 +471,7 @@ export class SpecialistService {
           capability: compare.capability,
           mutates: compare.mutates,
           latencyMs: compare.latencyMs,
+          domainCorrect: true,
           output: compare.output,
         },
       ],
@@ -356,41 +491,62 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    skipApprovalPropose?: boolean,
   ): Promise<SpecialistResult> {
-    const pendingApproval: PendingApproval = {
-      reason: 'mutates',
-      preview: `Đề xuất tạo ticket vận hành: "${step.goal.slice(0, 80)}" — chờ duyệt trước khi gọi mcp-ops.create_service_ticket.`,
-      tool: 'create_service_ticket',
-      agentRole: 'ops',
-      mcp: 'mcp-ops-shb',
-      capability: 'ops',
-      args: {
-        subject: step.goal.slice(0, 120),
-        department: 'ops',
-        customerNo: customer.customerNo,
-        priority: 'medium',
-      },
-    };
+    const pendingApproval: PendingApproval | undefined = skipApprovalPropose
+      ? undefined
+      : {
+          reason: 'mutates',
+          preview: `Đề xuất tạo ticket vận hành: "${step.goal.slice(0, 80)}" — chờ duyệt trước khi gọi mcp-ops.create_service_ticket.`,
+          tool: 'create_service_ticket',
+          agentRole: 'ops',
+          mcp: 'mcp-ops-shb',
+          capability: 'ops',
+          args: {
+            subject: step.goal.slice(0, 120),
+            department: 'ops',
+            customerNo: customer.customerNo,
+            priority: 'medium',
+          },
+        };
 
     return {
       mode: 'direct',
       toolCalls: [
-        {
-          id: 'pending-ticket',
-          tool: pendingApproval.tool,
-          mcp: pendingApproval.mcp,
-          capability: pendingApproval.capability,
-          mutates: true,
-          requiresApproval: true,
-          status: 'pending_approval',
-          args: pendingApproval.args,
-        },
+        pendingApproval
+          ? {
+              id: 'pending-ticket',
+              tool: pendingApproval.tool,
+              mcp: pendingApproval.mcp,
+              capability: pendingApproval.capability,
+              mutates: true,
+              requiresApproval: true,
+              status: 'pending_approval',
+              domainCorrect: true,
+              args: pendingApproval.args,
+            }
+          : {
+              id: 'compare-ticket-skipped',
+              tool: 'create_service_ticket',
+              mcp: 'mcp-ops-shb',
+              capability: 'ops',
+              mutates: true,
+              requiresApproval: true,
+              status: 'skipped_for_compare',
+              domainCorrect: true,
+            },
       ],
       pendingApproval,
       output: {
-        summary: pendingApproval.preview,
-        approvalReason: 'mutates',
-        approvalPreview: pendingApproval.preview,
+        summary: pendingApproval
+          ? pendingApproval.preview
+          : `Ops: đề xuất ticket (compare: bỏ qua Approval) — ${step.goal.slice(0, 80)}`,
+        ...(pendingApproval
+          ? {
+              approvalReason: 'mutates' as const,
+              approvalPreview: pendingApproval.preview,
+            }
+          : {}),
         stepGoal: step.goal,
       },
     };

@@ -82,7 +82,8 @@ npm run prisma:seed:railway
 | Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | |
 | Phase 6 — RAG hybrid (pgvector + FTS + citations) | |
 | Phase 7 — Approval HITL + WebSocket | |
-| Phase 8 — Automations (cron scan + run-now) | Done P0 backend |
+| Phase 8 — Automations (cron scan + run-now) | |
+| Phase 9 — Compare single vs multi (`POST /api/compare`) | Done P0 backend |
 
 ### Phase 4 API
 
@@ -148,3 +149,13 @@ Credit proposes submit_loan_application (no call until approve). Legal FX may pr
 | `GET` | `/api/automations/:id/runs` | AutomationRun list |
 
 Scheduler: DB scan every 30s for `enabled && nextRunAt <= now`. Graph: trigger.cron → extract → llm-transform → notification. WS: `automation.run.updated`.
+
+### Phase 9 — Compare (single vs multi)
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/api/compare` | Body: `{ goal, bankCode? }` → `{ multi, single, verdict }` |
+
+- **Multi:** Planner DAG (demo pin Credit‖Legal→Product), `skipApprovalPropose` so run finishes without HITL park; metrics still count Approval-gated mutates as `realActions`.
+- **Single:** 1 baseline step, no Planner; MCP allowlist bypass (`skipAllowlist`); thin RAG; no mutate/Approval.
+- Metrics align FE `CompareMetrics`: `latencyMs`, `toolAccuracy`, `citationCount`, `realActions`, `totalTokens`, `costUsd`, `notes` (+ `taskRunId`).

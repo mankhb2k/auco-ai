@@ -27,7 +27,13 @@ export class OrchestratorService {
       include: { steps: true },
     });
 
-    const plan = task.planJson as unknown as TaskPlan;
+    const plan = task.planJson as unknown as TaskPlan & {
+      skipApprovalPropose?: boolean;
+      baseline?: boolean;
+      orchestrationMode?: 'multi' | 'single';
+    };
+    const skipApprovalPropose = plan.skipApprovalPropose === true;
+    const baseline = plan.baseline === true;
     const stepByPlanId = new Map(
       task.steps.map((s) => {
         const input = s.input as { planStepId?: string } | null;
@@ -96,6 +102,8 @@ export class OrchestratorService {
               priorOutputs,
               doneIds,
               failedIds,
+              skipApprovalPropose,
+              baseline,
             });
             if (outcome === 'waiting_approval') hitApproval = true;
           }),
@@ -171,6 +179,8 @@ export class OrchestratorService {
     priorOutputs: Record<string, unknown>;
     doneIds: Set<string>;
     failedIds: Set<string>;
+    skipApprovalPropose?: boolean;
+    baseline?: boolean;
   }): Promise<'done' | 'failed' | 'waiting_approval'> {
     const { stepPlan, dbStepId, priorOutputs, doneIds, failedIds } = opts;
     const startedAt = new Date();
@@ -190,6 +200,8 @@ export class OrchestratorService {
         goal: opts.goal,
         bankCode: opts.bankCode,
         priorOutputs,
+        skipApprovalPropose: opts.skipApprovalPropose,
+        baseline: opts.baseline,
       });
 
       if (result.pendingApproval) {
