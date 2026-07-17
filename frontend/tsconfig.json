@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@aucobot/shared": ["./lib/shared/index.ts"]
+      "@auco-ai/shared": ["./lib/shared/index.ts"]
     }
   },
   "include": [
