@@ -35,17 +35,23 @@
 | 15 | **DAG kịch bản demo: cố định 3 TaskStep chuyên gia** (ghim few-shot) — case ngoài kịch bản Planner vẫn `generateObject` động, có trần (§2.4) | Demo ổn định, đủ ≥2–3 chuyên gia theo đề bài; không để plan lệch lúc live |
 | 16 | **MCP ưu tiên implement thật: `mcp-los` + `mcp-compliance`**; `core-banking` / `product` / `ops` = mock nông cùng contract (§3) | Đủ minh họa side-effect + RAG/compliance; giảm scope triển khai |
 | 17 | **Planner điều phối theo Agent Catalog + Zod enum + validation + tool allowlist** — không “đoán tự do” (§2.5) | Tránh giao việc nhầm domain; sai routing bị chặn trước khi Specialist chạy |
-| 18 | **LLM demo: OpenAI primary** (Planner + Specialist tool-calling); **Gemini fallback** khi rate-limit/lỗi; embedding tách provider (§5.4E) | Banking demo phụ thuộc structured plan + tool ổn định hơn “model nào giỏi ngân hàng hơn”; OpenAI chín hơn cho agent loop; Gemini rẻ/ổn làm dự phòng |
+| 18 | **LLM: MỘT model mặc định (OpenAI) cho mọi agent** — env platform quản; **Gemini fallback** chỉ do gateway kích hoạt khi lỗi; nhân viên **không đổi model**, không BYOK (§5.4) | Đơn giản, audit nhất quán, đúng mô hình ngân hàng: model là hạ tầng được duyệt |
+| 19 | **Data scope theo nhân viên (mô phỏng nhẹ, không phải auth thật):** `Employee`/`Customer`/`CustomerPortfolio` + scope-check trước khi gọi MCP, tái dùng Approval khi ngoài danh mục (§2.7) | Đúng nguyên tắc need-to-know của ngân hàng; chi phí thấp vì tái dùng Approval có sẵn |
+| 20 | **`bankCode` là seam trên mọi model lõi** (TaskRun, Automation, KnowledgeDocument, Customer, Employee) — demo chỉ seed 1 giá trị `"SHB"`, không xây tenant-switcher UI (§9.5.2) | Sẵn sàng mở rộng nhiều ngân hàng mà không migrate lại schema; đúng tầm nhìn startup multi-bank |
+| 21 | **Agent × MCP là catalog ship sẵn (4 chuyên gia cấu hình đầy đủ)** — không có UI cho user cuối tự thêm/xóa tool; admin config = roadmap sau demo (§3.5) | Đúng tinh thần "dùng chuyên gia", không "lắp ráp agent"; giữ nguyên guardrail routing đã chốt ở §2.5 |
+| 22 | **RAG nâng cấp "lite":** hybrid vector + Postgres full-text, bảng `DocumentRelation` (amends/supersedes), `effectiveFrom/To` versioning trên `KnowledgeDocument` — **không** xây Graph DB / BM25 engine / Conflict Detector NLP riêng (§4.3) | Giải đúng bài toán "quy định sửa đổi nhiều lần" với chi phí thấp, tránh rủi ro tích hợp hệ thống R&D riêng trong 48h |
+| 23 | **Không có Group / multi-session như Aucobot** — "session" = 1 `TaskRun`; chỉ cần 1 Planner (hạ tầng, ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) | Chọn chuyên gia là việc của Planner có kiểm soát, không phải user tự ráp bot; giữ UX tối giản đúng scope 48h |
 
 **Đã cân nhắc và loại bỏ:**
 
 - Next.js fullstack + Vercel + Supabase — loại vì giám khảo đánh giá devops
-- Auth / multi-tenant — không thuộc deliverable
+- Auth / multi-tenant **UI** — không thuộc deliverable; nhưng **schema đã chừa seam `bankCode`/`employeeId`** (§9.5)
 - Monorepo `packages/*` + Turborepo — tăng độ phức tạp khi FE/BE làm song song
 - Mesh agent↔agent tự do — vòng lặp / khó audit; thay bằng fractal star có trần worker
 - Một MCP server khổng lồ chứa toàn bộ tool SHB — mất ranh giới hệ thống và audit
 - Auto-approve làm mặc định demo — loại; chỉ người thật duyệt side-effect
 - **User tự dán API key / BYOK per agent trong demo** — loại: conflict với không auth, rủi ro lộ key trên UI, không chứng minh multi-agent banking; để sau demo nếu làm SaaS
+- **RBAC engine tổng quát / vault / tenant-switcher UI trong 48h** — loại: chi phí cao, không đổi kết quả demo; chỉ giữ seam schema (§9.5.1)
 
 ---
 
@@ -60,6 +66,20 @@
 3. Tool-use thật: gọi API / truy vấn dữ liệu / hành động cụ thể
 4. **Dashboard** hiển thị trace agent, trạng thái nhiệm vụ, quyết định, luồng cộng tác
 5. **So sánh** single-agent chatbot vs hệ thống multi-agent
+
+### 1.1 Phân khúc khách hàng & giá trị (pitch) ✅
+
+Dùng cho slide pitch — ai dùng hệ thống và ai hưởng lợi, khớp với các vai trò đã có trong kiến trúc (Employee/Portfolio §2.7, Approval §6):
+
+| Nhóm | Ai | Khớp với kiến trúc |
+|---|---|---|
+| **Người dùng trực tiếp** | Nhân viên Tín dụng | `Employee.role = credit_officer` — gửi yêu cầu qua chat, nhận kết quả Credit Agent |
+| | Nhân viên Vận hành | `Employee.role = ops_officer` — theo dõi ticket, tạo hồ sơ (Ops Agent) |
+| | Bộ phận giám sát quy trình / đánh giá rủi ro / duyệt cuối | **Người duyệt trên Approval panel** (§6) — chính là vai trò `branch_manager`/reviewer đã thiết kế, không phải vai trò mới |
+| **Người dùng gián tiếp** | Khách hàng cá nhân / doanh nghiệp SHB | Không đăng nhập hệ thống — là đối tượng được nhân viên tra cứu (`Customer` trong `CustomerPortfolio`, §2.7) |
+| | Đối tượng hưởng lợi từ tốc độ duyệt | Ví dụ: DN cần vốn gấp nhập hàng trong ngày — multi-agent chạy song song (Credit ‖ Legal) rút thời gian duyệt từ 2–3 ngày xuống còn vài phút cho case đủ điều kiện rõ ràng |
+
+**Câu pitch dùng được ngay:** *"Hệ thống không chỉ giúp nhân viên trả lời nhanh hơn — nó rút ngắn thời gian một doanh nghiệp cần vốn gấp phải chờ, từ vài ngày xuống vài phút, nhờ 3 chuyên gia số làm việc song song thay vì tuần tự qua nhiều phòng ban."*
 
 ---
 
@@ -93,6 +113,8 @@ Ops / tạo hồ sơ vận hành: nếu còn thời gian demo, gắn vào **Appr
 ```prisma
 model TaskRun {
   id          String   @id @default(cuid())
+  bankCode    String   @default("SHB")     // seam multi-tenant — xem §9.5
+  employeeId  String?                      // actor khởi tạo — xem §2.7 (nullable = "demo employee" mặc định)
   goal        String   @db.Text
   status      String                    // planning | running | done | failed
   planJson    Json
@@ -117,6 +139,8 @@ model TaskStep {
 ```
 
 Bảng này vừa là engine chạy plan, vừa là nguồn dữ liệu duy nhất nuôi Dashboard — không trùng lặp state.
+
+> `bankCode` và `employeeId` là **seam** (chỗ chờ sẵn), không phải auth thật. Demo seed 1 `bankCode = "SHB"` và 1 employee mặc định — nhưng schema đã sẵn sàng cho nhiều ngân hàng / nhiều nhân viên sau này mà không phải migrate lại (§9.5).
 
 ### 2.2 Luồng chạy
 
@@ -338,6 +362,110 @@ model AutomationRun {
 
 Demo: **1 automation mẫu** (báo cáo tháng) + nút *Chạy thử ngay*.
 
+### 2.7 Nhân viên được dùng data khách hàng nào? — Data scope ✅
+
+**Câu hỏi đúng và còn thiếu trong bản trước:** hệ thống đang giả định 1 phiên duy nhất, "hỏi gì cũng trả lời được", không phân biệt nhân viên A chỉ được xem khách hàng do mình quản lý hay khách toàn ngân hàng. Trong banking thật, đây **không phải chi tiết phụ** — là nguyên tắc *need-to-know* bắt buộc.
+
+**Đánh giá:** deliverable đề bài **không chấm trực tiếp** mục này (không phải multi-agent/RAG/MCP/dashboard). Nhưng chi phí thêm một **bản mô phỏng nhẹ** rất thấp, và nó biến câu chuyện "không auth" từ *lỗ hổng* thành *quyết định có chủ đích, đã lường trước governance*. Khuyến nghị: **làm bản mô phỏng, không làm auth thật.**
+
+#### Model tối thiểu
+
+```prisma
+model Employee {
+  id          String @id @default(cuid())
+  bankCode    String @default("SHB")
+  displayName String                    // "Nguyễn Thị B — Chuyên viên Tín dụng"
+  role        String                    // credit_officer | compliance_officer | ops_officer | branch_manager
+  branchCode  String?
+}
+
+model Customer {
+  id         String @id @default(cuid())
+  bankCode   String @default("SHB")
+  fullName   String
+  customerNo String
+  branchCode String?
+}
+
+model CustomerPortfolio {
+  id         String @id @default(cuid())
+  employeeId String
+  customerId String
+  bankCode   String @default("SHB")
+}
+```
+
+#### Luồng — không phải auth, là scope-check trước khi gọi MCP
+
+```text
+1. Demo KHÔNG có login — chỉ có 1 banner cố định:
+   "Đang dùng với vai trò: Nguyễn Thị B — Chuyên viên Tín dụng — CN Cầu Giấy"
+   (hoặc dropdown chọn giữa 2–3 employee mock, KHÔNG cần mật khẩu)
+2. TaskRun.employeeId = employee đang chọn (seed sẵn, không phải session thật)
+3. Trước khi Specialist gọi MCP tool cần customerId:
+     customerId ∈ CustomerPortfolio(employeeId)?
+       Có   → gọi tool bình thường
+       Không → TaskStep.status = waiting_approval
+               reason = "out_of_portfolio_access"
+               → hiện trên Approval panel: "Nhân viên X xin truy cập KH ngoài danh mục được giao"
+               → branch_manager (mô phỏng) duyệt mới cho tool chạy tiếp
+4. Mọi truy cập ngoài danh mục — duyệt hay từ chối — đều ghi vào TaskStep/Approval log
+```
+
+→ **Tái dùng nguyên cơ chế Approval đã có (§6)** — không phải xây thêm hệ thống quyền mới. Đây là điểm rất rẻ: 1 check trước dispatch + 1 reason code mới, không thêm bảng phức tạp.
+
+#### Vì sao nên làm (giá rẻ, giá trị cao)
+
+| Lợi ích | Chi tiết |
+|---|---|
+| Câu chuyện banking thật hơn | Giám khảo hỏi "AI có thấy hết data khách hàng không?" → có câu trả lời bằng demo, không chỉ bằng lời |
+| Demo có thêm 1 tình huống "wow" | Ngoài case chính (đủ điều kiện vay), thêm case phụ: hỏi về KH ngoài danh mục → hệ thống tự chặn + xin duyệt |
+| Không cần auth thật | Không JWT, không session, không password — chỉ 1 dropdown/banner tĩnh |
+| Sẵn seam cho production | `Employee`/`CustomerPortfolio` là mô hình thật ngân hàng cần — không phải mock bỏ đi sau demo |
+
+#### Không làm (ngoài phạm vi 48h)
+
+- Không đăng nhập/mật khẩu/session thật
+- Không RBAC engine tổng quát (permission matrix phức tạp)
+- Không đồng bộ portfolio thật từ HR/core banking
+
+#### Tóm tắt trả lời giám khảo
+
+> Nhân viên không thấy toàn bộ dữ liệu khách hàng. Mỗi nhân viên mock có **danh mục khách hàng được giao** (`CustomerPortfolio`); agent gọi MCP tool bị chặn nếu `customerId` ngoài danh mục, và phải qua **Approval** giống mọi side-effect khác. Đây là mô phỏng nhẹ, không phải hệ thống auth đầy đủ — nhưng thể hiện đúng nguyên tắc *need-to-know* của ngân hàng, tái dùng cơ chế approval đã có sẵn.
+
+### 2.8 Session / Group — có cần như Aucobot không? ✅
+
+**Trả lời ngắn: không cần Group; "session" chỉ đơn giản là 1 `TaskRun` mới.** Không cần hệ thống session/thread/group như Aucobot.
+
+Aucobot cho user **tự tay thêm nhiều bot vào 1 room** (group), rồi tự tổ chức nhiều cuộc hội thoại song song (sidebar nhiều thread, đổi tên, ghim, lưu trữ) — hợp lý cho một SaaS chat đa mục đích. Hệ thống này **khác về bản chất**: chuyên gia được **Planner tự động chọn có kiểm soát** (§2, §2.5) — người dùng không tự lắp ráp agent vào phòng. Việc "gom nhóm" chính là công việc của Planner, không phải của UI.
+
+| Khái niệm Aucobot | Cần cho demo này? | Thay bằng |
+|---|---|---|
+| **Group** (tự thêm nhiều bot vào 1 room) | ❌ Không | Planner tự chọn Specialist theo Agent Catalog (§2, §2.5) — cho user tự ráp sẽ phá guardrail chống điều phối nhầm |
+| Tạo/đổi tên/ghim/lưu trữ session | ❌ Không | "Gửi yêu cầu mới" = tạo 1 `TaskRun` mới — không có thao tác quản lý thread |
+| Sidebar nhiều cuộc hội thoại song song | 💡 Optional | Chỉ cần 1 tab "Lịch sử" liệt kê `TaskRun` cũ (đọc lại trace) — không rename/archive/pin |
+| Multi-user, mỗi user nhiều group riêng | ❌ Không | Không auth, 1 phiên cố định (§0 #9) |
+
+**Số agent cần dựng — chốt đúng như bạn tóm:**
+
+```text
+1 Planner    — hạ tầng điều phối, KHÔNG hiện diện như "1 bot" trong UI, không cần add vào group
+4 Specialist — Credit / Legal / Product / Ops, ship sẵn (§3.5)
+   Demo chính chạy 3 (Credit ‖ Legal → Product); Ops optional/off-script (§2.4)
+Worker       — không phải "agent cố định" phải quản lý; chỉ sinh tạm trong 1 TaskStep rồi huỷ (§2.3)
+```
+
+**UX tối thiểu (không cần copy nguyên khối session/group của Aucobot):**
+
+- 1 ô nhập goal → submit → tạo `TaskRun` → hiện DAG + trace + kết quả (§7)
+- Nút *"Yêu cầu mới"* = tạo `TaskRun` mới — không phải "New Chat" kiểu đa thread
+- (Optional, P1) 1 tab *Lịch sử* liệt kê `TaskRun` cũ để demo so sánh nhiều lần chạy — chỉ đọc, không sửa/xóa/đổi tên
+- Tab *Automations* (§2.6) và *Approvals* (§6) tách riêng, không lồng vào khái niệm session/group
+
+#### Tóm tắt trả lời giám khảo
+
+> Hệ thống không có khái niệm "group" như nền tảng chat-bot thông thường — chọn chuyên gia là việc của Planner có kiểm soát, không phải người dùng tự lắp bot vào phòng. "Session" ở đây tương đương 1 `TaskRun`: gửi yêu cầu mới = tạo TaskRun mới, không cần hệ thống quản lý thread phức tạp. Toàn bộ demo chỉ cần 1 Planner (hạ tầng, ẩn) + 4 chuyên gia cố định, kịch bản chính chạy 3.
+
 ---
 
 ## 3. SHB MCP Suite — connector hệ thống vận hành ngân hàng ✅
@@ -432,6 +560,49 @@ Registry dùng metadata để: allowlist theo domain agent, ép approval, hiện
 
 Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector đầu tiên; cùng kiến trúc gắn MCP ngân hàng khác qua capability registry.**
 
+### 3.5 Agent nào được gọi API/tool nào? — Ma trận quyền + UX "ship sẵn expert" ✅
+
+**Câu hỏi đúng, và câu trả lời ngắn: đã có (Agent Catalog §2.5), nhưng chưa từng gộp thành 1 bảng nhìn xuyên suốt + chưa trả lời rõ UX.** Chốt tại đây.
+
+#### Ma trận quyền — nguồn sự thật duy nhất (đồng bộ với `allowedMcp` ở §2.5)
+
+| Agent | MCP server | Tool được gọi | Side-effect (`mutates`) |
+|---|---|---|---|
+| **Credit Agent** | `mcp-core-banking` | `get_account_balance`, `get_transaction_history`, `get_credit_score` | Không |
+| | `mcp-los` | `check_loan_eligibility` | Không |
+| | | `submit_loan_application` | ⚠️ Có → Approval |
+| | RAG | `credit_kb_search` | Không |
+| **Legal/Compliance Agent** | `mcp-compliance` | `run_aml_check`, `search_regulation` | Không |
+| | | `flag_transaction` | ⚠️ Có → Approval |
+| | RAG | `legal_kb_search` | Không |
+| **Product Agent** | `mcp-product` | `list_products`, `check_product_eligibility`, `compare_products` | Không |
+| | RAG | `product_kb_search` | Không |
+| **Operations Agent** | `mcp-ops` | `get_ticket_status`, `assign_department` | Không |
+| | | `create_service_ticket` | ⚠️ Có → Approval |
+| | `mcp-los` (đọc) | tra cứu trạng thái hồ sơ | Không |
+
+Đây **chính là** `AgentCapability.allowedMcp` ở §2.5 hiển thị dạng bảng đầy đủ — không phải cấu hình thứ hai; Orchestrator đọc **1 nguồn** (`agent-catalog.ts` seed trong `backend/`), bảng trên chỉ là view để thuyết trình/audit.
+
+#### UX: user tự cấu hình hay ship sẵn expert? → **Ship sẵn, không cấu hình trong demo** ✅
+
+| Phương án | Đánh giá |
+|---|---|
+| **A. Ship sẵn 4 chuyên gia cố định** (catalog + allowlist hard-code) | ✅ **Chốt cho 48h** — nhất quán với Zod enum khóa `agentRole` (§2.5), an toàn, nhanh build |
+| **B. Admin tự thêm/xóa tool cho từng agent qua UI** | 💡 Roadmap sau demo — cần policy engine + validate tool schema mỗi lần đổi, không rẻ |
+| **C. User cuối (nhân viên) tự chọn tool khi chat** | ❌ **Không làm** — sai mô hình; nhân viên dùng chuyên gia đã cấu hình sẵn, không lắp ráp agent |
+
+**Lý do chốt Ship sẵn (A):**
+
+- Đúng tinh thần "chuyên gia số" của đề bài — nhân viên **dùng** chuyên gia đã được duyệt, không **cấu hình** chuyên gia
+- Khớp với §2.5 (Zod enum) và §9.5 (không làm RBAC/policy engine trong 48h) — thêm UI cấu hình sẽ phá vỡ chính guardrail chống điều phối nhầm đã dựng
+- Ngân hàng thật cũng không muốn nhân viên tự gắn API tùy ý vào một "AI agent" — đúng mạch lý luận ở §5.4D (model/agent do tổ chức kiểm soát)
+
+**Roadmap (không làm trong 48h):** "Agent Studio" cho admin/quản trị SHB — thêm agent mới, gán tool mới, đổi allowlist — nhưng vẫn qua review/publish, không phải end-user tự bật tool sống ngay.
+
+#### Tóm tắt trả lời giám khảo
+
+> Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5) — không phải cấu hình rời. Về UX, chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**, nhân viên dùng ngay không cần setup. Cho phép admin ngân hàng tùy biến catalog là hướng mở rộng hợp lý sau demo, nhưng không phải việc của người dùng cuối, và không cần trong 48h vì có thể phá vỡ guardrail routing đã chốt.
+
 ---
 
 ## 4. RAG chuyên biệt theo agent — LlamaIndex.TS
@@ -462,14 +633,55 @@ RAG search expose thành MCP tool theo domain (`credit_kb_search`, `legal_kb_sea
 
 ```prisma
 model KnowledgeDocument {
-  id        String @id @default(cuid())
-  domain    String   // credit | legal | product | ops
-  title     String
-  sourceUrl String?
-  content   String @db.Text
+  id            String    @id @default(cuid())
+  domain        String                      // credit | legal | product | ops
+  bankCode      String    @default("SHB")   // seam multi-tenant (§9.5.2)
+  title         String
+  sourceUrl     String?
+  content       String    @db.Text
+  status        String    @default("active") // active | superseded — xem §4.3
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?                    // null = còn hiệu lực
   // vector do LlamaIndex PGVectorStore quản lý (không khai báo qua Prisma)
 }
 ```
+
+### 4.3 Văn bản sửa đổi nhiều lần — bản "lite" của Vector+BM25+Graph+Versioning ✅
+
+Có tham khảo một đề xuất "bộ não hệ thống" đầy đủ: **Vector + BM25 + Graph Traversal + Versioning Engine + Conflict Detector** để xử lý bài toán rất thật của banking — *một quy định bị sửa nhiều lần, điều khoản bị thay thế một phần*. Đây là bài toán đúng và nên đưa vào pitch. Nhưng **implement đầy đủ 5 thành phần đó trong 48h là quá rộng** — mỗi thành phần (graph DB, BM25 engine riêng, conflict-detection model) là một hạng mục R&D độc lập, rủi ro tích hợp cao cho AI Agent build trong thời gian ngắn.
+
+**Right-size lại thành 3 việc rẻ, nằm gọn trong `backend/src/rag/` đã có — không thêm hệ thống mới:**
+
+| Ý trong đề xuất | Bản lite áp dụng | Chi phí |
+|---|---|---|
+| **Vector search** | Đã có — pgvector (§4) | Có sẵn |
+| **BM25 keyword search** | **Postgres full-text search** (`tsvector`/`ts_rank`) kết hợp điểm với vector — hybrid search 2 nguồn, không cần Elastic/BM25 engine riêng | Thấp — 1 cột `tsvector` + 1 query |
+| **Graph Traversal** (văn bản A sửa văn bản B) | **1 bảng quan hệ** `DocumentRelation` (không phải graph DB) — truy vấn bằng JOIN/CTE thường, không phải Cypher | Thấp — 1 bảng + vài query |
+| **Versioning Engine** | `effectiveFrom`/`effectiveTo`/`status` trên `KnowledgeDocument` (đã thêm ở model trên) — retrieval lọc mặc định `status = active` | Rất thấp — chỉ field + filter |
+| **Conflict Detector** (NLP so khớp mâu thuẫn) | **Không xây model riêng** — khi retrieval trả nhiều chunk cùng chủ đề, đưa cả `status`/ngày hiệu lực vào prompt, để LLM tự chọn bản mới nhất và **luôn ghi rõ trong citation** "đã bị thay thế bởi [X] ngày [d]" nếu có | Thấp — prompt engineering, không code riêng |
+
+```prisma
+model DocumentRelation {
+  id           String @id @default(cuid())
+  fromDocId    String                 // văn bản mới / sửa đổi
+  toDocId      String                 // văn bản bị tác động
+  relationType String                 // amends | supersedes | replaces_clause
+  note         String? @db.Text       // ví dụ: "Điều 5 thay thế Điều 3 văn bản cũ"
+}
+```
+
+```text
+retrieve(domain, query):
+  1. hybridScore = weightedSum(vectorScore, ts_rank(query))   // hybrid, không cần service riêng
+  2. lọc mặc định: KnowledgeDocument.status = "active"
+     (nếu user hỏi lịch sử/so sánh phiên bản → cho phép trả cả "superseded", đánh dấu rõ)
+  3. join DocumentRelation → nếu doc có bản đã thay thế / bị thay thế, gắn ghi chú vào citation
+  4. trả context + citation kèm trạng thái hiệu lực cho LLM tổng hợp
+```
+
+**Không làm trong 48h:** Neo4j/graph database riêng, BM25 engine độc lập (Elasticsearch/OpenSearch), model NLP chuyên phát hiện mâu thuẫn pháp lý. Chi phí tích hợp cao, rủi ro lớn hơn giá trị tăng thêm cho demo.
+
+**Câu pitch dùng được:** *"Hệ thống hiểu văn bản pháp lý bị sửa đổi nhiều lần — không trích dẫn điều khoản đã hết hiệu lực — bằng cách kết hợp tìm kiếm ngữ nghĩa, từ khóa và quan hệ giữa các văn bản, không cần một hệ thống Graph AI riêng biệt."*
 
 ---
 
@@ -507,14 +719,14 @@ model KnowledgeDocument {
 
 **Quy tắc demo:** không để agent tự ghi long-term; mọi kết luận nghiệp vụ phải có citation; worker memory không sống lâu; Dashboard đọc `TaskRun`/`TaskStep` (+ `AutomationRun` nếu có).
 
-### 5.4 LLM gateway — limit, lỗi API, API key theo agent ✅
+### 5.4 LLM gateway — model mặc định, limit, lỗi API ✅
 
 Ba ý thường bị lẫn — tách rõ:
 
 | Ý tưởng | Demo thi | Đánh giá |
 |---|---|---|
 | **A. Auto failover khi rate-limit / API lỗi** | ✅ Làm **mỏng** trong `backend/src/llm` | Cần thiết cho live demo ổn định |
-| **B. Model/profile khác nhau theo agent** (Credit ≠ Legal) | 💡 Config env/seed — không bắt buộc UI | Hữu ích, không bắt buộc |
+| **B. Model/profile khác nhau theo agent hoặc user tự đổi model** | ❌ **Không làm** — 1 model mặc định do platform quản | Đơn giản, dễ audit; nhân viên không được đổi model |
 | **C. User tự kết nối API key riêng (BYOK) per agent** | ❌ **Không làm** trong demo | Không cần thiết cho đề bài; xung đột “không auth” |
 
 #### A. Failover khi bị limit / API lỗi (nên có)
@@ -536,20 +748,23 @@ Phạm vi demo tối thiểu:
 - Log attempt trên `TaskStep.toolCalls` / structured log
 - **Không** tự nhảy sang Specialist khác vì LLM lỗi (Credit lỗi ≠ giao Legal làm thay)
 
-#### B. Model theo agent (optional)
+#### B. Một model mặc định — không per-agent, không user đổi ✅
 
-```ts
-// seed / env — platform quản lý; chi tiết model xem §5.4E
-agentModelProfile = {
-  planner: { provider: "openai", model: "gpt-4o" },
-  credit:  { provider: "openai", model: "gpt-4o" },
-  legal:   { provider: "openai", model: "gpt-4o" },
-  product: { provider: "openai", model: "gpt-4o-mini" },
-  ops:     { provider: "openai", model: "gpt-4o-mini" },
-}
+```text
+DEFAULT_LLM = { provider: "openai", model: "gpt-4o" }   ← env, platform quản lý
+FALLBACK_LLM = { provider: "google", model: "gemini-*" } ← chỉ gateway dùng khi lỗi
+
+Planner + Credit + Legal + Product + Ops → cùng DEFAULT_LLM
+Nhân viên / UI: KHÔNG có settings chọn model, không dán key
+Đổi model = đổi env + deploy (quyết định của platform, có kiểm soát)
 ```
 
-Điểm cộng thuyết trình: “mỗi chuyên gia có profile model phù hợp nhiệm vụ”. Không cần UI settings trong hackathon.
+Lý do chốt như vậy:
+
+- **Đơn giản hóa demo** — một cấu hình, một hành vi, dễ debug plan lệch
+- **Audit nhất quán** — mọi trace cùng model/version; so sánh single vs multi không nhiễu biến model
+- **Đúng mô hình ngân hàng** — model là hạ tầng được duyệt, nhân viên dùng chứ không cấu hình
+- Fallback (§5.4A) là cơ chế **hệ thống**, không phải lựa chọn của user
 
 #### C. User BYOK / API key riêng từng agent — không cần thiết lúc này
 
@@ -611,20 +826,10 @@ Thuyết trình nên nói:
 **Chốt demo:**
 
 ```text
-Primary:  OpenAI (ví dụ gpt-4o / gpt-4.1-class) — Planner + Credit/Legal/Product
-Fallback: Gemini (Flash hoặc Pro) — khi 429/5xx/timeout OpenAI
-Embedding: OpenAI embeddings hoặc Gemini embeddings (một nhà, cấu hình env) — không bắt buộc Together
-```
-
-```ts
-agentModelProfile = {
-  planner: { provider: "openai",  model: "gpt-4o" },
-  credit:  { provider: "openai",  model: "gpt-4o" },
-  legal:   { provider: "openai",  model: "gpt-4o" }, // quy định: ưu tiên model mạnh
-  product: { provider: "openai",  model: "gpt-4o-mini" }, // optional: rẻ hơn
-  ops:     { provider: "openai",  model: "gpt-4o-mini" },
-  // fallbackProvider: "google" / gemini — trong llm gateway (§5.4A)
-}
+Model mặc định: OpenAI (ví dụ gpt-4o / gpt-4.1-class) — TẤT CẢ agent dùng chung
+Fallback:       Gemini (Flash hoặc Pro) — chỉ gateway kích hoạt khi 429/5xx/timeout
+Embedding:      OpenAI embeddings hoặc Gemini embeddings (một nhà, cấu hình env)
+User/nhân viên: không chọn model, không dán key
 ```
 
 **Không chọn Gemini làm primary** cho bản demo này trừ khi: không có/không đủ quota OpenAI, hoặc team đã đo Gemini ổn định hơn trên đúng Zod `TaskPlan` của mình.
@@ -636,10 +841,9 @@ agentModelProfile = {
 
 ```text
 Cần:     LLM gateway mỏng (retry + fallback) + trace lỗi
-Primary: OpenAI cho Planner/Specialist
-Fallback: Gemini khi primary lỗi
-Tuỳ chọn: model profile theo agentRole (config)
-Không:   user dán API key / BYOK per agent trong bản demo
+Model:   MỘT model mặc định (OpenAI) cho mọi agent — env platform quản
+Fallback: Gemini khi primary lỗi — cơ chế hệ thống, không phải lựa chọn user
+Không:   per-agent model, user đổi model, user dán API key / BYOK
 Tầm nhìn: model/agent do tổ chức kiểm soát; fine-tune / private model sau — không train-from-scratch trong thi
 ```
 
@@ -737,6 +941,60 @@ Dashboard chỉ đọc state đã persist — không vẽ ảo.
 
 ---
 
+## 9.5 Đánh giá kiến trúc (Senior Review) — khoảng trống, multi-bank, phạm vi 48h
+
+Nhìn lại toàn bộ thiết kế ở góc senior: phần **điều phối** (Planner/Specialist/Worker, routing an toàn, approval, automation, LLM gateway) đã chặt. Khoảng trống thật nằm ở hai chỗ: **data scope theo nhân viên** (đã giải ở §2.7) và **seam multi-tenant** để không phải viết lại khi mở rộng nhiều ngân hàng.
+
+### 9.5.1 Bảng khoảng trống — mức độ cần thiết
+
+| Khoảng trống | Có bắt buộc cho track thi? | Chi phí thêm | Khuyến nghị |
+|---|---|---|---|
+| **Data scope theo nhân viên** (§2.7) | Không trực tiếp | Thấp — tái dùng Approval | ✅ **Làm** — rẻ, tăng credibility banking rõ rệt |
+| **`bankCode` trên model lõi** (TaskRun, Automation, KnowledgeDocument, Customer, Employee) | Không | Rất thấp — chỉ thêm field + default | ✅ **Làm ngay** — tránh migrate lại khi lên nhiều ngân hàng |
+| **`Customer`/`Employee` seed tối thiểu** | Không | Thấp | ✅ **Làm** — cần để §2.7 có dữ liệu chạy demo |
+| **Actor/audit trên TaskStep/AutomationRun** (ai bấm, ai duyệt) | Gián tiếp (đề bài có nhắc "quyết định") | Rất thấp | ✅ **Làm** — 1 field, giá trị audit lớn |
+| Agent Catalog data-driven theo từng bank (không chỉ enum cứng SHB) | Không | Trung bình | 💡 **Ghi nhận, không làm** — enum cứng vẫn an toàn hơn cho 48h; catalog theo tenant để sau |
+| PII masking trên Dashboard (che số tài khoản khi ngoài scope) | Không | Thấp–trung bình | 💡 Làm nếu còn dư thời gian, không phải P0 |
+| Idempotency scheduler (tránh chạy Automation trùng) | Không | Thấp | 💡 Làm nếu còn dư thời gian |
+| RBAC engine tổng quát / policy language | Không | Cao | ❌ **Không làm** — quá rộng cho 48h, không đổi kết quả demo |
+| Auth thật (login, JWT, session) | Không (đã chốt bỏ) | Cao | ❌ **Không làm** — giữ quyết định §0 #9 |
+| Vault / mã hóa secret nâng cao | Không | Cao | ❌ **Không làm** — `.env` đủ cho demo |
+| Đa tenant UI (chọn ngân hàng trên FE) | Không | Trung bình | ❌ **Không làm UI** — chỉ cần schema có seam |
+| Fine-tune / train model riêng | Không | Rất cao | ❌ **Không làm** — đã chốt ở §5.4D, chỉ là tầm nhìn |
+
+### 9.5.2 Multi-tenant seam — mở rộng nhiều ngân hàng, không riêng SHB
+
+MCP registry đã có `bankCode` (§3.2). Để câu chuyện startup "nhiều ngân hàng" nhất quán từ MCP xuống tận data, cần rải `bankCode` vào các model lõi **ngay từ đầu** — chi phí gần như 0 lúc này, chi phí migrate lại sau demo là lớn:
+
+```text
+TaskRun.bankCode            (đã thêm §2.1)
+Automation.bankCode         (thêm tương tự — seed "SHB")
+KnowledgeDocument.bankCode  (RAG namespace theo domain + bank, không chỉ domain)
+Customer.bankCode / Employee.bankCode  (§2.7)
+MCP Connector Registry.bankCode        (đã có §3.2)
+```
+
+**Nguyên tắc:** demo chỉ seed **1 giá trị `bankCode = "SHB"`** — không xây UI chuyển ngân hàng, không xây tenant switcher. Nhưng vì field đã có sẵn ở mọi bảng, thêm ngân hàng thứ 2 sau demo = **seed data mới + connector mới**, không phải viết lại schema hay orchestrator.
+
+**Điểm cần nói rõ khi giám khảo hỏi "có phải chỉ làm cho SHB không":**
+
+> Chúng tôi không hard-code SHB vào logic. `bankCode` là seam trên mọi bảng lõi và trên MCP registry. Bản demo chỉ seed một ngân hàng vì đó là phạm vi đề bài, nhưng thêm ngân hàng thứ hai là thao tác cấu hình/seed, không phải refactor kiến trúc.
+
+### 9.5.3 Phạm vi "vừa đủ" cho 48h — thứ tự ưu tiên
+
+Với ràng buộc 48h và team dùng AI Agent để build, ưu tiên theo P0 (bắt buộc, đúng deliverable) → P1 (rẻ, tăng điểm senior) → P2 (bỏ nếu thiếu giờ) → Không làm:
+
+| Ưu tiên | Việc |
+|---|---|
+| **P0 — đúng deliverable** | Planner/Specialist/Worker (§2), MCP `los`+`compliance` thật (§3), RAG citation (§4), Approval thật (§6), Dashboard DAG+trace+compare (§7,§8) |
+| **P1 — rẻ, tăng chất lượng senior** | `bankCode` seam (§9.5.2), Employee/Customer/Portfolio + scope-check tái dùng Approval (§2.7), 1 Automation mẫu + toggle (§2.6), LLM gateway retry+fallback (§5.4A) |
+| **P2 — làm nếu còn dư giờ** | PII masking nhẹ trên Dashboard, idempotency scheduler, mock connector ngân hàng thứ 2 chỉ để demo registry hoạt động (không cần đầy đủ) |
+| **Không làm trong 48h** | Auth thật, RBAC engine, vault, tenant-switcher UI, fine-tune, catalog data-driven đa tenant |
+
+**Lằn ranh "vừa đủ, tránh over-engineer":** mọi seam ở P1 chỉ là **field + 1 check logic**, không kéo theo UI phức tạp hay migration lớn. Nếu một ý tưởng cần thêm bảng mới + UI mới + luồng duyệt mới → mặc định đẩy xuống P2/không làm, trừ khi nó tái dùng cơ chế đã có (như §2.7 tái dùng Approval).
+
+---
+
 ## 10. Cấu trúc thư mục & API
 
 ```
@@ -821,8 +1079,14 @@ Giai đoạn 2: FE trỏ NEXT_PUBLIC_API_URL → backend thật
 | 17 | Planner tránh điều phối nhầm bằng gì? | ✅ Đã chốt — Agent Catalog + Zod enum + validation + tool allowlist (§2.5) |
 | 18 | Agent tự chuyển khi rate-limit / API lỗi? | ✅ Đã chốt — **LLM gateway retry + 1 fallback**; không đổi Specialist vì lỗi model (§5.4) |
 | 19 | User nối API key riêng / BYOK per agent? | ✅ Đã chốt — **không làm trong demo**; platform key; BYOK chỉ sau demo nếu SaaS (§5.4) |
-| 20 | Model khác nhau theo từng agent? | 💡 mở — cho phép qua env/seed profile; không bắt UI |
+| 20 | Model khác nhau theo từng agent / user tự đổi model? | ✅ Đã chốt — **không**; một model mặc định, platform quản qua env (§5.4B) |
 | 21 | OpenAI hay Gemini cho demo? | ✅ Đã chốt — **OpenAI primary**, **Gemini fallback** (§5.4E) |
+| 22 | Nhân viên dùng data khách hàng nào — có cần trong track thi không? | ✅ Đã chốt — không bắt buộc nhưng **nên làm bản mô phỏng nhẹ**: Employee/Customer/Portfolio + scope-check tái dùng Approval (§2.7) |
+| 23 | Kiến trúc có sẵn sàng nhiều ngân hàng, không chỉ SHB? | ✅ Đã chốt — `bankCode` seam trên mọi model lõi; demo seed 1 giá trị, không xây UI đa tenant (§9.5.2) |
+| 24 | Có cần RBAC engine / auth thật để hỗ trợ data scope không? | ✅ Đã chốt — **không** trong 48h; scope-check + Approval là đủ cho demo (§9.5.1) |
+| 25 | Agent có quyền gọi API/tool nào — user tự cấu hình hay ship sẵn? | ✅ Đã chốt — **ship sẵn 4 chuyên gia cấu hình đầy đủ**; không có UI cấu hình cho end-user; admin config là roadmap (§3.5) |
+| 26 | Có xây Graph DB / BM25 engine / Conflict Detector riêng cho văn bản sửa đổi không? | ✅ Đã chốt — **không**; dùng bản lite: Postgres full-text + `DocumentRelation` + versioning field + prompt engineering (§4.3) |
+| 27 | Có cần Group / multi-session như Aucobot không? | ✅ Đã chốt — **không**; "session" = 1 `TaskRun`; chỉ 1 Planner (ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) |
 
 ---
 
@@ -904,7 +1168,7 @@ Ba tiêu chí nhấn mạnh:
 
 ### 12.16b “Khi bị rate-limit / API lỗi, agent có tự chuyển không? User có tự gắn API key không?”
 
-> Có **failover mỏng ở tầng LLM gateway**: retry rồi chuyển provider/model dự phòng — không phải Planner đổi chuyên gia (Credit lỗi không giao Legal làm thay). Model profile theo agent là optional qua config. **User BYOK / API key riêng từng agent không làm trong demo**: đề bài không chấm key management, demo không auth, và mô hình ngân hàng thật dùng gateway/vault nội bộ chứ không để nhân viên dán key lên UI. BYOK chỉ hợp lý nếu sau này làm SaaS có đăng nhập.
+> Có **failover mỏng ở tầng LLM gateway**: retry rồi chuyển provider/model dự phòng — không phải Planner đổi chuyên gia (Credit lỗi không giao Legal làm thay), và cũng không phải user chọn. **Nhân viên không đổi model, không dán API key**: hệ thống dùng một model mặc định do platform quản qua env; đề bài không chấm key management, demo không auth, và ngân hàng thật dùng gateway/vault nội bộ. BYOK chỉ hợp lý nếu sau này làm SaaS có đăng nhập.
 
 ### 12.16c “Ngân hàng có cho nhân viên dùng agent riêng không? Sau này có train model riêng không?”
 
@@ -912,7 +1176,27 @@ Ba tiêu chí nhấn mạnh:
 
 ### 12.16d “Demo dùng OpenAI hay Gemini? Cái nào hợp ngân hàng hơn?”
 
-> Không API cloud nào “chuyên SHB”. Nghiệp vụ nằm ở RAG, MCP và approval. Cho demo multi-agent, nhóm chọn **OpenAI làm primary** vì structured output (`TaskPlan`) và tool-calling ổn định hơn khi live; **Gemini làm fallback** khi rate-limit/lỗi. Gemini mạnh context dài / chi phí — hợp làm dự phòng hoặc đọc văn bản dài, không cần làm não Planner chính trừ khi đo thực tế trên schema của nhóm cho kết quả tốt hơn.
+> Không API cloud nào “chuyên SHB”. Nghiệp vụ nằm ở RAG, MCP và approval. Nhóm chốt **một model mặc định: OpenAI** cho mọi agent vì structured output (`TaskPlan`) và tool-calling ổn định khi live; **Gemini là fallback hệ thống** khi rate-limit/lỗi — không phải lựa chọn của nhân viên. Đổi model là quyết định platform (env + deploy), giữ audit nhất quán như cách ngân hàng quản hạ tầng được duyệt.
+
+### 12.16e “Nhân viên được dùng dữ liệu khách hàng nào? Có phân quyền theo khách hàng không?”
+
+> Có, nhưng ở mức mô phỏng chứ không phải hệ thống RBAC đầy đủ. Mỗi nhân viên mock có **danh mục khách hàng được giao** (`CustomerPortfolio`). Trước khi agent gọi MCP tool cần `customerId`, hệ thống kiểm tra khách hàng đó có thuộc danh mục nhân viên đang dùng không; nếu không, step chuyển `waiting_approval` với lý do "truy cập ngoài danh mục" và tái dùng đúng luồng approval đã có — không xây thêm hệ thống quyền riêng. Đây là seam đúng hướng ngân hàng thật (need-to-know), triển khai với chi phí thấp trong 48h.
+
+### 12.16f “Kiến trúc này chỉ làm cho SHB hay mở rộng được nhiều ngân hàng?”
+
+> Không hard-code SHB. `bankCode` là field seam trên mọi model lõi (TaskRun, Automation, KnowledgeDocument, Customer, Employee) và trên MCP Connector Registry (§3.2). Bản demo chỉ seed một giá trị `bankCode = "SHB"` vì đó là phạm vi đề bài — không xây tenant-switcher UI, không multi-tenant billing. Nhưng vì seam đã có sẵn ở data layer, mở rộng ngân hàng thứ hai là thêm seed + connector mock, không phải viết lại orchestrator hay Planner.
+
+### 12.16g “Agent có quyền gọi API/tool nào? Nhân viên có tự cấu hình được không?”
+
+> Mỗi chuyên gia có allowlist tool cố định trong Agent Catalog (§2.5, §3.5) — ví dụ Credit Agent chỉ gọi `mcp-core-banking` + `mcp-los`, Legal chỉ gọi `mcp-compliance`. Chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**; nhân viên dùng ngay, không tự thêm/xóa tool. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý, nhưng không cần trong bản demo — thêm UI cấu hình lúc này có thể phá vỡ chính cơ chế chống điều phối nhầm đã dựng.
+
+### 12.16h “Đề xuất Vector+BM25+Graph+Versioning+Conflict Detector cho văn bản pháp lý — có áp dụng được không?”
+
+> Bài toán đúng và đáng đưa vào pitch: quy định SBV/SHB bị sửa đổi nhiều lần, trích dẫn nhầm điều khoản hết hiệu lực là rủi ro thật. Chúng tôi áp dụng **bản lite**: hybrid vector + Postgres full-text (thay BM25 engine riêng), một bảng `DocumentRelation` ghi quan hệ "văn bản A sửa văn bản B" (thay Graph DB), field `effectiveFrom/To` + `status` để lọc bản còn hiệu lực (Versioning Engine lite), và để LLM tự chọn bản mới nhất khi trích dẫn thay vì xây model Conflict Detector riêng. Vẫn kể được đúng câu chuyện, với chi phí phù hợp 48h.
+
+### 12.16i “Có cần chức năng Group hay tạo session mới như Aucobot không?”
+
+> Không. Aucobot cho user tự thêm nhiều bot vào 1 room (Group) và quản lý nhiều thread song song. Ở đây, chọn chuyên gia là việc của **Planner có kiểm soát** (§2, §2.5) — người dùng không tự lắp bot vào phòng, nên khái niệm Group không áp dụng. "Session" tương đương 1 `TaskRun`: gửi yêu cầu mới là tạo TaskRun mới, không cần hệ thống thread/rename/archive. Toàn bộ hệ thống chỉ cần dựng **1 Planner (hạ tầng, ẩn) + 4 Specialist cố định** (Credit/Legal/Product/Ops); kịch bản demo chính chạy 3 (Credit ‖ Legal → Product), Ops là off-script/optional (§2.8).
 
 ### 12.17 “Production-ready chưa?”
 
