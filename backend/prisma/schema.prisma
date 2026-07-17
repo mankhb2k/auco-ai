@@ -1,0 +1,149 @@
+// Digital Expert Agents — Prisma schema (Phase 1)
+// Models from README §§2.1, 2.6, 2.7, 4 — bankCode seam on core tables
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model TaskRun {
+  id          String     @id @default(cuid())
+  bankCode    String     @default("SHB")
+  employeeId  String?
+  employee    Employee?  @relation(fields: [employeeId], references: [id])
+  goal        String     @db.Text
+  status      String // planning | running | done | failed
+  planJson    Json
+  finalAnswer String?    @db.Text
+  createdAt   DateTime   @default(now())
+  steps       TaskStep[]
+
+  @@index([bankCode])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model TaskStep {
+  id        String    @id @default(cuid())
+  taskRunId String
+  taskRun   TaskRun   @relation(fields: [taskRunId], references: [id], onDelete: Cascade)
+  agentRole String // credit | legal | product | ops
+  mode      String    @default("direct") // direct | spawn_workers
+  input     Json
+  output    Json?
+  status    String // pending | running | waiting_approval | done | failed
+  dependsOn String[]
+  toolCalls Json[]    @default([])
+  startedAt DateTime?
+  finishedAt DateTime?
+
+  @@index([taskRunId])
+  @@index([status])
+}
+
+model Employee {
+  id          String              @id @default(cuid())
+  bankCode    String              @default("SHB")
+  displayName String
+  role        String // credit_officer | compliance_officer | ops_officer | branch_manager
+  branchCode  String?
+  portfolios  CustomerPortfolio[]
+  taskRuns    TaskRun[]
+
+  @@index([bankCode])
+}
+
+model Customer {
+  id         String              @id @default(cuid())
+  bankCode   String              @default("SHB")
+  fullName   String
+  customerNo String
+  branchCode String?
+  portfolios CustomerPortfolio[]
+
+  @@unique([bankCode, customerNo])
+  @@index([bankCode])
+}
+
+model CustomerPortfolio {
+  id         String   @id @default(cuid())
+  employeeId String
+  customerId String
+  bankCode   String   @default("SHB")
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, customerId])
+  @@index([bankCode])
+}
+
+model Automation {
+  id                 String          @id @default(cuid())
+  bankCode           String          @default("SHB")
+  name               String
+  description        String?         @db.Text
+  createdByAgentRole String
+  triggerType        String // schedule | manual
+  cronExpr           String?
+  timezone           String          @default("Asia/Ho_Chi_Minh")
+  enabled            Boolean         @default(false)
+  status             String // draft | pending_approval | active | paused
+  graphJson          Json? // pinned step graph (trigger/extract/llm-transform/notification)
+  botVersionId       String?
+  lastRunAt          DateTime?
+  nextRunAt          DateTime?
+  createdAt          DateTime        @default(now())
+  runs               AutomationRun[]
+
+  @@index([bankCode])
+  @@index([enabled])
+}
+
+model AutomationRun {
+  id            String     @id @default(cuid())
+  automationId  String
+  automation    Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  status        String // running | done | failed
+  startedAt     DateTime   @default(now())
+  finishedAt    DateTime?
+  resultSummary String?    @db.Text
+  traceJson     Json?
+  actorId       String? // who triggered (user/system)
+
+  @@index([automationId])
+  @@index([status])
+}
+
+model KnowledgeDocument {
+  id            String             @id @default(cuid())
+  domain        String // credit | legal | product | ops
+  bankCode      String             @default("SHB")
+  title         String
+  sourceUrl     String?
+  content       String             @db.Text
+  status        String             @default("active") // active | superseded
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  createdAt     DateTime           @default(now())
+  relationsFrom DocumentRelation[] @relation("FromDoc")
+  relationsTo   DocumentRelation[] @relation("ToDoc")
+
+  @@index([bankCode, domain])
+  @@index([status])
+}
+
+model DocumentRelation {
+  id           String            @id @default(cuid())
+  fromDocId    String
+  toDocId      String
+  relationType String // amends | supersedes | replaces_clause
+  note         String?           @db.Text
+  fromDoc      KnowledgeDocument @relation("FromDoc", fields: [fromDocId], references: [id], onDelete: Cascade)
+  toDoc        KnowledgeDocument @relation("ToDoc", fields: [toDocId], references: [id], onDelete: Cascade)
+
+  @@index([fromDocId])
+  @@index([toDocId])
+}

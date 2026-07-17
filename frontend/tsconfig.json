@@ -19,8 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@auco-ai/shared": ["./lib/shared/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
