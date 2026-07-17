@@ -29,4 +29,14 @@ export class RealtimeService {
       ...payload,
     });
   }
+
+  emitAutomationRunUpdated(
+    automationId: string,
+    payload: Record<string, unknown>,
+  ) {
+    this.gateway?.emitToAutomation(automationId, 'automation.run.updated', {
+      automationId,
+      ...payload,
+    });
+  }
 }

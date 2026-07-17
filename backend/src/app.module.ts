@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ApprovalsModule } from './approvals/approvals.module';
+import { AutomationsModule } from './automations/automations.module';
 import { HealthModule } from './health/health.module';
 import { LlmModule } from './llm/llm.module';
 import { McpClientModule } from './mcp-client/mcp-client.module';
@@ -25,7 +26,7 @@ import { RedisModule } from './redis/redis.module';
     RealtimeModule,
     PlanningModule,
     ApprovalsModule,
-    // Phase 8+: AutomationsModule
+    AutomationsModule,
   ],
 })
 export class AppModule {}

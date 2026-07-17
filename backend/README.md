@@ -81,7 +81,8 @@ npm run prisma:seed:railway
 | Phase 4 — Planner / Orchestrator + TaskRun API | |
 | Phase 5 — SHB MCP Suite (los+compliance thật, 3 stub) | |
 | Phase 6 — RAG hybrid (pgvector + FTS + citations) | |
-| Phase 7 — Approval HITL + WebSocket | Phase 8 Automations |
+| Phase 7 — Approval HITL + WebSocket | |
+| Phase 8 — Automations (cron scan + run-now) | Done P0 backend |
 
 ### Phase 4 API
 
@@ -135,3 +136,15 @@ Hybrid: vector cosine + Postgres `ts_rank`; default filter `status=active`; join
 amespace /ws | subscribe { taskRunId } → 	ask.updated / step.updated / pproval.needed |
 
 Credit proposes submit_loan_application (no call until approve). Legal FX may propose lag_transaction. Ops proposes create_service_ticket.
+
+### Phase 8 — Automations
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/api/automations` | List (+ recent runs) |
+| `GET` | `/api/automations/:id` | Detail + run history |
+| `PATCH` | `/api/automations/:id` | Toggle `enabled`, edit cron — agent never auto-enables |
+| `POST` | `/api/automations/:id/run-now` | Manual run pinned graph |
+| `GET` | `/api/automations/:id/runs` | AutomationRun list |
+
+Scheduler: DB scan every 30s for `enabled && nextRunAt <= now`. Graph: trigger.cron → extract → llm-transform → notification. WS: `automation.run.updated`.

@@ -36,16 +36,31 @@ export class RealtimeGateway implements OnGatewayInit {
   @SubscribeMessage('subscribe')
   handleSubscribe(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { taskRunId?: string },
+    @MessageBody() body: { taskRunId?: string; automationId?: string },
   ) {
-    const id = body?.taskRunId?.trim();
-    if (!id) return { ok: false, error: 'taskRunId required' };
-    void client.join(`taskRun:${id}`);
-    this.logger.debug(`Client ${client.id} joined taskRun:${id}`);
-    return { ok: true, room: `taskRun:${id}` };
+    const rooms: string[] = [];
+    const taskRunId = body?.taskRunId?.trim();
+    const automationId = body?.automationId?.trim();
+    if (taskRunId) {
+      void client.join(`taskRun:${taskRunId}`);
+      rooms.push(`taskRun:${taskRunId}`);
+    }
+    if (automationId) {
+      void client.join(`automation:${automationId}`);
+      rooms.push(`automation:${automationId}`);
+    }
+    if (!rooms.length) {
+      return { ok: false, error: 'taskRunId or automationId required' };
+    }
+    this.logger.debug(`Client ${client.id} joined ${rooms.join(',')}`);
+    return { ok: true, rooms };
   }
 
   emitToTask(taskRunId: string, event: string, payload: unknown) {
     this.server?.to(`taskRun:${taskRunId}`).emit(event, payload);
+  }
+
+  emitToAutomation(automationId: string, event: string, payload: unknown) {
+    this.server?.to(`automation:${automationId}`).emit(event, payload);
   }
 }
