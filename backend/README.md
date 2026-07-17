@@ -11,9 +11,11 @@ npm run docker:up
 # 2. Env
 cp .env.example .env
 
-# 3. Migrate + generate + seed
+# 3. Migrate + generate + seed (Phase 2 — mock từ Frontend)
 npx prisma migrate deploy
 npm run prisma:seed
+# Seed: 3 employees, 24 customers, portfolio CN Cầu Giấy,
+# 6 knowledge docs, 1 automation (data/mock/*)
 
 # 4. Dev server (port 8387)
 npm run start:dev
@@ -37,11 +39,13 @@ Health: [http://localhost:8387/health](http://localhost:8387/health)
 
 | Variable | Source |
 |---|---|
-| `DATABASE_URL` | Railway Postgres |
+| `DATABASE_URL` | Railway Postgres — **bắt buộc** (Variable Reference từ Postgres). Không có → migrate fail |
 | `REDIS_URL` | Railway Redis |
 | `PORT` | Railway (auto) |
 | `CORS_ORIGINS` | your Vercel FE URL(s), comma-separated |
 | `NODE_ENV` | `production` |
+
+> Nếu migrate báo `datasource.url property is required`: service chưa được gắn `DATABASE_URL`. Vào **Variables** của `auco-ai` → Add Variable Reference → chọn Postgres → `DATABASE_URL` (hoặc `DATABASE_PRIVATE_URL`).
 
 5. Healthcheck path: `/health` (already in `railway.json`).
 6. Entrypoint runs `prisma migrate deploy` then starts Nest.

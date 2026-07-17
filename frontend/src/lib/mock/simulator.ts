@@ -376,6 +376,7 @@ export class TaskRunSimulator {
         usage: creditUsage,
       });
       credit.output = this.creditOutput();
+      credit.assessment = this.creditAssessment();
       credit.status = "waiting_approval";
       credit.approvalReason = this.outOfPortfolio
         ? "out_of_portfolio_access"
@@ -414,6 +415,7 @@ export class TaskRunSimulator {
       legal.status = "done";
       legal.finishedAt = nowIso();
       legal.output = this.legalOutput();
+      legal.assessment = this.legalAssessment();
       this.emit();
       this.tryStartProduct(product);
     });
@@ -492,6 +494,7 @@ export class TaskRunSimulator {
       product.status = "done";
       product.finishedAt = nowIso();
       product.output = this.productOutput();
+      product.assessment = this.productAssessment();
       this.emit();
       this.finishIfReady();
     });
@@ -640,6 +643,104 @@ export class TaskRunSimulator {
     }
     const d = activeDoc("doc-shb-dti");
     return [{ sourceDoc: d.title, section: d.section, score: 0.87 }];
+  }
+
+  private creditAssessment(): string {
+    if (this.run.scenario === "corporate") {
+      return [
+        "**Đánh giá Credit Agent**",
+        "",
+        "Đã phân tích BCTC, DTI và LTV nhà xưởng của CT TNHH Sản xuất SHB Mekong.",
+        "",
+        "• Yêu cầu vay: **50 tỷ VND**",
+        "• Hạn mức tối đa đề xuất: **40 tỷ VND** (vốn tự có chưa đáp ứng đủ 50 tỷ)",
+        "• DTI ≈ 41% · LTV ≈ 72%",
+        "• KRI: vốn tự có thấp hơn mức yêu cầu",
+        "",
+        "Khuyến nghị: trình hồ sơ với hạn mức 40 tỷ và chuẩn bị giải ngân sau khi được phê duyệt.",
+      ].join("\n");
+    }
+    if (this.run.scenario === "fx") {
+      return [
+        "**Đánh giá Credit Agent**",
+        "",
+        "Khách hàng Trần Thị Bình có nhu cầu vay/đổi ngoại tệ lớn.",
+        "",
+        `• Xu hướng FX hộ gia đình (IMF): ~${imfFxTrend.currentPct}%`,
+        `• ${imfFxTrend.insight}`,
+        "",
+        "Rủi ro tỷ giá được đánh giá ở mức cao hơn bình thường đối với khoản dài hạn.",
+      ].join("\n");
+    }
+    if (this.outOfPortfolio) {
+      return [
+        "**Đánh giá Credit Agent**",
+        "",
+        "Yêu cầu truy cập khách hàng ngoài danh mục được giao (CN Hà Đông).",
+        "Cần phê duyệt trước khi tiếp tục tra cứu / tạo hồ sơ.",
+      ].join("\n");
+    }
+    return [
+      "**Đánh giá Credit Agent**",
+      "",
+      "Nguyễn Văn An đủ điều kiện sơ bộ vay mua nhà 2 tỷ.",
+      "• DTI ≈ 32% · LTV ≈ 65% · CIC nhóm 1 (Tốt)",
+      "",
+      "Sẵn sàng tạo hồ sơ LOS sau khi duyệt.",
+    ].join("\n");
+  }
+
+  private legalAssessment(): string {
+    if (this.run.scenario === "corporate") {
+      return [
+        "**Nhận xét Legal / Compliance**",
+        "",
+        "Đã đối chiếu Thông tư 39/2016/TT-NHNN với quy trình tín dụng nội bộ SHB (bản đang hiệu lực).",
+        "",
+        `• ${ltvConflict.message}`,
+        "• AML/KYC: đạt (rủi ro thấp)",
+        "",
+        "Kết luận: **đạt có điều kiện** — áp dụng LTV nội bộ 75%; cần phê duyệt đặc biệt nếu muốn tiệm cận trần 80% của Thông tư.",
+      ].join("\n");
+    }
+    if (this.run.scenario === "fx") {
+      return [
+        "**Nhận xét Legal / Compliance**",
+        "",
+        "Giao dịch FX lớn cần KYC/AML tăng cường.",
+        `• ${imfFxTrend.recommendation}`,
+        "",
+        "Kết luận: **đạt kèm cảnh báo** — nên gắn flag giám sát trước khi thực thi.",
+      ].join("\n");
+    }
+    return [
+      "**Nhận xét Legal / Compliance**",
+      "",
+      "AML/KYC đạt. Không phát hiện cảnh báo tuân thủ liên quan khoản vay mua nhà.",
+    ].join("\n");
+  }
+
+  private productAssessment(): string {
+    if (this.run.scenario === "corporate") {
+      return [
+        "**Đề xuất Product Agent**",
+        "",
+        "Sản phẩm phù hợp: **Vay trung dài hạn DN — mở rộng sản xuất**",
+        "Hạn mức gợi ý: **40 tỷ VND**, khớp vốn tự có và LTV nội bộ 75%.",
+      ].join("\n");
+    }
+    if (this.run.scenario === "fx") {
+      return [
+        "**Đề xuất Product Agent**",
+        "",
+        "Ưu tiên **vay ngắn hạn có tài sản đảm bảo**; hạn chế sản phẩm FX dài hạn trong bối cảnh tích trữ ngoại tệ tăng.",
+      ].join("\n");
+    }
+    return [
+      "**Đề xuất Product Agent**",
+      "",
+      "Sản phẩm: **Vay mua nhà lãi suất cố định** — khớp thu nhập và tài sản đảm bảo.",
+    ].join("\n");
   }
 
   private creditOutput(): Record<string, unknown> {
