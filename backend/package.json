@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
   "author": "",
   "private": true,
@@ -23,6 +23,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
+    "prisma:seed:railway": "powershell -ExecutionPolicy Bypass -File scripts/seed-railway.ps1",
+    "llm:status": "curl -s http://localhost:8387/api/llm/status",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
@@ -30,18 +32,22 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.18",
+    "@ai-sdk/openai": "^4.0.16",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "ai": "^7.0.31",
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
     "pg": "^8.22.0",
     "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

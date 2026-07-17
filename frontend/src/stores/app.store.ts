@@ -4,7 +4,6 @@ import { create } from "zustand";
 import {
   buildHistorySample,
   compareByMode,
-  DEMO_GOAL,
   DEFAULT_SCENARIO,
   employees,
   mcpSuite,
@@ -71,7 +70,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   automationRuns: seedAutomationRuns,
   mcp: mcpSuite,
   compare: compareByMode.multi,
-  goalDraft: DEMO_GOAL,
+  goalDraft: "",
   isSimulating: false,
   outOfPortfolioDemo: false,
 
@@ -131,6 +130,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       mainTab: "workspace",
       compare: compareByMode[mode],
       scenarioId: run.scenario,
+      goalDraft: "",
     });
 
     simulator = new TaskRunSimulator(
@@ -170,7 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       activeRun: null,
       isSimulating: false,
-      goalDraft: DEMO_GOAL,
+      goalDraft: "",
       scenarioId: DEFAULT_SCENARIO,
       mainTab: "workspace",
     });

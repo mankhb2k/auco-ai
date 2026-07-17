@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { LlmGatewayService } from '../llm/llm.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 
@@ -9,6 +10,10 @@ export type HealthStatus = {
   checks: {
     database: 'up' | 'down';
     redis: 'up' | 'down' | 'skipped';
+    llm: {
+      primary: 'configured' | 'missing';
+      fallback: 'configured' | 'missing';
+    };
   };
 };
 
@@ -17,6 +22,7 @@ export class HealthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly llm: LlmGatewayService,
   ) {}
 
   async check(): Promise<HealthStatus> {
@@ -39,6 +45,15 @@ export class HealthService {
       }
     }
 
+    const llm = {
+      primary: this.llm.isPrimaryConfigured
+        ? ('configured' as const)
+        : ('missing' as const),
+      fallback: this.llm.isFallbackConfigured
+        ? ('configured' as const)
+        : ('missing' as const),
+    };
+
     const status =
       database === 'down'
         ? 'error'
@@ -50,7 +65,7 @@ export class HealthService {
       status,
       service: 'auco-backend',
       timestamp,
-      checks: { database, redis },
+      checks: { database, redis, llm },
     };
   }
 }

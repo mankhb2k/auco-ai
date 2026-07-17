@@ -62,6 +62,8 @@ model Customer {
   fullName   String
   customerNo String
   branchCode String?
+  /// Full FE mock profile (cic, income, demoTag, etc.) — Phase 2 seed
+  profileJson Json?
   portfolios CustomerPortfolio[]
 
   @@unique([bankCode, customerNo])

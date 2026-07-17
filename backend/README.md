@@ -1,6 +1,6 @@
-# Auco AI — NestJS Backend (Phase 1)
+# Auco AI — NestJS Backend
 
-Digital Expert Agents backend. Phase 1: NestJS + Prisma + Postgres/pgvector + Redis, Railway-ready.
+Digital Expert Agents backend. Phases 1–3: NestJS + Prisma + Postgres/pgvector + Redis + **LLM gateway**, Railway-ready.
 
 ## Local
 
@@ -10,8 +10,9 @@ npm run docker:up
 
 # 2. Env
 cp .env.example .env
+# Fill OPENAI_API_KEY (required for agents) + optional GEMINI_API_KEY (fallback)
 
-# 3. Migrate + generate + seed
+# 3. Migrate + generate + seed (Phase 2 — mock từ Frontend)
 npx prisma migrate deploy
 npm run prisma:seed
 
@@ -24,39 +25,57 @@ Health: [http://localhost:8387/health](http://localhost:8387/health)
 ```json
 {
   "status": "ok",
-  "checks": { "database": "up", "redis": "up" }
+  "checks": {
+    "database": "up",
+    "redis": "up",
+    "llm": { "primary": "configured", "fallback": "configured" }
+  }
 }
 ```
 
+### Phase 3 — LLM gateway
+
+| Endpoint | Mục đích |
+|---|---|
+| `GET /api/llm/status` | Primary/fallback model + key configured? |
+| `POST /api/llm/smoke` | Tiny `generateObject` (non-prod, or `LLM_SMOKE_ENABLED=true`) |
+
+Behavior (§5.4 README):
+
+- Default: OpenAI (`DEFAULT_LLM_MODEL`, default `gpt-4o`)
+- On 429 / 5xx / timeout → retry primary → fallback Gemini
+- Trace: `{ provider, model, attempt, errorCode, usedFallback }`
+- No BYOK / no per-agent model
+
 ## Railway deploy
 
-1. New project → add **PostgreSQL** (+ enable `vector` extension if available) + **Redis**.
-2. New service from this repo, **Root Directory = `backend`**.
-3. Builder uses `Dockerfile` / `railway.json`.
-4. Variables (from plugins + app):
+1. New project → add **PostgreSQL** + **Redis**.
+2. New service, image `mankhb2k/auco-ai` (or Dockerfile Root Directory `backend`).
+3. Variables:
 
-| Variable | Source |
-|---|---|
-| `DATABASE_URL` | Railway Postgres |
-| `REDIS_URL` | Railway Redis |
-| `PORT` | Railway (auto) |
-| `CORS_ORIGINS` | your Vercel FE URL(s), comma-separated |
-| `NODE_ENV` | `production` |
+| Variable | Required | Notes |
+|---|---|---|
+| `DATABASE_URL` | Yes | Postgres private URL |
+| `REDIS_URL` | Yes | Redis |
+| `CORS_ORIGINS` | Yes | Vercel FE URL(s) |
+| `OPENAI_API_KEY` | Yes (Phase 3+) | Primary LLM |
+| `GEMINI_API_KEY` | Optional | Fallback LLM |
+| `DEFAULT_LLM_MODEL` | Optional | default `gpt-4o` |
+| `FALLBACK_LLM_MODEL` | Optional | default `gemini-2.0-flash` |
+| `LLM_SMOKE_ENABLED` | Optional | `true` to allow `POST /api/llm/smoke` in prod |
+| `PORT` | Auto | Railway |
 
-5. Healthcheck path: `/health` (already in `railway.json`).
-6. Entrypoint runs `prisma migrate deploy` then starts Nest.
-
-Optional one-off seed after first deploy:
+Seed from laptop:
 
 ```bash
-railway run npm run prisma:seed
+npm run prisma:seed:railway
 ```
 
 ## Phase map
 
-| Done (Phase 1) | Next |
+| Done | Next |
 |---|---|
-| Nest scaffold, CORS, `/health` | LLM gateway |
-| Docker Compose Postgres + Redis | Planner / Orchestrator |
-| Prisma schema + migrate + seed | MCP Suite, RAG, Approval, WS |
-| Dockerfile + railway.json | Automations (BullMQ) |
+| Phase 1 — Nest + Docker + Prisma + Redis | |
+| Phase 2 — Seed từ FE mock | |
+| Phase 3 — LLM gateway OpenAI + Gemini fallback | Phase 4 Planner / Orchestrator |
+| | MCP Suite, RAG, Approval, WS, Automations |

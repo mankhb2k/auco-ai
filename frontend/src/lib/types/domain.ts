@@ -90,6 +90,8 @@ export interface TaskStep {
   workers?: WorkerSpawn[];
   approvalReason?: ApprovalReason;
   approvalPreview?: string;
+  /** Nhận xét / đánh giá hiển thị trên chat (prose) */
+  assessment?: string;
   usage?: TokenUsage;
   startedAt?: string;
   finishedAt?: string;
