@@ -1,0 +1,3764 @@
+{
+  "Smileys": [
+    {
+      "emoji": "👾",
+      "name": "alien monster",
+      "codePoint": "1f47e",
+      "relativePath": "Smileys/1f47e.webp"
+    },
+    {
+      "emoji": "👽",
+      "name": "alien",
+      "codePoint": "1f47d",
+      "relativePath": "Smileys/1f47d.webp"
+    },
+    {
+      "emoji": "👿",
+      "name": "angry face with horns",
+      "codePoint": "1f47f",
+      "relativePath": "Smileys/1f47f.webp"
+    },
+    {
+      "emoji": "😠",
+      "name": "angry face",
+      "codePoint": "1f620",
+      "relativePath": "Smileys/1f620.webp"
+    },
+    {
+      "emoji": "😧",
+      "name": "anguished face",
+      "codePoint": "1f627",
+      "relativePath": "Smileys/1f627.webp"
+    },
+    {
+      "emoji": "😰",
+      "name": "anxious face with sweat",
+      "codePoint": "1f630",
+      "relativePath": "Smileys/1f630.webp"
+    },
+    {
+      "emoji": "😲",
+      "name": "astonished face",
+      "codePoint": "1f632",
+      "relativePath": "Smileys/1f632.webp"
+    },
+    {
+      "emoji": "😁",
+      "name": "beaming face with smiling eyes",
+      "codePoint": "1f601",
+      "relativePath": "Smileys/1f601.webp"
+    },
+    {
+      "emoji": "😹",
+      "name": "cat with tears of joy",
+      "codePoint": "1f639",
+      "relativePath": "Smileys/1f639.webp"
+    },
+    {
+      "emoji": "😼",
+      "name": "cat with wry smile",
+      "codePoint": "1f63c",
+      "relativePath": "Smileys/1f63c.webp"
+    },
+    {
+      "emoji": "🤡",
+      "name": "clown face",
+      "codePoint": "1f921",
+      "relativePath": "Smileys/1f921.webp"
+    },
+    {
+      "emoji": "🥶",
+      "name": "cold face",
+      "codePoint": "1f976",
+      "relativePath": "Smileys/1f976.webp"
+    },
+    {
+      "emoji": "😖",
+      "name": "confounded face",
+      "codePoint": "1f616",
+      "relativePath": "Smileys/1f616.webp"
+    },
+    {
+      "emoji": "😕",
+      "name": "confused face",
+      "codePoint": "1f615",
+      "relativePath": "Smileys/1f615.webp"
+    },
+    {
+      "emoji": "🤠",
+      "name": "cowboy hat face",
+      "codePoint": "1f920",
+      "relativePath": "Smileys/1f920.webp"
+    },
+    {
+      "emoji": "😿",
+      "name": "crying cat",
+      "codePoint": "1f63f",
+      "relativePath": "Smileys/1f63f.webp"
+    },
+    {
+      "emoji": "😢",
+      "name": "crying face",
+      "codePoint": "1f622",
+      "relativePath": "Smileys/1f622.webp"
+    },
+    {
+      "emoji": "😞",
+      "name": "disappointed face",
+      "codePoint": "1f61e",
+      "relativePath": "Smileys/1f61e.webp"
+    },
+    {
+      "emoji": "🥸",
+      "name": "disguised face",
+      "codePoint": "1f978",
+      "relativePath": "Smileys/1f978.webp"
+    },
+    {
+      "emoji": "🫥",
+      "name": "dotted line face",
+      "codePoint": "1fae5",
+      "relativePath": "Smileys/1fae5.webp"
+    },
+    {
+      "emoji": "😓",
+      "name": "downcast face with sweat",
+      "codePoint": "1f613",
+      "relativePath": "Smileys/1f613.webp"
+    },
+    {
+      "emoji": "🤤",
+      "name": "drooling face",
+      "codePoint": "1f924",
+      "relativePath": "Smileys/1f924.webp"
+    },
+    {
+      "emoji": "🤯",
+      "name": "exploding head",
+      "codePoint": "1f92f",
+      "relativePath": "Smileys/1f92f.webp"
+    },
+    {
+      "emoji": "😑",
+      "name": "expressionless face",
+      "codePoint": "1f611",
+      "relativePath": "Smileys/1f611.webp"
+    },
+    {
+      "emoji": "😘",
+      "name": "face blowing a kiss",
+      "codePoint": "1f618",
+      "relativePath": "Smileys/1f618.webp"
+    },
+    {
+      "emoji": "😮‍💨",
+      "name": "face exhaling",
+      "codePoint": "1f62e",
+      "relativePath": "Smileys/1f62e.webp"
+    },
+    {
+      "emoji": "🥹",
+      "name": "face holding back tears",
+      "codePoint": "1f979",
+      "relativePath": "Smileys/1f979.webp"
+    },
+    {
+      "emoji": "😶‍🌫️",
+      "name": "face in clouds",
+      "codePoint": "1f636",
+      "relativePath": "Smileys/1f636.webp"
+    },
+    {
+      "emoji": "😋",
+      "name": "face savoring food",
+      "codePoint": "1f60b",
+      "relativePath": "Smileys/1f60b.webp"
+    },
+    {
+      "emoji": "😱",
+      "name": "face screaming in fear",
+      "codePoint": "1f631",
+      "relativePath": "Smileys/1f631.webp"
+    },
+    {
+      "emoji": "🤮",
+      "name": "face vomiting",
+      "codePoint": "1f92e",
+      "relativePath": "Smileys/1f92e.webp"
+    },
+    {
+      "emoji": "🫤",
+      "name": "face with diagonal mouth",
+      "codePoint": "1fae4",
+      "relativePath": "Smileys/1fae4.webp"
+    },
+    {
+      "emoji": "🤭",
+      "name": "face with hand over mouth",
+      "codePoint": "1f92d",
+      "relativePath": "Smileys/1f92d.webp"
+    },
+    {
+      "emoji": "🤕",
+      "name": "face with head-bandage",
+      "codePoint": "1f915",
+      "relativePath": "Smileys/1f915.webp"
+    },
+    {
+      "emoji": "😷",
+      "name": "face with medical mask",
+      "codePoint": "1f637",
+      "relativePath": "Smileys/1f637.webp"
+    },
+    {
+      "emoji": "🧐",
+      "name": "face with monocle",
+      "codePoint": "1f9d0",
+      "relativePath": "Smileys/1f9d0.webp"
+    },
+    {
+      "emoji": "🫢",
+      "name": "face with open eyes and hand over mouth",
+      "codePoint": "1fae2",
+      "relativePath": "Smileys/1fae2.webp"
+    },
+    {
+      "emoji": "😮",
+      "name": "face with open mouth",
+      "codePoint": "1f62e",
+      "relativePath": "Smileys/1f62e.webp"
+    },
+    {
+      "emoji": "🫣",
+      "name": "face with peeking eye",
+      "codePoint": "1fae3",
+      "relativePath": "Smileys/1fae3.webp"
+    },
+    {
+      "emoji": "🤨",
+      "name": "face with raised eyebrow",
+      "codePoint": "1f928",
+      "relativePath": "Smileys/1f928.webp"
+    },
+    {
+      "emoji": "🙄",
+      "name": "face with rolling eyes",
+      "codePoint": "1f644",
+      "relativePath": "Smileys/1f644.webp"
+    },
+    {
+      "emoji": "😵‍💫",
+      "name": "face with spiral eyes",
+      "codePoint": "1f635",
+      "relativePath": "Smileys/1f635.webp"
+    },
+    {
+      "emoji": "😤",
+      "name": "face with steam from nose",
+      "codePoint": "1f624",
+      "relativePath": "Smileys/1f624.webp"
+    },
+    {
+      "emoji": "🤬",
+      "name": "face with symbols on mouth",
+      "codePoint": "1f92c",
+      "relativePath": "Smileys/1f92c.webp"
+    },
+    {
+      "emoji": "😂",
+      "name": "face with tears of joy",
+      "codePoint": "1f602",
+      "relativePath": "Smileys/1f602.webp"
+    },
+    {
+      "emoji": "🤒",
+      "name": "face with thermometer",
+      "codePoint": "1f912",
+      "relativePath": "Smileys/1f912.webp"
+    },
+    {
+      "emoji": "😛",
+      "name": "face with tongue",
+      "codePoint": "1f61b",
+      "relativePath": "Smileys/1f61b.webp"
+    },
+    {
+      "emoji": "😶",
+      "name": "face without mouth",
+      "codePoint": "1f636",
+      "relativePath": "Smileys/1f636.webp"
+    },
+    {
+      "emoji": "😨",
+      "name": "fearful face",
+      "codePoint": "1f628",
+      "relativePath": "Smileys/1f628.webp"
+    },
+    {
+      "emoji": "😳",
+      "name": "flushed face",
+      "codePoint": "1f633",
+      "relativePath": "Smileys/1f633.webp"
+    },
+    {
+      "emoji": "😦",
+      "name": "frowning face with open mouth",
+      "codePoint": "1f626",
+      "relativePath": "Smileys/1f626.webp"
+    },
+    {
+      "emoji": "☹️",
+      "name": "frowning face",
+      "codePoint": "2639",
+      "relativePath": "Smileys/2639.webp"
+    },
+    {
+      "emoji": "👻",
+      "name": "ghost",
+      "codePoint": "1f47b",
+      "relativePath": "Smileys/1f47b.webp"
+    },
+    {
+      "emoji": "👺",
+      "name": "goblin",
+      "codePoint": "1f47a",
+      "relativePath": "Smileys/1f47a.webp"
+    },
+    {
+      "emoji": "😬",
+      "name": "grimacing face",
+      "codePoint": "1f62c",
+      "relativePath": "Smileys/1f62c.webp"
+    },
+    {
+      "emoji": "😸",
+      "name": "grinning cat with smiling eyes",
+      "codePoint": "1f638",
+      "relativePath": "Smileys/1f638.webp"
+    },
+    {
+      "emoji": "😺",
+      "name": "grinning cat",
+      "codePoint": "1f63a",
+      "relativePath": "Smileys/1f63a.webp"
+    },
+    {
+      "emoji": "😃",
+      "name": "grinning face with big eyes",
+      "codePoint": "1f603",
+      "relativePath": "Smileys/1f603.webp"
+    },
+    {
+      "emoji": "😄",
+      "name": "grinning face with smiling eyes",
+      "codePoint": "1f604",
+      "relativePath": "Smileys/1f604.webp"
+    },
+    {
+      "emoji": "😅",
+      "name": "grinning face with sweat",
+      "codePoint": "1f605",
+      "relativePath": "Smileys/1f605.webp"
+    },
+    {
+      "emoji": "😀",
+      "name": "grinning face",
+      "codePoint": "1f600",
+      "relativePath": "Smileys/1f600.webp"
+    },
+    {
+      "emoji": "😆",
+      "name": "grinning squinting face",
+      "codePoint": "1f606",
+      "relativePath": "Smileys/1f606.webp"
+    },
+    {
+      "emoji": "🙉",
+      "name": "hear-no-evil monkey",
+      "codePoint": "1f649",
+      "relativePath": "Smileys/1f649.webp"
+    },
+    {
+      "emoji": "🥵",
+      "name": "hot face",
+      "codePoint": "1f975",
+      "relativePath": "Smileys/1f975.webp"
+    },
+    {
+      "emoji": "😯",
+      "name": "hushed face",
+      "codePoint": "1f62f",
+      "relativePath": "Smileys/1f62f.webp"
+    },
+    {
+      "emoji": "😽",
+      "name": "kissing cat",
+      "codePoint": "1f63d",
+      "relativePath": "Smileys/1f63d.webp"
+    },
+    {
+      "emoji": "😚",
+      "name": "kissing face with closed eyes",
+      "codePoint": "1f61a",
+      "relativePath": "Smileys/1f61a.webp"
+    },
+    {
+      "emoji": "😗",
+      "name": "kissing face",
+      "codePoint": "1f617",
+      "relativePath": "Smileys/1f617.webp"
+    },
+    {
+      "emoji": "😭",
+      "name": "loudly crying face",
+      "codePoint": "1f62d",
+      "relativePath": "Smileys/1f62d.webp"
+    },
+    {
+      "emoji": "🤥",
+      "name": "lying face",
+      "codePoint": "1f925",
+      "relativePath": "Smileys/1f925.webp"
+    },
+    {
+      "emoji": "🫠",
+      "name": "melting face",
+      "codePoint": "1fae0",
+      "relativePath": "Smileys/1fae0.webp"
+    },
+    {
+      "emoji": "🤑",
+      "name": "money-mouth face",
+      "codePoint": "1f911",
+      "relativePath": "Smileys/1f911.webp"
+    },
+    {
+      "emoji": "🤢",
+      "name": "nauseated face",
+      "codePoint": "1f922",
+      "relativePath": "Smileys/1f922.webp"
+    },
+    {
+      "emoji": "🤓",
+      "name": "nerd face",
+      "codePoint": "1f913",
+      "relativePath": "Smileys/1f913.webp"
+    },
+    {
+      "emoji": "😐",
+      "name": "neutral face",
+      "codePoint": "1f610",
+      "relativePath": "Smileys/1f610.webp"
+    },
+    {
+      "emoji": "👹",
+      "name": "ogre",
+      "codePoint": "1f479",
+      "relativePath": "Smileys/1f479.webp"
+    },
+    {
+      "emoji": "🥳",
+      "name": "partying face",
+      "codePoint": "1f973",
+      "relativePath": "Smileys/1f973.webp"
+    },
+    {
+      "emoji": "😔",
+      "name": "pensive face",
+      "codePoint": "1f614",
+      "relativePath": "Smileys/1f614.webp"
+    },
+    {
+      "emoji": "😣",
+      "name": "persevering face",
+      "codePoint": "1f623",
+      "relativePath": "Smileys/1f623.webp"
+    },
+    {
+      "emoji": "💩",
+      "name": "pile of poo",
+      "codePoint": "1f4a9",
+      "relativePath": "Smileys/1f4a9.webp"
+    },
+    {
+      "emoji": "🥺",
+      "name": "pleading face",
+      "codePoint": "1f97a",
+      "relativePath": "Smileys/1f97a.webp"
+    },
+    {
+      "emoji": "😾",
+      "name": "pouting cat",
+      "codePoint": "1f63e",
+      "relativePath": "Smileys/1f63e.webp"
+    },
+    {
+      "emoji": "😌",
+      "name": "relieved face",
+      "codePoint": "1f60c",
+      "relativePath": "Smileys/1f60c.webp"
+    },
+    {
+      "emoji": "🤖",
+      "name": "robot",
+      "codePoint": "1f916",
+      "relativePath": "Smileys/1f916.webp"
+    },
+    {
+      "emoji": "🤣",
+      "name": "rolling on the floor laughing",
+      "codePoint": "1f923",
+      "relativePath": "Smileys/1f923.webp"
+    },
+    {
+      "emoji": "😥",
+      "name": "sad but relieved face",
+      "codePoint": "1f625",
+      "relativePath": "Smileys/1f625.webp"
+    },
+    {
+      "emoji": "🫡",
+      "name": "saluting face",
+      "codePoint": "1fae1",
+      "relativePath": "Smileys/1fae1.webp"
+    },
+    {
+      "emoji": "🙈",
+      "name": "see-no-evil monkey",
+      "codePoint": "1f648",
+      "relativePath": "Smileys/1f648.webp"
+    },
+    {
+      "emoji": "🤫",
+      "name": "shushing face",
+      "codePoint": "1f92b",
+      "relativePath": "Smileys/1f92b.webp"
+    },
+    {
+      "emoji": "☠️",
+      "name": "skull and crossbones",
+      "codePoint": "2620",
+      "relativePath": "Smileys/2620.webp"
+    },
+    {
+      "emoji": "💀",
+      "name": "skull",
+      "codePoint": "1f480",
+      "relativePath": "Smileys/1f480.webp"
+    },
+    {
+      "emoji": "😴",
+      "name": "sleeping face",
+      "codePoint": "1f634",
+      "relativePath": "Smileys/1f634.webp"
+    },
+    {
+      "emoji": "😪",
+      "name": "sleepy face",
+      "codePoint": "1f62a",
+      "relativePath": "Smileys/1f62a.webp"
+    },
+    {
+      "emoji": "🙁",
+      "name": "slightly frowning face",
+      "codePoint": "1f641",
+      "relativePath": "Smileys/1f641.webp"
+    },
+    {
+      "emoji": "🙂",
+      "name": "slightly smiling face",
+      "codePoint": "1f642",
+      "relativePath": "Smileys/1f642.webp"
+    },
+    {
+      "emoji": "😻",
+      "name": "smiling cat with heart-eyes",
+      "codePoint": "1f63b",
+      "relativePath": "Smileys/1f63b.webp"
+    },
+    {
+      "emoji": "😇",
+      "name": "smiling face with halo",
+      "codePoint": "1f607",
+      "relativePath": "Smileys/1f607.webp"
+    },
+    {
+      "emoji": "🥰",
+      "name": "smiling face with hearts",
+      "codePoint": "1f970",
+      "relativePath": "Smileys/1f970.webp"
+    },
+    {
+      "emoji": "😈",
+      "name": "smiling face with horns",
+      "codePoint": "1f608",
+      "relativePath": "Smileys/1f608.webp"
+    },
+    {
+      "emoji": "😊",
+      "name": "smiling face with smiling eyes",
+      "codePoint": "1f60a",
+      "relativePath": "Smileys/1f60a.webp"
+    },
+    {
+      "emoji": "😎",
+      "name": "smiling face with sunglasses",
+      "codePoint": "1f60e",
+      "relativePath": "Smileys/1f60e.webp"
+    },
+    {
+      "emoji": "🥲",
+      "name": "smiling face with tear",
+      "codePoint": "1f972",
+      "relativePath": "Smileys/1f972.webp"
+    },
+    {
+      "emoji": "☺️",
+      "name": "smiling face",
+      "codePoint": "263a",
+      "relativePath": "Smileys/263a.webp"
+    },
+    {
+      "emoji": "😏",
+      "name": "smirking face",
+      "codePoint": "1f60f",
+      "relativePath": "Smileys/1f60f.webp"
+    },
+    {
+      "emoji": "🤧",
+      "name": "sneezing face",
+      "codePoint": "1f927",
+      "relativePath": "Smileys/1f927.webp"
+    },
+    {
+      "emoji": "🙊",
+      "name": "speak-no-evil monkey",
+      "codePoint": "1f64a",
+      "relativePath": "Smileys/1f64a.webp"
+    },
+    {
+      "emoji": "😝",
+      "name": "squinting face with tongue",
+      "codePoint": "1f61d",
+      "relativePath": "Smileys/1f61d.webp"
+    },
+    {
+      "emoji": "🤩",
+      "name": "star-struck",
+      "codePoint": "1f929",
+      "relativePath": "Smileys/1f929.webp"
+    },
+    {
+      "emoji": "🤔",
+      "name": "thinking face",
+      "codePoint": "1f914",
+      "relativePath": "Smileys/1f914.webp"
+    },
+    {
+      "emoji": "😫",
+      "name": "tired face",
+      "codePoint": "1f62b",
+      "relativePath": "Smileys/1f62b.webp"
+    },
+    {
+      "emoji": "😒",
+      "name": "unamused face",
+      "codePoint": "1f612",
+      "relativePath": "Smileys/1f612.webp"
+    },
+    {
+      "emoji": "🙃",
+      "name": "upside-down face",
+      "codePoint": "1f643",
+      "relativePath": "Smileys/1f643.webp"
+    },
+    {
+      "emoji": "🙀",
+      "name": "weary cat",
+      "codePoint": "1f640",
+      "relativePath": "Smileys/1f640.webp"
+    },
+    {
+      "emoji": "😩",
+      "name": "weary face",
+      "codePoint": "1f629",
+      "relativePath": "Smileys/1f629.webp"
+    },
+    {
+      "emoji": "😜",
+      "name": "winking face with tongue",
+      "codePoint": "1f61c",
+      "relativePath": "Smileys/1f61c.webp"
+    },
+    {
+      "emoji": "😉",
+      "name": "winking face",
+      "codePoint": "1f609",
+      "relativePath": "Smileys/1f609.webp"
+    },
+    {
+      "emoji": "🥴",
+      "name": "woozy face",
+      "codePoint": "1f974",
+      "relativePath": "Smileys/1f974.webp"
+    },
+    {
+      "emoji": "😟",
+      "name": "worried face",
+      "codePoint": "1f61f",
+      "relativePath": "Smileys/1f61f.webp"
+    },
+    {
+      "emoji": "🥱",
+      "name": "yawning face",
+      "codePoint": "1f971",
+      "relativePath": "Smileys/1f971.webp"
+    },
+    {
+      "emoji": "🤪",
+      "name": "zany face",
+      "codePoint": "1f92a",
+      "relativePath": "Smileys/1f92a.webp"
+    },
+    {
+      "emoji": "🤐",
+      "name": "zipper-mouth face",
+      "codePoint": "1f910",
+      "relativePath": "Smileys/1f910.webp"
+    }
+  ],
+  "People": [
+    {
+      "emoji": "👶",
+      "name": "baby",
+      "codePoint": "1f476",
+      "relativePath": "People/1f476.webp"
+    },
+    {
+      "emoji": "👇",
+      "name": "backhand index pointing down",
+      "codePoint": "1f447",
+      "relativePath": "People/1f447.webp"
+    },
+    {
+      "emoji": "👈",
+      "name": "backhand index pointing left",
+      "codePoint": "1f448",
+      "relativePath": "People/1f448.webp"
+    },
+    {
+      "emoji": "👉",
+      "name": "backhand index pointing right",
+      "codePoint": "1f449",
+      "relativePath": "People/1f449.webp"
+    },
+    {
+      "emoji": "👆",
+      "name": "backhand index pointing up",
+      "codePoint": "1f446",
+      "relativePath": "People/1f446.webp"
+    },
+    {
+      "emoji": "🫦",
+      "name": "biting lip",
+      "codePoint": "1fae6",
+      "relativePath": "People/1fae6.webp"
+    },
+    {
+      "emoji": "🦴",
+      "name": "bone",
+      "codePoint": "1f9b4",
+      "relativePath": "People/1f9b4.webp"
+    },
+    {
+      "emoji": "👤",
+      "name": "bust in silhouette",
+      "codePoint": "1f464",
+      "relativePath": "People/1f464.webp"
+    },
+    {
+      "emoji": "👥",
+      "name": "busts in silhouette",
+      "codePoint": "1f465",
+      "relativePath": "People/1f465.webp"
+    },
+    {
+      "emoji": "🤙",
+      "name": "call me hand",
+      "codePoint": "1f919",
+      "relativePath": "People/1f919.webp"
+    },
+    {
+      "emoji": "👏",
+      "name": "clapping hands",
+      "codePoint": "1f44f",
+      "relativePath": "People/1f44f.webp"
+    },
+    {
+      "emoji": "🤞",
+      "name": "crossed fingers",
+      "codePoint": "1f91e",
+      "relativePath": "People/1f91e.webp"
+    },
+    {
+      "emoji": "🦻",
+      "name": "ear with hearing aid",
+      "codePoint": "1f9bb",
+      "relativePath": "People/1f9bb.webp"
+    },
+    {
+      "emoji": "👂",
+      "name": "ear",
+      "codePoint": "1f442",
+      "relativePath": "People/1f442.webp"
+    },
+    {
+      "emoji": "👀",
+      "name": "eyes",
+      "codePoint": "1f440",
+      "relativePath": "People/1f440.webp"
+    },
+    {
+      "emoji": "👨‍👩‍👧‍👦",
+      "name": "family man, woman, girl, boy",
+      "codePoint": "1f468",
+      "relativePath": "People/1f468.webp"
+    },
+    {
+      "emoji": "💪",
+      "name": "flexed biceps",
+      "codePoint": "1f4aa",
+      "relativePath": "People/1f4aa.webp"
+    },
+    {
+      "emoji": "🙏",
+      "name": "folded hands",
+      "codePoint": "1f64f",
+      "relativePath": "People/1f64f.webp"
+    },
+    {
+      "emoji": "🦶",
+      "name": "foot",
+      "codePoint": "1f9b6",
+      "relativePath": "People/1f9b6.webp"
+    },
+    {
+      "emoji": "👣",
+      "name": "footprints",
+      "codePoint": "1f463",
+      "relativePath": "People/1f463.webp"
+    },
+    {
+      "emoji": "🖐️",
+      "name": "hand with fingers splayed",
+      "codePoint": "1f590",
+      "relativePath": "People/1f590.webp"
+    },
+    {
+      "emoji": "🫰",
+      "name": "hand with index finger and thumb crossed",
+      "codePoint": "1faf0",
+      "relativePath": "People/1faf0.webp"
+    },
+    {
+      "emoji": "🤝",
+      "name": "handshake",
+      "codePoint": "1f91d",
+      "relativePath": "People/1f91d.webp"
+    },
+    {
+      "emoji": "🫶",
+      "name": "heart hands",
+      "codePoint": "1faf6",
+      "relativePath": "People/1faf6.webp"
+    },
+    {
+      "emoji": "🫵",
+      "name": "index pointing at the viewer",
+      "codePoint": "1faf5",
+      "relativePath": "People/1faf5.webp"
+    },
+    {
+      "emoji": "☝️",
+      "name": "index pointing up",
+      "codePoint": "261d",
+      "relativePath": "People/261d.webp"
+    },
+    {
+      "emoji": "🤛",
+      "name": "left-facing fist",
+      "codePoint": "1f91b",
+      "relativePath": "People/1f91b.webp"
+    },
+    {
+      "emoji": "🫲",
+      "name": "leftwards hand",
+      "codePoint": "1faf2",
+      "relativePath": "People/1faf2.webp"
+    },
+    {
+      "emoji": "🦵",
+      "name": "leg",
+      "codePoint": "1f9b5",
+      "relativePath": "People/1f9b5.webp"
+    },
+    {
+      "emoji": "🤟",
+      "name": "love-you gesture",
+      "codePoint": "1f91f",
+      "relativePath": "People/1f91f.webp"
+    },
+    {
+      "emoji": "🕺",
+      "name": "man dancing",
+      "codePoint": "1f57a",
+      "relativePath": "People/1f57a.webp"
+    },
+    {
+      "emoji": "🤦‍♂️",
+      "name": "man facepalming",
+      "codePoint": "1f926",
+      "relativePath": "People/1f926.webp"
+    },
+    {
+      "emoji": "👨‍⚕️",
+      "name": "man health worker",
+      "codePoint": "1f468",
+      "relativePath": "People/1f468.webp"
+    },
+    {
+      "emoji": "👮‍♂️",
+      "name": "man police officer",
+      "codePoint": "1f46e",
+      "relativePath": "People/1f46e.webp"
+    },
+    {
+      "emoji": "🤷‍♂️",
+      "name": "man shrugging",
+      "codePoint": "1f937",
+      "relativePath": "People/1f937.webp"
+    },
+    {
+      "emoji": "👨‍🏫",
+      "name": "man teacher",
+      "codePoint": "1f468",
+      "relativePath": "People/1f468.webp"
+    },
+    {
+      "emoji": "👨‍💻",
+      "name": "man technologist",
+      "codePoint": "1f468",
+      "relativePath": "People/1f468.webp"
+    },
+    {
+      "emoji": "🧛‍♂️",
+      "name": "man vampire",
+      "codePoint": "1f9db",
+      "relativePath": "People/1f9db.webp"
+    },
+    {
+      "emoji": "🧟‍♂️",
+      "name": "man zombie",
+      "codePoint": "1f9df",
+      "relativePath": "People/1f9df.webp"
+    },
+    {
+      "emoji": "🦾",
+      "name": "mechanical arm",
+      "codePoint": "1f9be",
+      "relativePath": "People/1f9be.webp"
+    },
+    {
+      "emoji": "🦿",
+      "name": "mechanical leg",
+      "codePoint": "1f9bf",
+      "relativePath": "People/1f9bf.webp"
+    },
+    {
+      "emoji": "🖕",
+      "name": "middle finger",
+      "codePoint": "1f595",
+      "relativePath": "People/1f595.webp"
+    },
+    {
+      "emoji": "👄",
+      "name": "mouth",
+      "codePoint": "1f444",
+      "relativePath": "People/1f444.webp"
+    },
+    {
+      "emoji": "🤶",
+      "name": "Mrs. Claus",
+      "codePoint": "1f936",
+      "relativePath": "People/1f936.webp"
+    },
+    {
+      "emoji": "🧑‍🎄",
+      "name": "Mx Claus",
+      "codePoint": "1f9d1",
+      "relativePath": "People/1f9d1.webp"
+    },
+    {
+      "emoji": "💅",
+      "name": "nail polish",
+      "codePoint": "1f485",
+      "relativePath": "People/1f485.webp"
+    },
+    {
+      "emoji": "👃",
+      "name": "nose",
+      "codePoint": "1f443",
+      "relativePath": "People/1f443.webp"
+    },
+    {
+      "emoji": "👌",
+      "name": "OK hand",
+      "codePoint": "1f44c",
+      "relativePath": "People/1f44c.webp"
+    },
+    {
+      "emoji": "👵",
+      "name": "old woman",
+      "codePoint": "1f475",
+      "relativePath": "People/1f475.webp"
+    },
+    {
+      "emoji": "👊",
+      "name": "oncoming fist",
+      "codePoint": "1f44a",
+      "relativePath": "People/1f44a.webp"
+    },
+    {
+      "emoji": "👐",
+      "name": "open hands",
+      "codePoint": "1f450",
+      "relativePath": "People/1f450.webp"
+    },
+    {
+      "emoji": "🫳",
+      "name": "palm down hand",
+      "codePoint": "1faf3",
+      "relativePath": "People/1faf3.webp"
+    },
+    {
+      "emoji": "🫴",
+      "name": "palm up hand",
+      "codePoint": "1faf4",
+      "relativePath": "People/1faf4.webp"
+    },
+    {
+      "emoji": "🤲",
+      "name": "palms up together",
+      "codePoint": "1f932",
+      "relativePath": "People/1f932.webp"
+    },
+    {
+      "emoji": "🫂",
+      "name": "people hugging",
+      "codePoint": "1fac2",
+      "relativePath": "People/1fac2.webp"
+    },
+    {
+      "emoji": "🤦",
+      "name": "person facepalming",
+      "codePoint": "1f926",
+      "relativePath": "People/1f926.webp"
+    },
+    {
+      "emoji": "🤷",
+      "name": "person shrugging",
+      "codePoint": "1f937",
+      "relativePath": "People/1f937.webp"
+    },
+    {
+      "emoji": "🤌",
+      "name": "pinched fingers",
+      "codePoint": "1f90c",
+      "relativePath": "People/1f90c.webp"
+    },
+    {
+      "emoji": "🤏",
+      "name": "pinching hand",
+      "codePoint": "1f90f",
+      "relativePath": "People/1f90f.webp"
+    },
+    {
+      "emoji": "🤰",
+      "name": "pregnant woman",
+      "codePoint": "1f930",
+      "relativePath": "People/1f930.webp"
+    },
+    {
+      "emoji": "🤚",
+      "name": "raised back of hand",
+      "codePoint": "1f91a",
+      "relativePath": "People/1f91a.webp"
+    },
+    {
+      "emoji": "✊",
+      "name": "raised fist",
+      "codePoint": "270a",
+      "relativePath": "People/270a.webp"
+    },
+    {
+      "emoji": "✋",
+      "name": "raised hand",
+      "codePoint": "270b",
+      "relativePath": "People/270b.webp"
+    },
+    {
+      "emoji": "🙌",
+      "name": "raising hands",
+      "codePoint": "1f64c",
+      "relativePath": "People/1f64c.webp"
+    },
+    {
+      "emoji": "🤜",
+      "name": "right-facing fist",
+      "codePoint": "1f91c",
+      "relativePath": "People/1f91c.webp"
+    },
+    {
+      "emoji": "🫱",
+      "name": "rightwards hand",
+      "codePoint": "1faf1",
+      "relativePath": "People/1faf1.webp"
+    },
+    {
+      "emoji": "🎅",
+      "name": "Santa Claus",
+      "codePoint": "1f385",
+      "relativePath": "People/1f385.webp"
+    },
+    {
+      "emoji": "🤘",
+      "name": "sign of the horns",
+      "codePoint": "1f918",
+      "relativePath": "People/1f918.webp"
+    },
+    {
+      "emoji": "🗣️",
+      "name": "speaking head",
+      "codePoint": "1f5e3",
+      "relativePath": "People/1f5e3.webp"
+    },
+    {
+      "emoji": "🧑‍💻",
+      "name": "technologist",
+      "codePoint": "1f9d1",
+      "relativePath": "People/1f9d1.webp"
+    },
+    {
+      "emoji": "👎",
+      "name": "thumbs down",
+      "codePoint": "1f44e",
+      "relativePath": "People/1f44e.webp"
+    },
+    {
+      "emoji": "👍",
+      "name": "thumbs up",
+      "codePoint": "1f44d",
+      "relativePath": "People/1f44d.webp"
+    },
+    {
+      "emoji": "👅",
+      "name": "tongue",
+      "codePoint": "1f445",
+      "relativePath": "People/1f445.webp"
+    },
+    {
+      "emoji": "🦷",
+      "name": "tooth",
+      "codePoint": "1f9b7",
+      "relativePath": "People/1f9b7.webp"
+    },
+    {
+      "emoji": "🧛",
+      "name": "vampire",
+      "codePoint": "1f9db",
+      "relativePath": "People/1f9db.webp"
+    },
+    {
+      "emoji": "✌️",
+      "name": "victory hand",
+      "codePoint": "270c",
+      "relativePath": "People/270c.webp"
+    },
+    {
+      "emoji": "🖖",
+      "name": "vulcan salute",
+      "codePoint": "1f596",
+      "relativePath": "People/1f596.webp"
+    },
+    {
+      "emoji": "👋",
+      "name": "waving hand",
+      "codePoint": "1f44b",
+      "relativePath": "People/1f44b.webp"
+    },
+    {
+      "emoji": "💃",
+      "name": "woman dancing",
+      "codePoint": "1f483",
+      "relativePath": "People/1f483.webp"
+    },
+    {
+      "emoji": "🤦‍♀️",
+      "name": "woman facepalming",
+      "codePoint": "1f926",
+      "relativePath": "People/1f926.webp"
+    },
+    {
+      "emoji": "👩‍⚕️",
+      "name": "woman health worker",
+      "codePoint": "1f469",
+      "relativePath": "People/1f469.webp"
+    },
+    {
+      "emoji": "👮‍♀️",
+      "name": "woman police officer",
+      "codePoint": "1f46e",
+      "relativePath": "People/1f46e.webp"
+    },
+    {
+      "emoji": "🤷‍♀️",
+      "name": "woman shrugging",
+      "codePoint": "1f937",
+      "relativePath": "People/1f937.webp"
+    },
+    {
+      "emoji": "👩‍💻",
+      "name": "woman technologist",
+      "codePoint": "1f469",
+      "relativePath": "People/1f469.webp"
+    },
+    {
+      "emoji": "🧛‍♀️",
+      "name": "woman vampire",
+      "codePoint": "1f9db",
+      "relativePath": "People/1f9db.webp"
+    },
+    {
+      "emoji": "🧟‍♀️",
+      "name": "woman zombie",
+      "codePoint": "1f9df",
+      "relativePath": "People/1f9df.webp"
+    },
+    {
+      "emoji": "✍️",
+      "name": "writing hand",
+      "codePoint": "270d",
+      "relativePath": "People/270d.webp"
+    },
+    {
+      "emoji": "🧟",
+      "name": "zombie",
+      "codePoint": "1f9df",
+      "relativePath": "People/1f9df.webp"
+    }
+  ],
+  "Animal-Natural": [
+    {
+      "emoji": "🐜",
+      "name": "ant",
+      "codePoint": "1f41c",
+      "relativePath": "Animal-Natural/1f41c.webp"
+    },
+    {
+      "emoji": "🐤",
+      "name": "baby chick",
+      "codePoint": "1f424",
+      "relativePath": "Animal-Natural/1f424.webp"
+    },
+    {
+      "emoji": "🦇",
+      "name": "bat",
+      "codePoint": "1f987",
+      "relativePath": "Animal-Natural/1f987.webp"
+    },
+    {
+      "emoji": "🐻",
+      "name": "bear",
+      "codePoint": "1f43b",
+      "relativePath": "Animal-Natural/1f43b.webp"
+    },
+    {
+      "emoji": "🪲",
+      "name": "beetle",
+      "codePoint": "1fab2",
+      "relativePath": "Animal-Natural/1fab2.webp"
+    },
+    {
+      "emoji": "🐦",
+      "name": "bird",
+      "codePoint": "1f426",
+      "relativePath": "Animal-Natural/1f426.webp"
+    },
+    {
+      "emoji": "🦬",
+      "name": "bison",
+      "codePoint": "1f9ac",
+      "relativePath": "Animal-Natural/1f9ac.webp"
+    },
+    {
+      "emoji": "🐈‍⬛",
+      "name": "black cat",
+      "codePoint": "1f408",
+      "relativePath": "Animal-Natural/1f408.webp"
+    },
+    {
+      "emoji": "🌼",
+      "name": "blossom",
+      "codePoint": "1f33c",
+      "relativePath": "Animal-Natural/1f33c.webp"
+    },
+    {
+      "emoji": "💐",
+      "name": "bouquet",
+      "codePoint": "1f490",
+      "relativePath": "Animal-Natural/1f490.webp"
+    },
+    {
+      "emoji": "🐛",
+      "name": "bug",
+      "codePoint": "1f41b",
+      "relativePath": "Animal-Natural/1f41b.webp"
+    },
+    {
+      "emoji": "🦋",
+      "name": "butterfly",
+      "codePoint": "1f98b",
+      "relativePath": "Animal-Natural/1f98b.webp"
+    },
+    {
+      "emoji": "🌵",
+      "name": "cactus",
+      "codePoint": "1f335",
+      "relativePath": "Animal-Natural/1f335.webp"
+    },
+    {
+      "emoji": "🐱",
+      "name": "cat face",
+      "codePoint": "1f431",
+      "relativePath": "Animal-Natural/1f431.webp"
+    },
+    {
+      "emoji": "🐈",
+      "name": "cat",
+      "codePoint": "1f408",
+      "relativePath": "Animal-Natural/1f408.webp"
+    },
+    {
+      "emoji": "🌸",
+      "name": "cherry blossom",
+      "codePoint": "1f338",
+      "relativePath": "Animal-Natural/1f338.webp"
+    },
+    {
+      "emoji": "🐔",
+      "name": "chicken",
+      "codePoint": "1f414",
+      "relativePath": "Animal-Natural/1f414.webp"
+    },
+    {
+      "emoji": "⛈️",
+      "name": "cloud with lightning and rain",
+      "codePoint": "26c8",
+      "relativePath": "Animal-Natural/26c8.webp"
+    },
+    {
+      "emoji": "🌩️",
+      "name": "cloud with lightning",
+      "codePoint": "1f329",
+      "relativePath": "Animal-Natural/1f329.webp"
+    },
+    {
+      "emoji": "🌧️",
+      "name": "cloud with rain",
+      "codePoint": "1f327",
+      "relativePath": "Animal-Natural/1f327.webp"
+    },
+    {
+      "emoji": "🌨️",
+      "name": "cloud with snow",
+      "codePoint": "1f328",
+      "relativePath": "Animal-Natural/1f328.webp"
+    },
+    {
+      "emoji": "☁️",
+      "name": "cloud",
+      "codePoint": "2601",
+      "relativePath": "Animal-Natural/2601.webp"
+    },
+    {
+      "emoji": "🪳",
+      "name": "cockroach",
+      "codePoint": "1fab3",
+      "relativePath": "Animal-Natural/1fab3.webp"
+    },
+    {
+      "emoji": "🐄",
+      "name": "cow",
+      "codePoint": "1f404",
+      "relativePath": "Animal-Natural/1f404.webp"
+    },
+    {
+      "emoji": "🦗",
+      "name": "cricket",
+      "codePoint": "1f997",
+      "relativePath": "Animal-Natural/1f997.webp"
+    },
+    {
+      "emoji": "🌳",
+      "name": "deciduous tree",
+      "codePoint": "1f333",
+      "relativePath": "Animal-Natural/1f333.webp"
+    },
+    {
+      "emoji": "🦌",
+      "name": "deer",
+      "codePoint": "1f98c",
+      "relativePath": "Animal-Natural/1f98c.webp"
+    },
+    {
+      "emoji": "🐶",
+      "name": "dog face",
+      "codePoint": "1f436",
+      "relativePath": "Animal-Natural/1f436.webp"
+    },
+    {
+      "emoji": "🕊️",
+      "name": "dove",
+      "codePoint": "1f54a",
+      "relativePath": "Animal-Natural/1f54a.webp"
+    },
+    {
+      "emoji": "🦆",
+      "name": "duck",
+      "codePoint": "1f986",
+      "relativePath": "Animal-Natural/1f986.webp"
+    },
+    {
+      "emoji": "🌲",
+      "name": "evergreen tree",
+      "codePoint": "1f332",
+      "relativePath": "Animal-Natural/1f332.webp"
+    },
+    {
+      "emoji": "🔥",
+      "name": "fire",
+      "codePoint": "1f525",
+      "relativePath": "Animal-Natural/1f525.webp"
+    },
+    {
+      "emoji": "🌛",
+      "name": "first quarter moon face",
+      "codePoint": "1f31b",
+      "relativePath": "Animal-Natural/1f31b.webp"
+    },
+    {
+      "emoji": "🌓",
+      "name": "first quarter moon",
+      "codePoint": "1f313",
+      "relativePath": "Animal-Natural/1f313.webp"
+    },
+    {
+      "emoji": "🐟",
+      "name": "fish",
+      "codePoint": "1f41f",
+      "relativePath": "Animal-Natural/1f41f.webp"
+    },
+    {
+      "emoji": "🦩",
+      "name": "flamingo",
+      "codePoint": "1f9a9",
+      "relativePath": "Animal-Natural/1f9a9.webp"
+    },
+    {
+      "emoji": "🍀",
+      "name": "four leaf clover",
+      "codePoint": "1f340",
+      "relativePath": "Animal-Natural/1f340.webp"
+    },
+    {
+      "emoji": "🦊",
+      "name": "fox",
+      "codePoint": "1f98a",
+      "relativePath": "Animal-Natural/1f98a.webp"
+    },
+    {
+      "emoji": "🐸",
+      "name": "frog",
+      "codePoint": "1f438",
+      "relativePath": "Animal-Natural/1f438.webp"
+    },
+    {
+      "emoji": "🐥",
+      "name": "front-facing baby chick",
+      "codePoint": "1f425",
+      "relativePath": "Animal-Natural/1f425.webp"
+    },
+    {
+      "emoji": "🌝",
+      "name": "full moon face",
+      "codePoint": "1f31d",
+      "relativePath": "Animal-Natural/1f31d.webp"
+    },
+    {
+      "emoji": "🌕",
+      "name": "full moon",
+      "codePoint": "1f315",
+      "relativePath": "Animal-Natural/1f315.webp"
+    },
+    {
+      "emoji": "🦒",
+      "name": "giraffe",
+      "codePoint": "1f992",
+      "relativePath": "Animal-Natural/1f992.webp"
+    },
+    {
+      "emoji": "🌟",
+      "name": "glowing star",
+      "codePoint": "1f31f",
+      "relativePath": "Animal-Natural/1f31f.webp"
+    },
+    {
+      "emoji": "🦍",
+      "name": "gorilla",
+      "codePoint": "1f98d",
+      "relativePath": "Animal-Natural/1f98d.webp"
+    },
+    {
+      "emoji": "🐹",
+      "name": "hamster",
+      "codePoint": "1f439",
+      "relativePath": "Animal-Natural/1f439.webp"
+    },
+    {
+      "emoji": "🐣",
+      "name": "hatching chick",
+      "codePoint": "1f423",
+      "relativePath": "Animal-Natural/1f423.webp"
+    },
+    {
+      "emoji": "🦔",
+      "name": "hedgehog",
+      "codePoint": "1f994",
+      "relativePath": "Animal-Natural/1f994.webp"
+    },
+    {
+      "emoji": "🌿",
+      "name": "herb",
+      "codePoint": "1f33f",
+      "relativePath": "Animal-Natural/1f33f.webp"
+    },
+    {
+      "emoji": "🌺",
+      "name": "hibiscus",
+      "codePoint": "1f33a",
+      "relativePath": "Animal-Natural/1f33a.webp"
+    },
+    {
+      "emoji": "⚡",
+      "name": "high voltage",
+      "codePoint": "26a1",
+      "relativePath": "Animal-Natural/26a1.webp"
+    },
+    {
+      "emoji": "🐝",
+      "name": "honeybee",
+      "codePoint": "1f41d",
+      "relativePath": "Animal-Natural/1f41d.webp"
+    },
+    {
+      "emoji": "🐴",
+      "name": "horse face",
+      "codePoint": "1f434",
+      "relativePath": "Animal-Natural/1f434.webp"
+    },
+    {
+      "emoji": "🐎",
+      "name": "horse",
+      "codePoint": "1f40e",
+      "relativePath": "Animal-Natural/1f40e.webp"
+    },
+    {
+      "emoji": "🦘",
+      "name": "kangaroo",
+      "codePoint": "1f998",
+      "relativePath": "Animal-Natural/1f998.webp"
+    },
+    {
+      "emoji": "🐨",
+      "name": "koala",
+      "codePoint": "1f428",
+      "relativePath": "Animal-Natural/1f428.webp"
+    },
+    {
+      "emoji": "🐞",
+      "name": "lady beetle",
+      "codePoint": "1f41e",
+      "relativePath": "Animal-Natural/1f41e.webp"
+    },
+    {
+      "emoji": "🌜",
+      "name": "last quarter moon face",
+      "codePoint": "1f31c",
+      "relativePath": "Animal-Natural/1f31c.webp"
+    },
+    {
+      "emoji": "🌗",
+      "name": "last quarter moon",
+      "codePoint": "1f317",
+      "relativePath": "Animal-Natural/1f317.webp"
+    },
+    {
+      "emoji": "🐆",
+      "name": "leopard",
+      "codePoint": "1f406",
+      "relativePath": "Animal-Natural/1f406.webp"
+    },
+    {
+      "emoji": "🦁",
+      "name": "lion",
+      "codePoint": "1f981",
+      "relativePath": "Animal-Natural/1f981.webp"
+    },
+    {
+      "emoji": "🦙",
+      "name": "llama",
+      "codePoint": "1f999",
+      "relativePath": "Animal-Natural/1f999.webp"
+    },
+    {
+      "emoji": "🦞",
+      "name": "lobster",
+      "codePoint": "1f99e",
+      "relativePath": "Animal-Natural/1f99e.webp"
+    },
+    {
+      "emoji": "🦠",
+      "name": "microbe",
+      "codePoint": "1f9a0",
+      "relativePath": "Animal-Natural/1f9a0.webp"
+    },
+    {
+      "emoji": "🐵",
+      "name": "monkey face",
+      "codePoint": "1f435",
+      "relativePath": "Animal-Natural/1f435.webp"
+    },
+    {
+      "emoji": "🦟",
+      "name": "mosquito",
+      "codePoint": "1f99f",
+      "relativePath": "Animal-Natural/1f99f.webp"
+    },
+    {
+      "emoji": "🐭",
+      "name": "mouse face",
+      "codePoint": "1f42d",
+      "relativePath": "Animal-Natural/1f42d.webp"
+    },
+    {
+      "emoji": "🌚",
+      "name": "new moon face",
+      "codePoint": "1f31a",
+      "relativePath": "Animal-Natural/1f31a.webp"
+    },
+    {
+      "emoji": "🌑",
+      "name": "new moon",
+      "codePoint": "1f311",
+      "relativePath": "Animal-Natural/1f311.webp"
+    },
+    {
+      "emoji": "🐙",
+      "name": "octopus",
+      "codePoint": "1f419",
+      "relativePath": "Animal-Natural/1f419.webp"
+    },
+    {
+      "emoji": "🦉",
+      "name": "owl",
+      "codePoint": "1f989",
+      "relativePath": "Animal-Natural/1f989.webp"
+    },
+    {
+      "emoji": "🐂",
+      "name": "ox",
+      "codePoint": "1f402",
+      "relativePath": "Animal-Natural/1f402.webp"
+    },
+    {
+      "emoji": "🌴",
+      "name": "palm tree",
+      "codePoint": "1f334",
+      "relativePath": "Animal-Natural/1f334.webp"
+    },
+    {
+      "emoji": "🐼",
+      "name": "panda",
+      "codePoint": "1f43c",
+      "relativePath": "Animal-Natural/1f43c.webp"
+    },
+    {
+      "emoji": "🦜",
+      "name": "parrot",
+      "codePoint": "1f99c",
+      "relativePath": "Animal-Natural/1f99c.webp"
+    },
+    {
+      "emoji": "🐾",
+      "name": "paw prints",
+      "codePoint": "1f43e",
+      "relativePath": "Animal-Natural/1f43e.webp"
+    },
+    {
+      "emoji": "🐧",
+      "name": "penguin",
+      "codePoint": "1f427",
+      "relativePath": "Animal-Natural/1f427.webp"
+    },
+    {
+      "emoji": "🐷",
+      "name": "pig face",
+      "codePoint": "1f437",
+      "relativePath": "Animal-Natural/1f437.webp"
+    },
+    {
+      "emoji": "🐽",
+      "name": "pig nose",
+      "codePoint": "1f43d",
+      "relativePath": "Animal-Natural/1f43d.webp"
+    },
+    {
+      "emoji": "🐻‍❄️",
+      "name": "polar bear",
+      "codePoint": "1f43b",
+      "relativePath": "Animal-Natural/1f43b.webp"
+    },
+    {
+      "emoji": "🐰",
+      "name": "rabbit face",
+      "codePoint": "1f430",
+      "relativePath": "Animal-Natural/1f430.webp"
+    },
+    {
+      "emoji": "🐇",
+      "name": "rabbit",
+      "codePoint": "1f407",
+      "relativePath": "Animal-Natural/1f407.webp"
+    },
+    {
+      "emoji": "🦝",
+      "name": "raccoon",
+      "codePoint": "1f99d",
+      "relativePath": "Animal-Natural/1f99d.webp"
+    },
+    {
+      "emoji": "🌈",
+      "name": "rainbow",
+      "codePoint": "1f308",
+      "relativePath": "Animal-Natural/1f308.webp"
+    },
+    {
+      "emoji": "🌹",
+      "name": "rose",
+      "codePoint": "1f339",
+      "relativePath": "Animal-Natural/1f339.webp"
+    },
+    {
+      "emoji": "🏵️",
+      "name": "rosette",
+      "codePoint": "1f3f5",
+      "relativePath": "Animal-Natural/1f3f5.webp"
+    },
+    {
+      "emoji": "🦕",
+      "name": "sauropod",
+      "codePoint": "1f995",
+      "relativePath": "Animal-Natural/1f995.webp"
+    },
+    {
+      "emoji": "🦭",
+      "name": "seal",
+      "codePoint": "1f9ad",
+      "relativePath": "Animal-Natural/1f9ad.webp"
+    },
+    {
+      "emoji": "🌱",
+      "name": "seedling",
+      "codePoint": "1f331",
+      "relativePath": "Animal-Natural/1f331.webp"
+    },
+    {
+      "emoji": "☘️",
+      "name": "shamrock",
+      "codePoint": "2618",
+      "relativePath": "Animal-Natural/2618.webp"
+    },
+    {
+      "emoji": "🦐",
+      "name": "shrimp",
+      "codePoint": "1f990",
+      "relativePath": "Animal-Natural/1f990.webp"
+    },
+    {
+      "emoji": "🐌",
+      "name": "snail",
+      "codePoint": "1f40c",
+      "relativePath": "Animal-Natural/1f40c.webp"
+    },
+    {
+      "emoji": "🐍",
+      "name": "snake",
+      "codePoint": "1f40d",
+      "relativePath": "Animal-Natural/1f40d.webp"
+    },
+    {
+      "emoji": "❄️",
+      "name": "snowflake",
+      "codePoint": "2744",
+      "relativePath": "Animal-Natural/2744.webp"
+    },
+    {
+      "emoji": "⛄",
+      "name": "snowman without snow",
+      "codePoint": "26c4",
+      "relativePath": "Animal-Natural/26c4.webp"
+    },
+    {
+      "emoji": "☃️",
+      "name": "snowman",
+      "codePoint": "2603",
+      "relativePath": "Animal-Natural/2603.webp"
+    },
+    {
+      "emoji": "🕸️",
+      "name": "spider web",
+      "codePoint": "1f578",
+      "relativePath": "Animal-Natural/1f578.webp"
+    },
+    {
+      "emoji": "🕷️",
+      "name": "spider",
+      "codePoint": "1f577",
+      "relativePath": "Animal-Natural/1f577.webp"
+    },
+    {
+      "emoji": "🐳",
+      "name": "spouting whale",
+      "codePoint": "1f433",
+      "relativePath": "Animal-Natural/1f433.webp"
+    },
+    {
+      "emoji": "🦑",
+      "name": "squid",
+      "codePoint": "1f991",
+      "relativePath": "Animal-Natural/1f991.webp"
+    },
+    {
+      "emoji": "⭐",
+      "name": "star",
+      "codePoint": "2b50",
+      "relativePath": "Animal-Natural/2b50.webp"
+    },
+    {
+      "emoji": "⛅",
+      "name": "sun behind cloud",
+      "codePoint": "26c5",
+      "relativePath": "Animal-Natural/26c5.webp"
+    },
+    {
+      "emoji": "🌥️",
+      "name": "sun behind large cloud",
+      "codePoint": "1f325",
+      "relativePath": "Animal-Natural/1f325.webp"
+    },
+    {
+      "emoji": "🌦️",
+      "name": "sun behind rain cloud",
+      "codePoint": "1f326",
+      "relativePath": "Animal-Natural/1f326.webp"
+    },
+    {
+      "emoji": "🌤️",
+      "name": "sun behind small cloud",
+      "codePoint": "1f324",
+      "relativePath": "Animal-Natural/1f324.webp"
+    },
+    {
+      "emoji": "🌞",
+      "name": "sun with face",
+      "codePoint": "1f31e",
+      "relativePath": "Animal-Natural/1f31e.webp"
+    },
+    {
+      "emoji": "☀️",
+      "name": "sun",
+      "codePoint": "2600",
+      "relativePath": "Animal-Natural/2600.webp"
+    },
+    {
+      "emoji": "🦢",
+      "name": "swan",
+      "codePoint": "1f9a2",
+      "relativePath": "Animal-Natural/1f9a2.webp"
+    },
+    {
+      "emoji": "🦖",
+      "name": "T-Rex",
+      "codePoint": "1f996",
+      "relativePath": "Animal-Natural/1f996.webp"
+    },
+    {
+      "emoji": "🐯",
+      "name": "tiger face",
+      "codePoint": "1f42f",
+      "relativePath": "Animal-Natural/1f42f.webp"
+    },
+    {
+      "emoji": "🐅",
+      "name": "tiger",
+      "codePoint": "1f405",
+      "relativePath": "Animal-Natural/1f405.webp"
+    },
+    {
+      "emoji": "🐠",
+      "name": "tropical fish",
+      "codePoint": "1f420",
+      "relativePath": "Animal-Natural/1f420.webp"
+    },
+    {
+      "emoji": "🌷",
+      "name": "tulip",
+      "codePoint": "1f337",
+      "relativePath": "Animal-Natural/1f337.webp"
+    },
+    {
+      "emoji": "🦃",
+      "name": "turkey",
+      "codePoint": "1f983",
+      "relativePath": "Animal-Natural/1f983.webp"
+    },
+    {
+      "emoji": "🐢",
+      "name": "turtle",
+      "codePoint": "1f422",
+      "relativePath": "Animal-Natural/1f422.webp"
+    },
+    {
+      "emoji": "🦄",
+      "name": "unicorn",
+      "codePoint": "1f984",
+      "relativePath": "Animal-Natural/1f984.webp"
+    },
+    {
+      "emoji": "🌘",
+      "name": "waning crescent moon",
+      "codePoint": "1f318",
+      "relativePath": "Animal-Natural/1f318.webp"
+    },
+    {
+      "emoji": "🌒",
+      "name": "waxing crescent moon",
+      "codePoint": "1f312",
+      "relativePath": "Animal-Natural/1f312.webp"
+    },
+    {
+      "emoji": "🌔",
+      "name": "waxing gibbous moon",
+      "codePoint": "1f314",
+      "relativePath": "Animal-Natural/1f314.webp"
+    },
+    {
+      "emoji": "🦓",
+      "name": "zebra",
+      "codePoint": "1f993",
+      "relativePath": "Animal-Natural/1f993.webp"
+    }
+  ],
+  "Food-Drink": [
+    {
+      "emoji": "🍼",
+      "name": "baby bottle",
+      "codePoint": "1f37c",
+      "relativePath": "Food-Drink/1f37c.webp"
+    },
+    {
+      "emoji": "🍌",
+      "name": "banana",
+      "codePoint": "1f34c",
+      "relativePath": "Food-Drink/1f34c.webp"
+    },
+    {
+      "emoji": "🍱",
+      "name": "bento box",
+      "codePoint": "1f371",
+      "relativePath": "Food-Drink/1f371.webp"
+    },
+    {
+      "emoji": "🧃",
+      "name": "beverage box",
+      "codePoint": "1f9c3",
+      "relativePath": "Food-Drink/1f9c3.webp"
+    },
+    {
+      "emoji": "🎂",
+      "name": "birthday cake",
+      "codePoint": "1f382",
+      "relativePath": "Food-Drink/1f382.webp"
+    },
+    {
+      "emoji": "🍾",
+      "name": "bottle with popping cork",
+      "codePoint": "1f37e",
+      "relativePath": "Food-Drink/1f37e.webp"
+    },
+    {
+      "emoji": "🧋",
+      "name": "bubble tea",
+      "codePoint": "1f9cb",
+      "relativePath": "Food-Drink/1f9cb.webp"
+    },
+    {
+      "emoji": "🥫",
+      "name": "canned food",
+      "codePoint": "1f96b",
+      "relativePath": "Food-Drink/1f96b.webp"
+    },
+    {
+      "emoji": "🍫",
+      "name": "chocolate bar",
+      "codePoint": "1f36b",
+      "relativePath": "Food-Drink/1f36b.webp"
+    },
+    {
+      "emoji": "🥂",
+      "name": "clinking glasses",
+      "codePoint": "1f942",
+      "relativePath": "Food-Drink/1f942.webp"
+    },
+    {
+      "emoji": "🍸",
+      "name": "cocktail glass",
+      "codePoint": "1f378",
+      "relativePath": "Food-Drink/1f378.webp"
+    },
+    {
+      "emoji": "🍪",
+      "name": "cookie",
+      "codePoint": "1f36a",
+      "relativePath": "Food-Drink/1f36a.webp"
+    },
+    {
+      "emoji": "🍳",
+      "name": "cooking",
+      "codePoint": "1f373",
+      "relativePath": "Food-Drink/1f373.webp"
+    },
+    {
+      "emoji": "🥤",
+      "name": "cup with straw",
+      "codePoint": "1f964",
+      "relativePath": "Food-Drink/1f964.webp"
+    },
+    {
+      "emoji": "🧁",
+      "name": "cupcake",
+      "codePoint": "1f9c1",
+      "relativePath": "Food-Drink/1f9c1.webp"
+    },
+    {
+      "emoji": "🍮",
+      "name": "custard",
+      "codePoint": "1f36e",
+      "relativePath": "Food-Drink/1f36e.webp"
+    },
+    {
+      "emoji": "🍡",
+      "name": "dango",
+      "codePoint": "1f361",
+      "relativePath": "Food-Drink/1f361.webp"
+    },
+    {
+      "emoji": "🍩",
+      "name": "doughnut",
+      "codePoint": "1f369",
+      "relativePath": "Food-Drink/1f369.webp"
+    },
+    {
+      "emoji": "🍥",
+      "name": "fish cake with swirl",
+      "codePoint": "1f365",
+      "relativePath": "Food-Drink/1f365.webp"
+    },
+    {
+      "emoji": "🍽️",
+      "name": "fork and knife with plate",
+      "codePoint": "1f37d",
+      "relativePath": "Food-Drink/1f37d.webp"
+    },
+    {
+      "emoji": "🍟",
+      "name": "french fries",
+      "codePoint": "1f35f",
+      "relativePath": "Food-Drink/1f35f.webp"
+    },
+    {
+      "emoji": "🥛",
+      "name": "glass of milk",
+      "codePoint": "1f95b",
+      "relativePath": "Food-Drink/1f95b.webp"
+    },
+    {
+      "emoji": "🍔",
+      "name": "hamburger",
+      "codePoint": "1f354",
+      "relativePath": "Food-Drink/1f354.webp"
+    },
+    {
+      "emoji": "☕",
+      "name": "hot beverage",
+      "codePoint": "2615",
+      "relativePath": "Food-Drink/2615.webp"
+    },
+    {
+      "emoji": "🌭",
+      "name": "hot dog",
+      "codePoint": "1f32d",
+      "relativePath": "Food-Drink/1f32d.webp"
+    },
+    {
+      "emoji": "🍭",
+      "name": "lollipop",
+      "codePoint": "1f36d",
+      "relativePath": "Food-Drink/1f36d.webp"
+    },
+    {
+      "emoji": "🧉",
+      "name": "mate",
+      "codePoint": "1f9c9",
+      "relativePath": "Food-Drink/1f9c9.webp"
+    },
+    {
+      "emoji": "🍖",
+      "name": "meat on bone",
+      "codePoint": "1f356",
+      "relativePath": "Food-Drink/1f356.webp"
+    },
+    {
+      "emoji": "🍢",
+      "name": "oden",
+      "codePoint": "1f362",
+      "relativePath": "Food-Drink/1f362.webp"
+    },
+    {
+      "emoji": "🥞",
+      "name": "pancakes",
+      "codePoint": "1f95e",
+      "relativePath": "Food-Drink/1f95e.webp"
+    },
+    {
+      "emoji": "🥧",
+      "name": "pie",
+      "codePoint": "1f967",
+      "relativePath": "Food-Drink/1f967.webp"
+    },
+    {
+      "emoji": "🍕",
+      "name": "pizza",
+      "codePoint": "1f355",
+      "relativePath": "Food-Drink/1f355.webp"
+    },
+    {
+      "emoji": "🍿",
+      "name": "popcorn",
+      "codePoint": "1f37f",
+      "relativePath": "Food-Drink/1f37f.webp"
+    },
+    {
+      "emoji": "🍗",
+      "name": "poultry leg",
+      "codePoint": "1f357",
+      "relativePath": "Food-Drink/1f357.webp"
+    },
+    {
+      "emoji": "🫗",
+      "name": "pouring liquid",
+      "codePoint": "1fad7",
+      "relativePath": "Food-Drink/1fad7.webp"
+    },
+    {
+      "emoji": "🥨",
+      "name": "pretzel",
+      "codePoint": "1f968",
+      "relativePath": "Food-Drink/1f968.webp"
+    },
+    {
+      "emoji": "🍙",
+      "name": "rice ball",
+      "codePoint": "1f359",
+      "relativePath": "Food-Drink/1f359.webp"
+    },
+    {
+      "emoji": "🍘",
+      "name": "rice cracker",
+      "codePoint": "1f358",
+      "relativePath": "Food-Drink/1f358.webp"
+    },
+    {
+      "emoji": "🥪",
+      "name": "sandwich",
+      "codePoint": "1f96a",
+      "relativePath": "Food-Drink/1f96a.webp"
+    },
+    {
+      "emoji": "🍰",
+      "name": "shortcake",
+      "codePoint": "1f370",
+      "relativePath": "Food-Drink/1f370.webp"
+    },
+    {
+      "emoji": "🍦",
+      "name": "soft ice cream",
+      "codePoint": "1f366",
+      "relativePath": "Food-Drink/1f366.webp"
+    },
+    {
+      "emoji": "🍓",
+      "name": "strawberry",
+      "codePoint": "1f353",
+      "relativePath": "Food-Drink/1f353.webp"
+    },
+    {
+      "emoji": "🥙",
+      "name": "stuffed flatbread",
+      "codePoint": "1f959",
+      "relativePath": "Food-Drink/1f959.webp"
+    },
+    {
+      "emoji": "🍣",
+      "name": "sushi",
+      "codePoint": "1f363",
+      "relativePath": "Food-Drink/1f363.webp"
+    },
+    {
+      "emoji": "🌮",
+      "name": "taco",
+      "codePoint": "1f32e",
+      "relativePath": "Food-Drink/1f32e.webp"
+    },
+    {
+      "emoji": "🍹",
+      "name": "tropical drink",
+      "codePoint": "1f379",
+      "relativePath": "Food-Drink/1f379.webp"
+    },
+    {
+      "emoji": "🥃",
+      "name": "tumbler glass",
+      "codePoint": "1f943",
+      "relativePath": "Food-Drink/1f943.webp"
+    },
+    {
+      "emoji": "🍷",
+      "name": "wine glass",
+      "codePoint": "1f377",
+      "relativePath": "Food-Drink/1f377.webp"
+    }
+  ],
+  "Activity": [
+    {
+      "emoji": "🥇",
+      "name": "1st place medal",
+      "codePoint": "1f947",
+      "relativePath": "Activity/1f947.webp"
+    },
+    {
+      "emoji": "🥈",
+      "name": "2nd place medal",
+      "codePoint": "1f948",
+      "relativePath": "Activity/1f948.webp"
+    },
+    {
+      "emoji": "🥉",
+      "name": "3rd place medal",
+      "codePoint": "1f949",
+      "relativePath": "Activity/1f949.webp"
+    },
+    {
+      "emoji": "🎟️",
+      "name": "admission tickets",
+      "codePoint": "1f39f",
+      "relativePath": "Activity/1f39f.webp"
+    },
+    {
+      "emoji": "🎨",
+      "name": "artist palette",
+      "codePoint": "1f3a8",
+      "relativePath": "Activity/1f3a8.webp"
+    },
+    {
+      "emoji": "🎈",
+      "name": "balloon",
+      "codePoint": "1f388",
+      "relativePath": "Activity/1f388.webp"
+    },
+    {
+      "emoji": "🏀",
+      "name": "basketball",
+      "codePoint": "1f3c0",
+      "relativePath": "Activity/1f3c0.webp"
+    },
+    {
+      "emoji": "🎄",
+      "name": "Christmas tree",
+      "codePoint": "1f384",
+      "relativePath": "Activity/1f384.webp"
+    },
+    {
+      "emoji": "🎊",
+      "name": "confetti ball",
+      "codePoint": "1f38a",
+      "relativePath": "Activity/1f38a.webp"
+    },
+    {
+      "emoji": "🔮",
+      "name": "crystal ball",
+      "codePoint": "1f52e",
+      "relativePath": "Activity/1f52e.webp"
+    },
+    {
+      "emoji": "🧨",
+      "name": "firecracker",
+      "codePoint": "1f9e8",
+      "relativePath": "Activity/1f9e8.webp"
+    },
+    {
+      "emoji": "🎆",
+      "name": "fireworks",
+      "codePoint": "1f386",
+      "relativePath": "Activity/1f386.webp"
+    },
+    {
+      "emoji": "🎃",
+      "name": "jack-o-lantern",
+      "codePoint": "1f383",
+      "relativePath": "Activity/1f383.webp"
+    },
+    {
+      "emoji": "🪄",
+      "name": "magic wand",
+      "codePoint": "1fa84",
+      "relativePath": "Activity/1fa84.webp"
+    },
+    {
+      "emoji": "🎖️",
+      "name": "military medal",
+      "codePoint": "1f396",
+      "relativePath": "Activity/1f396.webp"
+    },
+    {
+      "emoji": "🪩",
+      "name": "mirror ball",
+      "codePoint": "1faa9",
+      "relativePath": "Activity/1faa9.webp"
+    },
+    {
+      "emoji": "🎉",
+      "name": "party popper",
+      "codePoint": "1f389",
+      "relativePath": "Activity/1f389.webp"
+    },
+    {
+      "emoji": "🎭",
+      "name": "performing arts",
+      "codePoint": "1f3ad",
+      "relativePath": "Activity/1f3ad.webp"
+    },
+    {
+      "emoji": "⚽",
+      "name": "soccer ball",
+      "codePoint": "26bd",
+      "relativePath": "Activity/26bd.webp"
+    },
+    {
+      "emoji": "🎇",
+      "name": "sparkler",
+      "codePoint": "1f387",
+      "relativePath": "Activity/1f387.webp"
+    },
+    {
+      "emoji": "✨",
+      "name": "sparkles",
+      "codePoint": "2728",
+      "relativePath": "Activity/2728.webp"
+    },
+    {
+      "emoji": "🏅",
+      "name": "sports medal",
+      "codePoint": "1f3c5",
+      "relativePath": "Activity/1f3c5.webp"
+    },
+    {
+      "emoji": "🎫",
+      "name": "ticket",
+      "codePoint": "1f3ab",
+      "relativePath": "Activity/1f3ab.webp"
+    },
+    {
+      "emoji": "🏆",
+      "name": "trophy",
+      "codePoint": "1f3c6",
+      "relativePath": "Activity/1f3c6.webp"
+    },
+    {
+      "emoji": "🎮",
+      "name": "video game",
+      "codePoint": "1f3ae",
+      "relativePath": "Activity/1f3ae.webp"
+    }
+  ],
+  "Travel-Places": [
+    {
+      "emoji": "✈️",
+      "name": "airplane",
+      "codePoint": "2708",
+      "relativePath": "Travel-Places/2708.webp"
+    },
+    {
+      "emoji": "🚑",
+      "name": "ambulance",
+      "codePoint": "1f691",
+      "relativePath": "Travel-Places/1f691.webp"
+    },
+    {
+      "emoji": "🚗",
+      "name": "automobile",
+      "codePoint": "1f697",
+      "relativePath": "Travel-Places/1f697.webp"
+    },
+    {
+      "emoji": "🏖️",
+      "name": "beach with umbrella",
+      "codePoint": "1f3d6",
+      "relativePath": "Travel-Places/1f3d6.webp"
+    },
+    {
+      "emoji": "🏕️",
+      "name": "camping",
+      "codePoint": "1f3d5",
+      "relativePath": "Travel-Places/1f3d5.webp"
+    },
+    {
+      "emoji": "🏛️",
+      "name": "classical building",
+      "codePoint": "1f3db",
+      "relativePath": "Travel-Places/1f3db.webp"
+    },
+    {
+      "emoji": "🧭",
+      "name": "compass",
+      "codePoint": "1f9ed",
+      "relativePath": "Travel-Places/1f9ed.webp"
+    },
+    {
+      "emoji": "🏝️",
+      "name": "desert island",
+      "codePoint": "1f3dd",
+      "relativePath": "Travel-Places/1f3dd.webp"
+    },
+    {
+      "emoji": "♨️",
+      "name": "hot springs",
+      "codePoint": "2668",
+      "relativePath": "Travel-Places/2668.webp"
+    },
+    {
+      "emoji": "🏠",
+      "name": "house",
+      "codePoint": "1f3e0",
+      "relativePath": "Travel-Places/1f3e0.webp"
+    },
+    {
+      "emoji": "🚂",
+      "name": "locomotive",
+      "codePoint": "1f682",
+      "relativePath": "Travel-Places/1f682.webp"
+    },
+    {
+      "emoji": "🗿",
+      "name": "moai",
+      "codePoint": "1f5ff",
+      "relativePath": "Travel-Places/1f5ff.webp"
+    },
+    {
+      "emoji": "🛥️",
+      "name": "motor boat",
+      "codePoint": "1f6e5",
+      "relativePath": "Travel-Places/1f6e5.webp"
+    },
+    {
+      "emoji": "🚓",
+      "name": "police car",
+      "codePoint": "1f693",
+      "relativePath": "Travel-Places/1f693.webp"
+    },
+    {
+      "emoji": "🚀",
+      "name": "rocket",
+      "codePoint": "1f680",
+      "relativePath": "Travel-Places/1f680.webp"
+    },
+    {
+      "emoji": "🎢",
+      "name": "roller coaster",
+      "codePoint": "1f3a2",
+      "relativePath": "Travel-Places/1f3a2.webp"
+    },
+    {
+      "emoji": "🚕",
+      "name": "taxi",
+      "codePoint": "1f695",
+      "relativePath": "Travel-Places/1f695.webp"
+    }
+  ],
+  "Objects": [
+    {
+      "emoji": "🧮",
+      "name": "abacus",
+      "codePoint": "1f9ee",
+      "relativePath": "Objects/1f9ee.webp"
+    },
+    {
+      "emoji": "🗳️",
+      "name": "ballot box with ballot",
+      "codePoint": "1f5f3",
+      "relativePath": "Objects/1f5f3.webp"
+    },
+    {
+      "emoji": "📊",
+      "name": "bar chart",
+      "codePoint": "1f4ca",
+      "relativePath": "Objects/1f4ca.webp"
+    },
+    {
+      "emoji": "💣",
+      "name": "bomb",
+      "codePoint": "1f4a3",
+      "relativePath": "Objects/1f4a3.webp"
+    },
+    {
+      "emoji": "📚",
+      "name": "books",
+      "codePoint": "1f4da",
+      "relativePath": "Objects/1f4da.webp"
+    },
+    {
+      "emoji": "💼",
+      "name": "briefcase",
+      "codePoint": "1f4bc",
+      "relativePath": "Objects/1f4bc.webp"
+    },
+    {
+      "emoji": "🗂️",
+      "name": "card index dividers",
+      "codePoint": "1f5c2",
+      "relativePath": "Objects/1f5c2.webp"
+    },
+    {
+      "emoji": "📉",
+      "name": "chart decreasing",
+      "codePoint": "1f4c9",
+      "relativePath": "Objects/1f4c9.webp"
+    },
+    {
+      "emoji": "📈",
+      "name": "chart increasing",
+      "codePoint": "1f4c8",
+      "relativePath": "Objects/1f4c8.webp"
+    },
+    {
+      "emoji": "🎬",
+      "name": "clapper board",
+      "codePoint": "1f3ac",
+      "relativePath": "Objects/1f3ac.webp"
+    },
+    {
+      "emoji": "⚰️",
+      "name": "coffin",
+      "codePoint": "26b0",
+      "relativePath": "Objects/26b0.webp"
+    },
+    {
+      "emoji": "🪙",
+      "name": "coin",
+      "codePoint": "1fa99",
+      "relativePath": "Objects/1fa99.webp"
+    },
+    {
+      "emoji": "👑",
+      "name": "crown",
+      "codePoint": "1f451",
+      "relativePath": "Objects/1f451.webp"
+    },
+    {
+      "emoji": "📁",
+      "name": "file folder",
+      "codePoint": "1f4c1",
+      "relativePath": "Objects/1f4c1.webp"
+    },
+    {
+      "emoji": "💎",
+      "name": "gem stone",
+      "codePoint": "1f48e",
+      "relativePath": "Objects/1f48e.webp"
+    },
+    {
+      "emoji": "🎓",
+      "name": "graduation cap",
+      "codePoint": "1f393",
+      "relativePath": "Objects/1f393.webp"
+    },
+    {
+      "emoji": "👜",
+      "name": "handbag",
+      "codePoint": "1f45c",
+      "relativePath": "Objects/1f45c.webp"
+    },
+    {
+      "emoji": "👠",
+      "name": "high-heeled shoe",
+      "codePoint": "1f460",
+      "relativePath": "Objects/1f460.webp"
+    },
+    {
+      "emoji": "⌛",
+      "name": "hourglass done",
+      "codePoint": "231b",
+      "relativePath": "Objects/231b.webp"
+    },
+    {
+      "emoji": "⏳",
+      "name": "hourglass not done",
+      "codePoint": "23f3",
+      "relativePath": "Objects/23f3.webp"
+    },
+    {
+      "emoji": "🪪",
+      "name": "identification card",
+      "codePoint": "1faaa",
+      "relativePath": "Objects/1faaa.webp"
+    },
+    {
+      "emoji": "📥",
+      "name": "inbox tray",
+      "codePoint": "1f4e5",
+      "relativePath": "Objects/1f4e5.webp"
+    },
+    {
+      "emoji": "📨",
+      "name": "incoming envelope",
+      "codePoint": "1f4e8",
+      "relativePath": "Objects/1f4e8.webp"
+    },
+    {
+      "emoji": "🔑",
+      "name": "key",
+      "codePoint": "1f511",
+      "relativePath": "Objects/1f511.webp"
+    },
+    {
+      "emoji": "⌨️",
+      "name": "keyboard",
+      "codePoint": "2328",
+      "relativePath": "Objects/2328.webp"
+    },
+    {
+      "emoji": "💻",
+      "name": "laptop",
+      "codePoint": "1f4bb",
+      "relativePath": "Objects/1f4bb.webp"
+    },
+    {
+      "emoji": "💡",
+      "name": "light bulb",
+      "codePoint": "1f4a1",
+      "relativePath": "Objects/1f4a1.webp"
+    },
+    {
+      "emoji": "🔐",
+      "name": "locked with key",
+      "codePoint": "1f510",
+      "relativePath": "Objects/1f510.webp"
+    },
+    {
+      "emoji": "🧳",
+      "name": "luggage",
+      "codePoint": "1f9f3",
+      "relativePath": "Objects/1f9f3.webp"
+    },
+    {
+      "emoji": "🔍",
+      "name": "magnifying glass tilted left",
+      "codePoint": "1f50d",
+      "relativePath": "Objects/1f50d.webp"
+    },
+    {
+      "emoji": "🔎",
+      "name": "magnifying glass tilted right",
+      "codePoint": "1f50e",
+      "relativePath": "Objects/1f50e.webp"
+    },
+    {
+      "emoji": "📣",
+      "name": "megaphone",
+      "codePoint": "1f4e3",
+      "relativePath": "Objects/1f4e3.webp"
+    },
+    {
+      "emoji": "📝",
+      "name": "memo",
+      "codePoint": "1f4dd",
+      "relativePath": "Objects/1f4dd.webp"
+    },
+    {
+      "emoji": "🎤",
+      "name": "microphone",
+      "codePoint": "1f3a4",
+      "relativePath": "Objects/1f3a4.webp"
+    },
+    {
+      "emoji": "🔬",
+      "name": "microscope",
+      "codePoint": "1f52c",
+      "relativePath": "Objects/1f52c.webp"
+    },
+    {
+      "emoji": "🪖",
+      "name": "military helmet",
+      "codePoint": "1fa96",
+      "relativePath": "Objects/1fa96.webp"
+    },
+    {
+      "emoji": "📲",
+      "name": "mobile phone with arrow",
+      "codePoint": "1f4f2",
+      "relativePath": "Objects/1f4f2.webp"
+    },
+    {
+      "emoji": "📱",
+      "name": "mobile phone",
+      "codePoint": "1f4f1",
+      "relativePath": "Objects/1f4f1.webp"
+    },
+    {
+      "emoji": "💰",
+      "name": "money bag",
+      "codePoint": "1f4b0",
+      "relativePath": "Objects/1f4b0.webp"
+    },
+    {
+      "emoji": "💸",
+      "name": "money with wings",
+      "codePoint": "1f4b8",
+      "relativePath": "Objects/1f4b8.webp"
+    },
+    {
+      "emoji": "🎵",
+      "name": "musical note",
+      "codePoint": "1f3b5",
+      "relativePath": "Objects/1f3b5.webp"
+    },
+    {
+      "emoji": "🎶",
+      "name": "musical notes",
+      "codePoint": "1f3b6",
+      "relativePath": "Objects/1f3b6.webp"
+    },
+    {
+      "emoji": "📰",
+      "name": "newspaper",
+      "codePoint": "1f4f0",
+      "relativePath": "Objects/1f4f0.webp"
+    },
+    {
+      "emoji": "🗝️",
+      "name": "old key",
+      "codePoint": "1f5dd",
+      "relativePath": "Objects/1f5dd.webp"
+    },
+    {
+      "emoji": "📖",
+      "name": "open book",
+      "codePoint": "1f4d6",
+      "relativePath": "Objects/1f4d6.webp"
+    },
+    {
+      "emoji": "📤",
+      "name": "outbox tray",
+      "codePoint": "1f4e4",
+      "relativePath": "Objects/1f4e4.webp"
+    },
+    {
+      "emoji": "✏️",
+      "name": "pencil",
+      "codePoint": "270f",
+      "relativePath": "Objects/270f.webp"
+    },
+    {
+      "emoji": "💊",
+      "name": "pill",
+      "codePoint": "1f48a",
+      "relativePath": "Objects/1f48a.webp"
+    },
+    {
+      "emoji": "🖨️",
+      "name": "printer",
+      "codePoint": "1f5a8",
+      "relativePath": "Objects/1f5a8.webp"
+    },
+    {
+      "emoji": "👛",
+      "name": "purse",
+      "codePoint": "1f45b",
+      "relativePath": "Objects/1f45b.webp"
+    },
+    {
+      "emoji": "🎗️",
+      "name": "reminder ribbon",
+      "codePoint": "1f397",
+      "relativePath": "Objects/1f397.webp"
+    },
+    {
+      "emoji": "🧻",
+      "name": "roll of paper",
+      "codePoint": "1f9fb",
+      "relativePath": "Objects/1f9fb.webp"
+    },
+    {
+      "emoji": "🛍️",
+      "name": "shopping bags",
+      "codePoint": "1f6cd",
+      "relativePath": "Objects/1f6cd.webp"
+    },
+    {
+      "emoji": "🛒",
+      "name": "shopping cart",
+      "codePoint": "1f6d2",
+      "relativePath": "Objects/1f6d2.webp"
+    },
+    {
+      "emoji": "🧼",
+      "name": "soap",
+      "codePoint": "1f9fc",
+      "relativePath": "Objects/1f9fc.webp"
+    },
+    {
+      "emoji": "🧽",
+      "name": "sponge",
+      "codePoint": "1f9fd",
+      "relativePath": "Objects/1f9fd.webp"
+    },
+    {
+      "emoji": "🩺",
+      "name": "stethoscope",
+      "codePoint": "1fa7a",
+      "relativePath": "Objects/1fa7a.webp"
+    },
+    {
+      "emoji": "🎙️",
+      "name": "studio microphone",
+      "codePoint": "1f399",
+      "relativePath": "Objects/1f399.webp"
+    },
+    {
+      "emoji": "💉",
+      "name": "syringe",
+      "codePoint": "1f489",
+      "relativePath": "Objects/1f489.webp"
+    },
+    {
+      "emoji": "📆",
+      "name": "tear-off calendar",
+      "codePoint": "1f4c6",
+      "relativePath": "Objects/1f4c6.webp"
+    },
+    {
+      "emoji": "📞",
+      "name": "telephone receiver",
+      "codePoint": "1f4de",
+      "relativePath": "Objects/1f4de.webp"
+    },
+    {
+      "emoji": "☎️",
+      "name": "telephone",
+      "codePoint": "260e",
+      "relativePath": "Objects/260e.webp"
+    },
+    {
+      "emoji": "🔭",
+      "name": "telescope",
+      "codePoint": "1f52d",
+      "relativePath": "Objects/1f52d.webp"
+    },
+    {
+      "emoji": "📺",
+      "name": "television",
+      "codePoint": "1f4fa",
+      "relativePath": "Objects/1f4fa.webp"
+    },
+    {
+      "emoji": "🧪",
+      "name": "test tube",
+      "codePoint": "1f9ea",
+      "relativePath": "Objects/1f9ea.webp"
+    },
+    {
+      "emoji": "🌡️",
+      "name": "thermometer",
+      "codePoint": "1f321",
+      "relativePath": "Objects/1f321.webp"
+    },
+    {
+      "emoji": "🧰",
+      "name": "toolbox",
+      "codePoint": "1f9f0",
+      "relativePath": "Objects/1f9f0.webp"
+    },
+    {
+      "emoji": "🎩",
+      "name": "top hat",
+      "codePoint": "1f3a9",
+      "relativePath": "Objects/1f3a9.webp"
+    }
+  ],
+  "Symbols": [
+    {
+      "emoji": "💢",
+      "name": "anger symbol",
+      "codePoint": "1f4a2",
+      "relativePath": "Symbols/1f4a2.webp"
+    },
+    {
+      "emoji": "♒",
+      "name": "Aquarius",
+      "codePoint": "2652",
+      "relativePath": "Symbols/2652.webp"
+    },
+    {
+      "emoji": "♈",
+      "name": "Aries",
+      "codePoint": "2648",
+      "relativePath": "Symbols/2648.webp"
+    },
+    {
+      "emoji": "🚼",
+      "name": "baby symbol",
+      "codePoint": "1f6bc",
+      "relativePath": "Symbols/1f6bc.webp"
+    },
+    {
+      "emoji": "🛄",
+      "name": "baggage claim",
+      "codePoint": "1f6c4",
+      "relativePath": "Symbols/1f6c4.webp"
+    },
+    {
+      "emoji": "💓",
+      "name": "beating heart",
+      "codePoint": "1f493",
+      "relativePath": "Symbols/1f493.webp"
+    },
+    {
+      "emoji": "🖤",
+      "name": "black heart",
+      "codePoint": "1f5a4",
+      "relativePath": "Symbols/1f5a4.webp"
+    },
+    {
+      "emoji": "💙",
+      "name": "blue heart",
+      "codePoint": "1f499",
+      "relativePath": "Symbols/1f499.webp"
+    },
+    {
+      "emoji": "💔",
+      "name": "broken heart",
+      "codePoint": "1f494",
+      "relativePath": "Symbols/1f494.webp"
+    },
+    {
+      "emoji": "🤎",
+      "name": "brown heart",
+      "codePoint": "1f90e",
+      "relativePath": "Symbols/1f90e.webp"
+    },
+    {
+      "emoji": "♋",
+      "name": "Cancer",
+      "codePoint": "264b",
+      "relativePath": "Symbols/264b.webp"
+    },
+    {
+      "emoji": "♑",
+      "name": "Capricorn",
+      "codePoint": "2651",
+      "relativePath": "Symbols/2651.webp"
+    },
+    {
+      "emoji": "☑️",
+      "name": "check box with check",
+      "codePoint": "2611",
+      "relativePath": "Symbols/2611.webp"
+    },
+    {
+      "emoji": "✅",
+      "name": "check mark button",
+      "codePoint": "2705",
+      "relativePath": "Symbols/2705.webp"
+    },
+    {
+      "emoji": "✔️",
+      "name": "check mark",
+      "codePoint": "2714",
+      "relativePath": "Symbols/2714.webp"
+    },
+    {
+      "emoji": "💥",
+      "name": "collision",
+      "codePoint": "1f4a5",
+      "relativePath": "Symbols/1f4a5.webp"
+    },
+    {
+      "emoji": "🆒",
+      "name": "COOL button",
+      "codePoint": "1f192",
+      "relativePath": "Symbols/1f192.webp"
+    },
+    {
+      "emoji": "❌",
+      "name": "cross mark",
+      "codePoint": "274c",
+      "relativePath": "Symbols/274c.webp"
+    },
+    {
+      "emoji": "💱",
+      "name": "currency exchange",
+      "codePoint": "1f4b1",
+      "relativePath": "Symbols/1f4b1.webp"
+    },
+    {
+      "emoji": "🛃",
+      "name": "customs",
+      "codePoint": "1f6c3",
+      "relativePath": "Symbols/1f6c3.webp"
+    },
+    {
+      "emoji": "💫",
+      "name": "dizzy",
+      "codePoint": "1f4ab",
+      "relativePath": "Symbols/1f4ab.webp"
+    },
+    {
+      "emoji": "‼️",
+      "name": "double exclamation mark",
+      "codePoint": "203c",
+      "relativePath": "Symbols/203c.webp"
+    },
+    {
+      "emoji": "⁉️",
+      "name": "exclamation question mark",
+      "codePoint": "2049",
+      "relativePath": "Symbols/2049.webp"
+    },
+    {
+      "emoji": "🆓",
+      "name": "FREE button",
+      "codePoint": "1f193",
+      "relativePath": "Symbols/1f193.webp"
+    },
+    {
+      "emoji": "♊",
+      "name": "Gemini",
+      "codePoint": "264a",
+      "relativePath": "Symbols/264a.webp"
+    },
+    {
+      "emoji": "💚",
+      "name": "green heart",
+      "codePoint": "1f49a",
+      "relativePath": "Symbols/1f49a.webp"
+    },
+    {
+      "emoji": "💗",
+      "name": "growing heart",
+      "codePoint": "1f497",
+      "relativePath": "Symbols/1f497.webp"
+    },
+    {
+      "emoji": "💟",
+      "name": "heart decoration",
+      "codePoint": "1f49f",
+      "relativePath": "Symbols/1f49f.webp"
+    },
+    {
+      "emoji": "❣️",
+      "name": "heart exclamation",
+      "codePoint": "2763",
+      "relativePath": "Symbols/2763.webp"
+    },
+    {
+      "emoji": "❤️‍🔥",
+      "name": "heart on fire",
+      "codePoint": "2764",
+      "relativePath": "Symbols/2764.webp"
+    },
+    {
+      "emoji": "💘",
+      "name": "heart with arrow",
+      "codePoint": "1f498",
+      "relativePath": "Symbols/1f498.webp"
+    },
+    {
+      "emoji": "💝",
+      "name": "heart with ribbon",
+      "codePoint": "1f49d",
+      "relativePath": "Symbols/1f49d.webp"
+    },
+    {
+      "emoji": "💯",
+      "name": "hundred points",
+      "codePoint": "1f4af",
+      "relativePath": "Symbols/1f4af.webp"
+    },
+    {
+      "emoji": "💋",
+      "name": "kiss mark",
+      "codePoint": "1f48b",
+      "relativePath": "Symbols/1f48b.webp"
+    },
+    {
+      "emoji": "🛅",
+      "name": "left luggage",
+      "codePoint": "1f6c5",
+      "relativePath": "Symbols/1f6c5.webp"
+    },
+    {
+      "emoji": "♌",
+      "name": "Leo",
+      "codePoint": "264c",
+      "relativePath": "Symbols/264c.webp"
+    },
+    {
+      "emoji": "♎",
+      "name": "Libra",
+      "codePoint": "264e",
+      "relativePath": "Symbols/264e.webp"
+    },
+    {
+      "emoji": "💌",
+      "name": "love letter",
+      "codePoint": "1f48c",
+      "relativePath": "Symbols/1f48c.webp"
+    },
+    {
+      "emoji": "❤️‍🩹",
+      "name": "mending heart",
+      "codePoint": "2764",
+      "relativePath": "Symbols/2764.webp"
+    },
+    {
+      "emoji": "🚹",
+      "name": "men’s room",
+      "codePoint": "1f6b9",
+      "relativePath": "Symbols/1f6b9.webp"
+    },
+    {
+      "emoji": "🆕",
+      "name": "NEW button",
+      "codePoint": "1f195",
+      "relativePath": "Symbols/1f195.webp"
+    },
+    {
+      "emoji": "🔞",
+      "name": "no one under eighteen",
+      "codePoint": "1f51e",
+      "relativePath": "Symbols/1f51e.webp"
+    },
+    {
+      "emoji": "🆗",
+      "name": "OK button",
+      "codePoint": "1f197",
+      "relativePath": "Symbols/1f197.webp"
+    },
+    {
+      "emoji": "⛎",
+      "name": "Ophiuchus",
+      "codePoint": "26ce",
+      "relativePath": "Symbols/26ce.webp"
+    },
+    {
+      "emoji": "🧡",
+      "name": "orange heart",
+      "codePoint": "1f9e1",
+      "relativePath": "Symbols/1f9e1.webp"
+    },
+    {
+      "emoji": "🛂",
+      "name": "passport control",
+      "codePoint": "1f6c2",
+      "relativePath": "Symbols/1f6c2.webp"
+    },
+    {
+      "emoji": "♓",
+      "name": "Pisces",
+      "codePoint": "2653",
+      "relativePath": "Symbols/2653.webp"
+    },
+    {
+      "emoji": "💜",
+      "name": "purple heart",
+      "codePoint": "1f49c",
+      "relativePath": "Symbols/1f49c.webp"
+    },
+    {
+      "emoji": "❤️",
+      "name": "red heart",
+      "codePoint": "2764",
+      "relativePath": "Symbols/2764.webp"
+    },
+    {
+      "emoji": "💞",
+      "name": "revolving hearts",
+      "codePoint": "1f49e",
+      "relativePath": "Symbols/1f49e.webp"
+    },
+    {
+      "emoji": "🗯️",
+      "name": "right anger bubble",
+      "codePoint": "1f5ef",
+      "relativePath": "Symbols/1f5ef.webp"
+    },
+    {
+      "emoji": "♐",
+      "name": "Sagittarius",
+      "codePoint": "2650",
+      "relativePath": "Symbols/2650.webp"
+    },
+    {
+      "emoji": "♏",
+      "name": "Scorpio",
+      "codePoint": "264f",
+      "relativePath": "Symbols/264f.webp"
+    },
+    {
+      "emoji": "💖",
+      "name": "sparkling heart",
+      "codePoint": "1f496",
+      "relativePath": "Symbols/1f496.webp"
+    },
+    {
+      "emoji": "💬",
+      "name": "speech balloon",
+      "codePoint": "1f4ac",
+      "relativePath": "Symbols/1f4ac.webp"
+    },
+    {
+      "emoji": "♉",
+      "name": "Taurus",
+      "codePoint": "2649",
+      "relativePath": "Symbols/2649.webp"
+    },
+    {
+      "emoji": "💭",
+      "name": "thought balloon",
+      "codePoint": "1f4ad",
+      "relativePath": "Symbols/1f4ad.webp"
+    },
+    {
+      "emoji": "🔝",
+      "name": "TOP arrow",
+      "codePoint": "1f51d",
+      "relativePath": "Symbols/1f51d.webp"
+    },
+    {
+      "emoji": "💕",
+      "name": "two hearts",
+      "codePoint": "1f495",
+      "relativePath": "Symbols/1f495.webp"
+    },
+    {
+      "emoji": "🆙",
+      "name": "UP! button",
+      "codePoint": "1f199",
+      "relativePath": "Symbols/1f199.webp"
+    },
+    {
+      "emoji": "♍",
+      "name": "Virgo",
+      "codePoint": "264d",
+      "relativePath": "Symbols/264d.webp"
+    },
+    {
+      "emoji": "❕",
+      "name": "white exclamation mark",
+      "codePoint": "2755",
+      "relativePath": "Symbols/2755.webp"
+    },
+    {
+      "emoji": "🤍",
+      "name": "white heart",
+      "codePoint": "1f90d",
+      "relativePath": "Symbols/1f90d.webp"
+    },
+    {
+      "emoji": "❔",
+      "name": "white question mark",
+      "codePoint": "2754",
+      "relativePath": "Symbols/2754.webp"
+    },
+    {
+      "emoji": "🚺",
+      "name": "women’s room",
+      "codePoint": "1f6ba",
+      "relativePath": "Symbols/1f6ba.webp"
+    },
+    {
+      "emoji": "💛",
+      "name": "yellow heart",
+      "codePoint": "1f49b",
+      "relativePath": "Symbols/1f49b.webp"
+    },
+    {
+      "emoji": "💤",
+      "name": "ZZZ",
+      "codePoint": "1f4a4",
+      "relativePath": "Symbols/1f4a4.webp"
+    }
+  ],
+  "Flags": [
+    {
+      "emoji": "🏴",
+      "name": "black flag",
+      "codePoint": "1f3f4",
+      "relativePath": "Flags/1f3f4.webp"
+    },
+    {
+      "emoji": "🏁",
+      "name": "chequered flag",
+      "codePoint": "1f3c1",
+      "relativePath": "Flags/1f3c1.webp"
+    },
+    {
+      "emoji": "🇦🇷",
+      "name": "flag Argentina",
+      "codePoint": "1f1e6",
+      "relativePath": "Flags/1f1e6.webp"
+    },
+    {
+      "emoji": "🇦🇲",
+      "name": "flag Armenia",
+      "codePoint": "1f1e6",
+      "relativePath": "Flags/1f1e6.webp"
+    },
+    {
+      "emoji": "🇦🇹",
+      "name": "flag Austria",
+      "codePoint": "1f1e6",
+      "relativePath": "Flags/1f1e6.webp"
+    },
+    {
+      "emoji": "🇧🇸",
+      "name": "flag Bahamas",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇾",
+      "name": "flag Belarus",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇪",
+      "name": "flag Belgium",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇯",
+      "name": "flag Benin",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇷",
+      "name": "flag Brazil",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇬",
+      "name": "flag Bulgaria",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇧🇫",
+      "name": "flag Burkina Faso",
+      "codePoint": "1f1e7",
+      "relativePath": "Flags/1f1e7.webp"
+    },
+    {
+      "emoji": "🇨🇲",
+      "name": "flag Cameroon",
+      "codePoint": "1f1e8",
+      "relativePath": "Flags/1f1e8.webp"
+    },
+    {
+      "emoji": "🇹🇩",
+      "name": "flag Chad",
+      "codePoint": "1f1f9",
+      "relativePath": "Flags/1f1f9.webp"
+    },
+    {
+      "emoji": "🇨🇳",
+      "name": "flag China",
+      "codePoint": "1f1e8",
+      "relativePath": "Flags/1f1e8.webp"
+    },
+    {
+      "emoji": "🇭🇷",
+      "name": "flag Croatia",
+      "codePoint": "1f1ed",
+      "relativePath": "Flags/1f1ed.webp"
+    },
+    {
+      "emoji": "🇨🇿",
+      "name": "flag Czechia",
+      "codePoint": "1f1e8",
+      "relativePath": "Flags/1f1e8.webp"
+    },
+    {
+      "emoji": "🇩🇯",
+      "name": "flag Djibouti",
+      "codePoint": "1f1e9",
+      "relativePath": "Flags/1f1e9.webp"
+    },
+    {
+      "emoji": "🇬🇶",
+      "name": "flag Equatorial Guinea",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇪🇪",
+      "name": "flag Estonia",
+      "codePoint": "1f1ea",
+      "relativePath": "Flags/1f1ea.webp"
+    },
+    {
+      "emoji": "🇫🇷",
+      "name": "flag France",
+      "codePoint": "1f1eb",
+      "relativePath": "Flags/1f1eb.webp"
+    },
+    {
+      "emoji": "🇬🇦",
+      "name": "flag Gabon",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇩🇪",
+      "name": "flag Germany",
+      "codePoint": "1f1e9",
+      "relativePath": "Flags/1f1e9.webp"
+    },
+    {
+      "emoji": "🇬🇭",
+      "name": "flag Ghana",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇬🇼",
+      "name": "flag Guinea-Bissau",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇬🇳",
+      "name": "flag Guinea",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇭🇺",
+      "name": "flag Hungary",
+      "codePoint": "1f1ed",
+      "relativePath": "Flags/1f1ed.webp"
+    },
+    {
+      "emoji": "🇮🇳",
+      "name": "flag India",
+      "codePoint": "1f1ee",
+      "relativePath": "Flags/1f1ee.webp"
+    },
+    {
+      "emoji": "🇮🇩",
+      "name": "flag Indonesia",
+      "codePoint": "1f1ee",
+      "relativePath": "Flags/1f1ee.webp"
+    },
+    {
+      "emoji": "🇮🇪",
+      "name": "flag Ireland",
+      "codePoint": "1f1ee",
+      "relativePath": "Flags/1f1ee.webp"
+    },
+    {
+      "emoji": "🇮🇹",
+      "name": "flag Italy",
+      "codePoint": "1f1ee",
+      "relativePath": "Flags/1f1ee.webp"
+    },
+    {
+      "emoji": "🇯🇵",
+      "name": "flag Japan",
+      "codePoint": "1f1ef",
+      "relativePath": "Flags/1f1ef.webp"
+    },
+    {
+      "emoji": "🇯🇴",
+      "name": "flag Jordan",
+      "codePoint": "1f1ef",
+      "relativePath": "Flags/1f1ef.webp"
+    },
+    {
+      "emoji": "🇱🇹",
+      "name": "flag Lithuania",
+      "codePoint": "1f1f1",
+      "relativePath": "Flags/1f1f1.webp"
+    },
+    {
+      "emoji": "🇱🇺",
+      "name": "flag Luxembourg",
+      "codePoint": "1f1f1",
+      "relativePath": "Flags/1f1f1.webp"
+    },
+    {
+      "emoji": "🇲🇬",
+      "name": "flag Madagascar",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇲🇱",
+      "name": "flag Mali",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇲🇨",
+      "name": "flag Monaco",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇲🇦",
+      "name": "flag Morocco",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇲🇿",
+      "name": "flag Mozambique",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇲🇲",
+      "name": "flag Myanmar (Burma)",
+      "codePoint": "1f1f2",
+      "relativePath": "Flags/1f1f2.webp"
+    },
+    {
+      "emoji": "🇳🇱",
+      "name": "flag Netherlands",
+      "codePoint": "1f1f3",
+      "relativePath": "Flags/1f1f3.webp"
+    },
+    {
+      "emoji": "🇳🇬",
+      "name": "flag Nigeria",
+      "codePoint": "1f1f3",
+      "relativePath": "Flags/1f1f3.webp"
+    },
+    {
+      "emoji": "🇵🇸",
+      "name": "flag Palestinian Territories",
+      "codePoint": "1f1f5",
+      "relativePath": "Flags/1f1f5.webp"
+    },
+    {
+      "emoji": "🇵🇪",
+      "name": "flag Peru",
+      "codePoint": "1f1f5",
+      "relativePath": "Flags/1f1f5.webp"
+    },
+    {
+      "emoji": "🇵🇭",
+      "name": "flag Philippines",
+      "codePoint": "1f1f5",
+      "relativePath": "Flags/1f1f5.webp"
+    },
+    {
+      "emoji": "🇵🇱",
+      "name": "flag Poland",
+      "codePoint": "1f1f5",
+      "relativePath": "Flags/1f1f5.webp"
+    },
+    {
+      "emoji": "🇷🇴",
+      "name": "flag Romania",
+      "codePoint": "1f1f7",
+      "relativePath": "Flags/1f1f7.webp"
+    },
+    {
+      "emoji": "🇷🇺",
+      "name": "flag Russia",
+      "codePoint": "1f1f7",
+      "relativePath": "Flags/1f1f7.webp"
+    },
+    {
+      "emoji": "🇸🇦",
+      "name": "flag Saudi Arabia",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇸🇳",
+      "name": "flag Senegal",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇸🇱",
+      "name": "flag Sierra Leone",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇸🇬",
+      "name": "flag Singapore",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇸🇽",
+      "name": "flag Sint Maarten",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇸🇴",
+      "name": "flag Somalia",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇰🇷",
+      "name": "flag South Korea",
+      "codePoint": "1f1f0",
+      "relativePath": "Flags/1f1f0.webp"
+    },
+    {
+      "emoji": "🇸🇸",
+      "name": "flag South Sudan",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇪🇸",
+      "name": "flag Spain",
+      "codePoint": "1f1ea",
+      "relativePath": "Flags/1f1ea.webp"
+    },
+    {
+      "emoji": "🇸🇩",
+      "name": "flag Sudan",
+      "codePoint": "1f1f8",
+      "relativePath": "Flags/1f1f8.webp"
+    },
+    {
+      "emoji": "🇺🇦",
+      "name": "flag Ukraine",
+      "codePoint": "1f1fa",
+      "relativePath": "Flags/1f1fa.webp"
+    },
+    {
+      "emoji": "🇦🇪",
+      "name": "flag United Arab Emirates",
+      "codePoint": "1f1e6",
+      "relativePath": "Flags/1f1e6.webp"
+    },
+    {
+      "emoji": "🇬🇧",
+      "name": "flag United Kingdom",
+      "codePoint": "1f1ec",
+      "relativePath": "Flags/1f1ec.webp"
+    },
+    {
+      "emoji": "🇺🇸",
+      "name": "flag United States",
+      "codePoint": "1f1fa",
+      "relativePath": "Flags/1f1fa.webp"
+    },
+    {
+      "emoji": "🇺🇿",
+      "name": "flag Uzbekistan",
+      "codePoint": "1f1fa",
+      "relativePath": "Flags/1f1fa.webp"
+    },
+    {
+      "emoji": "🇻🇳",
+      "name": "flag Vietnam",
+      "codePoint": "1f1fb",
+      "relativePath": "Flags/1f1fb.webp"
+    },
+    {
+      "emoji": "🇪🇭",
+      "name": "flag Western Sahara",
+      "codePoint": "1f1ea",
+      "relativePath": "Flags/1f1ea.webp"
+    },
+    {
+      "emoji": "🇾🇪",
+      "name": "flag Yemen",
+      "codePoint": "1f1fe",
+      "relativePath": "Flags/1f1fe.webp"
+    },
+    {
+      "emoji": "🏴‍☠️",
+      "name": "pirate flag",
+      "codePoint": "1f3f4",
+      "relativePath": "Flags/1f3f4.webp"
+    },
+    {
+      "emoji": "🚩",
+      "name": "triangular flag",
+      "codePoint": "1f6a9",
+      "relativePath": "Flags/1f6a9.webp"
+    },
+    {
+      "emoji": "🏳️",
+      "name": "white flag",
+      "codePoint": "1f3f3",
+      "relativePath": "Flags/1f3f3.webp"
+    }
+  ]
+}
