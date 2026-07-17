@@ -11,11 +11,50 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required for seed");
+/**
+ * `railway run` from a laptop injects private DATABASE_URL
+ * (*.railway.internal) which is unreachable outside Railway.
+ * Prefer DATABASE_PUBLIC_URL in that case.
+ */
+function resolveSeedDatabaseUrl(): string {
+  const privateUrl =
+    process.env.DATABASE_URL?.trim() ||
+    process.env.DATABASE_PRIVATE_URL?.trim() ||
+    "";
+  const publicUrl =
+    process.env.DATABASE_PUBLIC_URL?.trim() ||
+    process.env.POSTGRES_URL?.trim() ||
+    "";
+
+  const isRailwayInternal =
+    privateUrl.includes(".railway.internal") ||
+    privateUrl.includes("postgres.railway.internal");
+
+  if (isRailwayInternal) {
+    if (!publicUrl) {
+      throw new Error(
+        [
+          "DATABASE_URL points to railway.internal (private network).",
+          "From your laptop, seed needs the public URL.",
+          "Fix: Railway → Postgres → Variables → copy DATABASE_PUBLIC_URL,",
+          'then: railway run -e DATABASE_URL="$DATABASE_PUBLIC_URL" npm run prisma:seed',
+          "Or in Variables of auco-ai, ensure DATABASE_PUBLIC_URL is referenced,",
+          "and re-run (seed will auto-pick it).",
+        ].join(" "),
+      );
+    }
+    console.log("[seed] Using DATABASE_PUBLIC_URL (local railway run)");
+    return publicUrl;
+  }
+
+  const url = privateUrl || publicUrl;
+  if (!url) {
+    throw new Error("DATABASE_URL (or DATABASE_PUBLIC_URL) is required for seed");
+  }
+  return url;
 }
 
+const connectionString = resolveSeedDatabaseUrl();
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
+import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 
@@ -13,7 +14,8 @@ import { RedisModule } from './redis/redis.module';
     PrismaModule,
     RedisModule,
     HealthModule,
-    // Phase 3+: LlmModule, PlanningModule, AgentsModule, McpClientModule,
+    LlmModule,
+    // Phase 4+: PlanningModule, AgentsModule, McpClientModule,
     // RagModule, ApprovalsModule, AutomationsModule, RealtimeModule
   ],
 })
