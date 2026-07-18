@@ -18,109 +18,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  seedKnowledgeDocuments,
+  type KnowledgeUiDocument,
+} from "@/lib/mock/governance";
 import { useAppStore } from "@/stores/app.store";
-import { BookOpenCheck, RefreshCw, Send } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { BookOpenCheck, Send } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-
-type KnowledgeDocument = {
-  id: string;
-  domain: "credit" | "legal" | "product" | "ops";
-  title: string;
-  content: string;
-  status: "draft" | "active" | "superseded";
-  updatedAt: string;
-  publishedAt: string | null;
-};
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:8387";
 
 export function KnowledgePanel() {
   const employeeId = useAppStore((s) => s.employeeId);
   const employees = useAppStore((s) => s.employees);
   const actor = employees.find((e) => e.id === employeeId);
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [documents, setDocuments] = useState<KnowledgeUiDocument[]>(
+    () => structuredClone(seedKnowledgeDocuments),
+  );
   const [title, setTitle] = useState("");
   const [domain, setDomain] =
-    useState<KnowledgeDocument["domain"]>("credit");
+    useState<KnowledgeUiDocument["domain"]>("credit");
   const [content, setContent] = useState("");
 
-  const request = useCallback(
-    async (path: string, init?: RequestInit) => {
-      const response = await fetch(`${API_URL}${path}`, {
-        ...init,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Demo-Employee-Id": employeeId,
-          ...init?.headers,
-        },
-      });
-      if (!response.ok) {
-        const error = (await response.json().catch(() => null)) as
-          | { message?: string }
-          | null;
-        throw new Error(error?.message ?? `HTTP ${response.status}`);
-      }
-      return response.json();
-    },
-    [employeeId],
-  );
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setDocuments(
-        (await request("/api/knowledge/documents")) as KnowledgeDocument[],
-      );
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không tải được KB");
-    } finally {
-      setLoading(false);
-    }
-  }, [request]);
-
-  useEffect(() => {
-    if (actor?.accessLayer === "manager") void load();
-  }, [actor?.accessLayer, load]);
-
-  async function createDraft() {
+  function createDraft() {
     if (!title.trim() || !content.trim()) {
       toast.error("Cần nhập tiêu đề và nội dung");
       return;
     }
-    setLoading(true);
-    try {
-      await request("/api/knowledge/documents", {
-        method: "POST",
-        body: JSON.stringify({ title, domain, content }),
-      });
-      setTitle("");
-      setContent("");
-      toast.success("Đã lưu bản nháp");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không tạo được draft");
-    } finally {
-      setLoading(false);
-    }
+    const now = new Date().toISOString();
+    const draft: KnowledgeUiDocument = {
+      id: `kb-draft-${Math.random().toString(36).slice(2, 8)}`,
+      domain,
+      title: title.trim(),
+      content: content.trim(),
+      status: "draft",
+      updatedAt: now,
+      publishedAt: null,
+    };
+    setDocuments((prev) => [draft, ...prev]);
+    setTitle("");
+    setContent("");
+    toast.success("Đã lưu bản nháp (mock)");
   }
 
-  async function publish(id: string) {
-    setLoading(true);
-    try {
-      await request(`/api/knowledge/documents/${id}/publish`, {
-        method: "POST",
-      });
-      toast.success("Đã publish và rebuild RAG index");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Publish thất bại");
-    } finally {
-      setLoading(false);
-    }
+  function publish(id: string) {
+    const now = new Date().toISOString();
+    setDocuments((prev) =>
+      prev.map((document) =>
+        document.id === id
+          ? {
+              ...document,
+              status: "active",
+              publishedAt: now,
+              updatedAt: now,
+            }
+          : document,
+      ),
+    );
+    toast.success("Đã publish và rebuild RAG index (mock)");
   }
 
   if (actor?.accessLayer !== "manager") return null;
@@ -135,6 +89,7 @@ export function KnowledgePanel() {
           </CardTitle>
           <CardDescription>
             Trưởng phòng chỉ xuất bản tri thức; không sửa Agent Catalog hoặc MCP.
+            Dữ liệu mock để test UI.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -146,7 +101,7 @@ export function KnowledgePanel() {
           <Select
             value={domain}
             onValueChange={(value) =>
-              setDomain(value as KnowledgeDocument["domain"])
+              setDomain(value as KnowledgeUiDocument["domain"])
             }
           >
             <SelectTrigger>
@@ -165,7 +120,7 @@ export function KnowledgePanel() {
             placeholder="Nội dung đã chuẩn hóa..."
             className="min-h-52"
           />
-          <Button className="w-full" onClick={createDraft} disabled={loading}>
+          <Button className="w-full" onClick={createDraft}>
             Lưu bản nháp
           </Button>
         </CardContent>
@@ -179,53 +134,44 @@ export function KnowledgePanel() {
               Chỉ tài liệu active mới được ingest vào live RAG index.
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={loading ? "animate-spin" : ""} />
-            Tải lại
-          </Button>
+          <Badge variant="outline">Mock demo</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
-          {documents.length === 0 ? (
-            <p className="text-muted-foreground py-10 text-center text-sm">
-              Chưa có tài liệu hoặc backend chưa kết nối.
-            </p>
-          ) : (
-            documents.map((document) => (
-              <div
-                key={document.id}
-                className="flex items-start justify-between gap-3 rounded-lg border p-3"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-medium">
-                      {document.title}
-                    </p>
-                    <Badge variant="outline">{document.domain}</Badge>
-                    <Badge
-                      variant={
-                        document.status === "active" ? "default" : "secondary"
-                      }
-                    >
-                      {document.status}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-                    {document.content}
+          {documents.map((document) => (
+            <div
+              key={document.id}
+              className="flex items-start justify-between gap-3 rounded-lg border p-3"
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-medium">
+                    {document.title}
                   </p>
-                </div>
-                {document.status === "draft" ? (
-                  <Button
-                    size="sm"
-                    onClick={() => publish(document.id)}
-                    disabled={loading}
+                  <Badge variant="outline">{document.domain}</Badge>
+                  <Badge
+                    variant={
+                      document.status === "active"
+                        ? "default"
+                        : document.status === "draft"
+                          ? "secondary"
+                          : "outline"
+                    }
                   >
-                    <Send />
-                    Publish
-                  </Button>
-                ) : null}
+                    {document.status}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                  {document.content}
+                </p>
               </div>
-            ))
-          )}
+              {document.status === "draft" ? (
+                <Button size="sm" onClick={() => publish(document.id)}>
+                  <Send />
+                  Publish
+                </Button>
+              ) : null}
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>
