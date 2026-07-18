@@ -314,10 +314,13 @@ export class LoanRequestsService {
     const effective = this.effectiveStatus(row);
     const canSubmit =
       effective === 'advised' ||
-      (effective === 'needs_info' && Boolean(row.assessmentTaskRunId));
+      effective === 'assigned' ||
+      effective === 'failed' ||
+      (effective === 'needs_info' &&
+        (Boolean(row.assessmentTaskRunId) || Boolean(row.assessmentTag)));
     if (!canSubmit) {
       throw new ConflictException(
-        `Loan request status is ${effective}, expected advised or needs_info with assessment`,
+        `Loan request status is ${effective}, expected assigned, advised, failed, or needs_info`,
       );
     }
     if (!ASSESSMENT_TAGS.has(assessmentTag)) {
@@ -365,9 +368,14 @@ export class LoanRequestsService {
       throw new BadRequestException('Invalid assessment tag');
     }
     const effective = this.effectiveStatus(row);
-    if (effective !== 'advised' && effective !== 'needs_info') {
+    if (
+      effective !== 'advised' &&
+      effective !== 'needs_info' &&
+      effective !== 'assigned' &&
+      effective !== 'failed'
+    ) {
       throw new ConflictException(
-        `Loan request status is ${effective}, expected advised or needs_info`,
+        `Loan request status is ${effective}, expected assigned, advised, failed, or needs_info`,
       );
     }
 

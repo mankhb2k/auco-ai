@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { SpecialistService } from '../../agents/service/specialist.service';
 import { PrismaService } from '../../prisma/service/prisma.service';
@@ -9,7 +13,7 @@ import type { TaskPlan, TaskStepPlan } from '../task-plan.schema';
 const CONCURRENCY = 3;
 
 @Injectable()
-export class OrchestratorService {
+export class OrchestratorService implements OnApplicationBootstrap {
   private readonly logger = new Logger(OrchestratorService.name);
 
   constructor(
@@ -17,6 +21,44 @@ export class OrchestratorService {
     private readonly planner: PlannerService,
     private readonly specialists: SpecialistService,
   ) {}
+
+  /**
+   * Orchestration chạy in-memory: nếu process restart giữa chừng, run bị bỏ
+   * rơi sẽ kẹt ở "running" vĩnh viễn. Đánh dấu failed lúc boot để UI cho retry.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    try {
+      const orphaned = await this.prisma.taskRun.findMany({
+        where: { status: { in: ['planning', 'running'] } },
+        select: { id: true },
+      });
+      if (orphaned.length === 0) return;
+
+      const ids = orphaned.map((r) => r.id);
+      await this.prisma.taskStep.updateMany({
+        where: {
+          taskRunId: { in: ids },
+          status: { in: ['pending', 'running'] },
+        },
+        data: { status: 'failed', finishedAt: new Date() },
+      });
+      await this.prisma.taskRun.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          status: 'failed',
+          finalAnswer:
+            'Phiên đánh giá bị gián đoạn do backend khởi động lại. Vui lòng chạy lại đánh giá.',
+        },
+      });
+      this.logger.warn(
+        `Recovered ${ids.length} orphaned task run(s) after restart: ${ids.join(', ')}`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Orphaned run recovery failed: ${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
 
   /** Fresh run (One Job: no generic waiting_approval parking). */
   async runTaskRun(taskRunId: string): Promise<void> {

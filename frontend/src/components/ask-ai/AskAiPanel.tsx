@@ -22,12 +22,14 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app.store";
 import {
   ArrowUp,
+  BookOpen,
   CheckCircle2,
   Loader2,
   Plus,
   Sparkles,
   X,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -100,6 +102,93 @@ let msgSeq = 0;
 function nextId() {
   msgSeq += 1;
   return `aim-${Date.now()}-${msgSeq}`;
+}
+
+/** Badge trích dẫn kiểu Perplexity: pill nhỏ, chữ mono, icon nguồn. */
+function CitationBadge({ label }: { label: string }) {
+  const compact = label.replace(/\s*\[(active|draft|superseded)\]\s*$/i, "");
+  return (
+    <span
+      title={label}
+      className="bg-muted/70 text-muted-foreground hover:bg-muted mx-0.5 inline-flex max-w-56 cursor-default items-center gap-1 rounded-md border px-1.5 py-px align-middle font-mono text-[10px] leading-5 whitespace-nowrap transition-colors"
+    >
+      <BookOpen className="size-3 shrink-0" />
+      <span className="truncate">{compact}</span>
+    </span>
+  );
+}
+
+const INLINE_CITATION_RE = /\(\s*Trích dẫn:\s*([^)\n]+)\)/g;
+const CITATION_SECTION_RE = /^\**\s*(?:\d+\.\s*)?Trích dẫn( quy định)?:?\**\s*$/i;
+const BULLET_RE = /^\s*(?:[•\-*]|\d+\.)\s+(.*)$/;
+
+/**
+ * Render câu trả lời: biến "(Trích dẫn: X)" thành badge inline,
+ * và mục "Trích dẫn quy định:" thành hàng badge.
+ */
+function renderAnswer(content: string): ReactNode {
+  const lines = content.split("\n");
+  const blocks: ReactNode[] = [];
+  let citationList: string[] = [];
+  let inCitationSection = false;
+
+  const flushCitations = (key: string) => {
+    if (citationList.length === 0) return;
+    blocks.push(
+      <span key={key} className="flex flex-wrap gap-1 py-0.5">
+        {citationList.map((c, i) => (
+          <CitationBadge key={`${key}-${i}`} label={c} />
+        ))}
+      </span>,
+    );
+    citationList = [];
+  };
+
+  lines.forEach((line, index) => {
+    if (CITATION_SECTION_RE.test(line.trim())) {
+      inCitationSection = true;
+      return;
+    }
+    if (inCitationSection) {
+      const bullet = line.match(BULLET_RE);
+      if (bullet) {
+        citationList.push(bullet[1].trim());
+        return;
+      }
+      if (line.trim() === "") {
+        if (citationList.length > 0) {
+          flushCitations(`cites-${index}`);
+          inCitationSection = false;
+        }
+        return;
+      }
+      flushCitations(`cites-${index}`);
+      inCitationSection = false;
+    }
+
+    // Inline "(Trích dẫn: X)" → badge
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+    for (const match of line.matchAll(INLINE_CITATION_RE)) {
+      const start = match.index ?? 0;
+      if (start > cursor) parts.push(line.slice(cursor, start));
+      parts.push(
+        <CitationBadge key={`${index}-${start}`} label={match[1].trim()} />,
+      );
+      cursor = start + match[0].length;
+    }
+    if (cursor < line.length) parts.push(line.slice(cursor));
+
+    blocks.push(
+      <span key={`line-${index}`}>
+        {parts.length > 0 ? parts : line}
+        {"\n"}
+      </span>,
+    );
+  });
+  flushCitations("cites-tail");
+
+  return <>{blocks}</>;
 }
 
 export function AskAiPanel() {
@@ -367,70 +456,88 @@ export function AskAiPanel() {
               </div>
             </div>
           ) : (
-            messages.map((m) => (
-              <div
-                key={m.id}
-                className={cn(
-                  "rounded-lg px-3 py-2 text-sm whitespace-pre-line",
-                  m.run ? "w-full max-w-full" : "max-w-[92%]",
-                  m.role === "user"
-                    ? "bg-primary text-primary-foreground self-end"
-                    : "bg-muted/60 self-start border",
-                )}
-              >
-                {m.loanLabel ? (
-                  <p
-                    className={cn(
-                      "mb-2 text-[11px] font-medium",
-                      m.role === "user"
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {m.loanLabel}
-                  </p>
-                ) : null}
-                {m.pending ? (
-                  <span className="text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="size-3.5 animate-spin" />
-                    {m.content}
-                  </span>
-                ) : (
-                  <div>{m.content}</div>
-                )}
-                {m.role === "assistant" &&
-                m.run?.status === "done" &&
-                m.loanRequestId ? (
-                  <AssessmentAction
-                    loanRequestId={m.loanRequestId}
-                    employeeId={employeeId}
-                    suggestedTag={inferAssessmentTag(m.run)}
-                    appliedTag={m.appliedAssessmentTag}
-                    submitted={m.submitted === true}
-                    onApplied={(tag, submitted) =>
-                      setMessages((current) =>
-                        current.map((message) =>
-                          message.id === m.id
-                            ? {
-                                ...message,
-                                appliedAssessmentTag: tag,
-                                submitted,
-                              }
-                            : message,
-                        ),
-                      )
-                    }
-                  />
-                ) : null}
-                {m.run ? (
+            messages.map((m) =>
+              m.role === "assistant" && m.run ? (
+                // Perplexity-style: harness và nhận định là 2 khối rời, không bọc card ngoài
+                <div key={m.id} className="flex w-full flex-col gap-3">
+                  {m.loanLabel ? (
+                    <p className="text-muted-foreground text-[11px] font-medium">
+                      {m.loanLabel}
+                    </p>
+                  ) : null}
                   <AgentCoordinationProgress
                     activeRun={m.run}
                     isSimulating={m.pending}
-                    className="mt-3 shadow-none"
+                    className="shadow-none"
                   />
-                ) : null}
-              </div>
-            ))
+                  {m.pending ? (
+                    <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                      <Loader2 className="size-3.5 animate-spin" />
+                      {m.content}
+                    </span>
+                  ) : (
+                    <div className="text-sm leading-6 whitespace-pre-line">
+                      {renderAnswer(m.content)}
+                    </div>
+                  )}
+                  {m.run.status === "done" && m.loanRequestId ? (
+                    <AssessmentAction
+                      loanRequestId={m.loanRequestId}
+                      employeeId={employeeId}
+                      suggestedTag={inferAssessmentTag(m.run)}
+                      appliedTag={m.appliedAssessmentTag}
+                      submitted={m.submitted === true}
+                      onApplied={(tag, submitted) =>
+                        setMessages((current) =>
+                          current.map((message) =>
+                            message.id === m.id
+                              ? {
+                                  ...message,
+                                  appliedAssessmentTag: tag,
+                                  submitted,
+                                }
+                              : message,
+                          ),
+                        )
+                      }
+                    />
+                  ) : null}
+                </div>
+              ) : (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "max-w-[92%] rounded-lg px-3 py-2 text-sm whitespace-pre-line",
+                    m.role === "user"
+                      ? "bg-primary text-primary-foreground self-end"
+                      : "bg-muted/60 self-start border",
+                  )}
+                >
+                  {m.loanLabel ? (
+                    <p
+                      className={cn(
+                        "mb-2 text-[11px] font-medium",
+                        m.role === "user"
+                          ? "text-primary-foreground/70"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {m.loanLabel}
+                    </p>
+                  ) : null}
+                  {m.pending ? (
+                    <span className="text-muted-foreground flex items-center gap-2">
+                      <Loader2 className="size-3.5 animate-spin" />
+                      {m.content}
+                    </span>
+                  ) : m.role === "assistant" ? (
+                    <div className="leading-6">{renderAnswer(m.content)}</div>
+                  ) : (
+                    <div>{m.content}</div>
+                  )}
+                </div>
+              ),
+            )
           )}
         </div>
       </div>

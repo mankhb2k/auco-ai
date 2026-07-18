@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { AgentRole } from '../agent-catalog';
 import { ActorsService } from '../../actors/service/actors.service';
+import { LlmGatewayService } from '../../llm/llm.gateway';
 import { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import type { TaskStepPlan } from '../../planning/task-plan.schema';
 import { RagService } from '../../rag/service/rag.service';
@@ -22,12 +23,23 @@ export type SpecialistResult = {
   pendingApproval?: PendingApproval;
 };
 
+const ROLE_LABEL: Record<string, string> = {
+  credit: 'Tín dụng (thẩm định)',
+  legal: 'Pháp lý / Tuân thủ',
+  collateral: 'Tài sản bảo đảm',
+  product: 'Sản phẩm',
+  ops: 'Vận hành',
+};
+
 @Injectable()
 export class SpecialistService {
+  private readonly logger = new Logger(SpecialistService.name);
+
   constructor(
     private readonly mcp: McpGatewayService,
     private readonly rag: RagService,
     private readonly actors: ActorsService,
+    private readonly llm: LlmGatewayService,
   ) {}
 
   async run(
@@ -49,11 +61,7 @@ export class SpecialistService {
     const bankCode = ctx.bankCode ?? 'SHB';
     const customer = this.extractCustomerHints(ctx.goal, step.goal);
 
-    if (
-      ctx.employeeId &&
-      customer.customerNo &&
-      !ctx.baseline
-    ) {
+    if (ctx.employeeId && customer.customerNo && !ctx.baseline) {
       const allowed = await this.actors.isCustomerInPortfolio(
         ctx.employeeId,
         customer.customerNo,
@@ -73,23 +81,100 @@ export class SpecialistService {
       step.mode ?? (role === 'credit' ? 'spawn_workers' : 'direct');
 
     if (mode === 'spawn_workers' && role === 'credit') {
-      return this.runCreditWorkers(bankCode, customer, step, ctx.skipApprovalPropose);
+      return this.runCreditWorkers(
+        bankCode,
+        customer,
+        step,
+        ctx.goal,
+        ctx.skipApprovalPropose,
+      );
     }
 
     if (role === 'legal') {
-      return this.runLegal(bankCode, customer, step, ctx.skipApprovalPropose);
+      return this.runLegal(
+        bankCode,
+        customer,
+        step,
+        ctx.goal,
+        ctx.skipApprovalPropose,
+      );
     }
     if (role === 'collateral') {
-      return this.runCollateral(bankCode, customer, step);
+      return this.runCollateral(bankCode, customer, step, ctx.goal);
     }
     if (role === 'product') {
-      return this.runProduct(bankCode, customer, step, ctx.priorOutputs);
+      return this.runProduct(
+        bankCode,
+        customer,
+        step,
+        ctx.goal,
+        ctx.priorOutputs,
+      );
     }
     if (role === 'ops') {
       return this.runOps(bankCode, customer, step, ctx.skipApprovalPropose);
     }
 
-    return this.runCreditWorkers(bankCode, customer, step, ctx.skipApprovalPropose);
+    return this.runCreditWorkers(
+      bankCode,
+      customer,
+      step,
+      ctx.goal,
+      ctx.skipApprovalPropose,
+    );
+  }
+
+  /**
+   * Chuyên gia phân tích dữ liệu tool/RAG bằng LLM → input cho agent tổng hợp.
+   * Nếu thiếu key hoặc LLM lỗi thì fallback sang summary deterministic.
+   */
+  private async analyzeExpert(opts: {
+    role: AgentRole;
+    overallGoal: string;
+    stepGoal: string;
+    facts: Record<string, unknown>;
+    fallbackSummary: string;
+  }): Promise<{ analysis: string; usedLlm: boolean }> {
+    if (!this.llm.isPrimaryConfigured && !this.llm.isFallbackConfigured) {
+      return { analysis: opts.fallbackSummary, usedLlm: false };
+    }
+
+    const roleLabel = ROLE_LABEL[opts.role] ?? opts.role;
+    try {
+      const { text } = await this.llm.generateText({
+        agentRole: opts.role,
+        purpose: 'specialist',
+        system: [
+          `Bạn là chuyên gia ${roleLabel} của ngân hàng SHB.`,
+          'Nhiệm vụ: phân tích dữ liệu tool/MCP và trích dẫn RAG đã thu thập,',
+          'viết nhận định chuyên môn ngắn (3–8 câu) bằng tiếng Việt.',
+          'Nêu rõ: kết luận trong phạm vi chuyên môn, căn cứ số liệu, rủi ro hoặc điểm chặn,',
+          'và trích dẫn quy định nếu có (dạng: Trích dẫn: tên tài liệu — điều khoản).',
+          'Không viết bản tổng hợp toàn hồ sơ — chỉ góc nhìn của chuyên gia này,',
+          'để bước Planner phía sau tổng hợp các nhận định lại.',
+          'Không bịa số liệu ngoài dữ liệu được cung cấp.',
+        ].join(' '),
+        prompt: [
+          `Mục tiêu hồ sơ:\n${opts.overallGoal}`,
+          `Nhiệm vụ bước:\n${opts.stepGoal}`,
+          `Dữ liệu đã thu thập:\n${JSON.stringify(opts.facts, null, 2)}`,
+          'Viết nhận định chuyên môn.',
+        ].join('\n\n'),
+      });
+      const analysis = text.trim();
+      if (!analysis) {
+        return { analysis: opts.fallbackSummary, usedLlm: false };
+      }
+      this.logger.log(
+        `Expert ${opts.role} analysis via LLM (${analysis.length} chars)`,
+      );
+      return { analysis, usedLlm: true };
+    } catch (err) {
+      this.logger.warn(
+        `Expert ${opts.role} LLM analysis failed, using fallback: ${err instanceof Error ? err.message : err}`,
+      );
+      return { analysis: opts.fallbackSummary, usedLlm: false };
+    }
   }
 
   /** README §2.7 — chặn MCP khi KH ngoài portfolio, xin duyệt manager. */
@@ -125,6 +210,7 @@ export class SpecialistService {
       pendingApproval,
       output: {
         summary: pendingApproval.preview,
+        analysis: pendingApproval.preview,
         approvalReason: 'out_of_portfolio_access',
         approvalPreview: pendingApproval.preview,
         customerNo,
@@ -163,7 +249,6 @@ export class SpecialistService {
         args: { purpose: goal, segment: 'retail' },
         skipAllowlist: true,
       }),
-      // Wrong-domain call (credit persona listing products) — shows allowlist gap
       this.mcp.callTool({
         bankCode,
         agentRole: 'credit',
@@ -177,6 +262,18 @@ export class SpecialistService {
       bankCode,
       query: goal.slice(0, 120),
       limit: 1,
+    });
+
+    const fallbackSummary = `Baseline single-agent: trả lời gộp Credit+Legal+Product trong 1 step (không Planner, không allowlist). Citation mỏng (${kb.citations.length}).`;
+    const { analysis, usedLlm } = await this.analyzeExpert({
+      role: 'credit',
+      overallGoal: goal,
+      stepGoal: step.goal,
+      facts: {
+        toolOutputs: calls.map((c) => ({ tool: c.tool, output: c.output })),
+        citations: kb.citations,
+      },
+      fallbackSummary,
     });
 
     return {
@@ -203,7 +300,9 @@ export class SpecialistService {
         },
       ],
       output: {
-        summary: `Baseline single-agent: trả lời gộp Credit+Legal+Product trong 1 step (không Planner, không allowlist). Citation mỏng (${kb.citations.length}).`,
+        summary: fallbackSummary,
+        analysis,
+        analysisUsedLlm: usedLlm,
         baseline: true,
         citations: kb.citations,
         stepGoal: step.goal,
@@ -215,6 +314,7 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    overallGoal: string,
     skipApprovalPropose?: boolean,
   ): Promise<SpecialistResult> {
     const args = { bankCode, ...customer };
@@ -243,19 +343,22 @@ export class SpecialistService {
 
     const kb = await this.rag.kbTool('credit_kb_search', {
       bankCode,
-      query: step.goal.includes('LTV') || step.goal.includes('nhà máy')
-        ? 'LTV nhà xưởng DTI CIC'
-        : 'DTI CIC hạn mức vay mua nhà',
+      query:
+        step.goal.includes('LTV') || step.goal.includes('nhà máy')
+          ? 'LTV nhà xưởng DTI CIC'
+          : 'DTI CIC hạn mức vay mua nhà',
       limit: 3,
       includeSuperseded: true,
     });
 
     const scoreOut = results[0]?.output as { score?: number } | undefined;
-    const eligOut = results[2]?.output as {
-      eligible?: boolean;
-      maxAmountVnd?: number;
-      recommendation?: string;
-    } | undefined;
+    const eligOut = results[2]?.output as
+      | {
+          eligible?: boolean;
+          maxAmountVnd?: number;
+          recommendation?: string;
+        }
+      | undefined;
 
     const amountVnd =
       Number(customer.requestedHint) ||
@@ -281,6 +384,25 @@ export class SpecialistService {
             note: step.goal.slice(0, 200),
           },
         };
+
+    const fallbackSummary = pendingApproval
+      ? `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'}; ${pendingApproval.preview}`
+      : `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'} (compare: bỏ qua propose mutate).`;
+
+    const { analysis, usedLlm } = await this.analyzeExpert({
+      role: 'credit',
+      overallGoal,
+      stepGoal: step.goal,
+      facts: {
+        customer,
+        creditScore: results[0]?.output ?? null,
+        transactionHistory: results[1]?.output ?? null,
+        eligibility: results[2]?.output ?? null,
+        citations: kb.citations,
+        policySummary: kb.summary,
+      },
+      fallbackSummary,
+    });
 
     return {
       mode: 'spawn_workers',
@@ -335,9 +457,9 @@ export class SpecialistService {
       ],
       pendingApproval,
       output: {
-        summary: pendingApproval
-          ? `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'}; ${pendingApproval.preview}`
-          : `${eligOut?.eligible ? 'Credit: đủ điều kiện sơ bộ' : 'Credit: cần review'} — điểm ${scoreOut?.score ?? '—'} (compare: bỏ qua propose mutate).`,
+        summary: fallbackSummary,
+        analysis,
+        analysisUsedLlm: usedLlm,
         eligible: eligOut?.eligible ?? false,
         score: scoreOut?.score ?? null,
         maxAmountVnd: eligOut?.maxAmountVnd ?? null,
@@ -359,6 +481,7 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    overallGoal: string,
     skipApprovalPropose?: boolean,
   ): Promise<SpecialistResult> {
     const aml = await this.mcp.callTool({
@@ -382,7 +505,6 @@ export class SpecialistService {
       includeSuperseded: false,
     });
 
-    // Keep MCP keyword search as secondary audit trail
     const reg = await this.mcp.callTool({
       bankCode,
       agentRole: 'legal',
@@ -434,6 +556,24 @@ export class SpecialistService {
             domainCorrect: true,
           }
         : null;
+
+    const fallbackSummary = topCite
+      ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.${pendingApproval ? ` ${pendingApproval.preview}` : skippedMutate ? ' (compare: bỏ qua propose flag).' : ''}`
+      : `Legal: AML ${amlOut.status ?? 'unknown'}; chưa có citation RAG.`;
+
+    const { analysis, usedLlm } = await this.analyzeExpert({
+      role: 'legal',
+      overallGoal,
+      stepGoal: step.goal,
+      facts: {
+        customer,
+        aml: aml.output,
+        regulationSearch: reg.output,
+        citations: kb.citations,
+        policySummary: kb.summary,
+      },
+      fallbackSummary,
+    });
 
     return {
       mode: 'direct',
@@ -487,9 +627,9 @@ export class SpecialistService {
       ],
       pendingApproval,
       output: {
-        summary: topCite
-          ? `Legal: AML ${amlOut.status ?? 'unknown'} (risk ${amlOut.risk ?? '—'}); citation: ${topCite.sourceDoc} [${topCite.status}] score=${topCite.score.toFixed(3)}.${pendingApproval ? ` ${pendingApproval.preview}` : skippedMutate ? ' (compare: bỏ qua propose flag).' : ''}`
-          : `Legal: AML ${amlOut.status ?? 'unknown'}; chưa có citation RAG.`,
+        summary: fallbackSummary,
+        analysis,
+        analysisUsedLlm: usedLlm,
         amlStatus: amlOut.status ?? null,
         risk: amlOut.risk ?? null,
         flags: amlOut.flags ?? [],
@@ -509,11 +649,17 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    overallGoal: string,
     prior: Record<string, unknown>,
   ): Promise<SpecialistResult> {
-    const credit = prior['step-credit'] as { eligible?: boolean } | undefined;
+    const credit = prior['step-credit'] as
+      | { eligible?: boolean; analysis?: string }
+      | undefined;
     const collateral = prior['step-collateral'] as
-      | { status?: string; eligible?: boolean }
+      | { status?: string; eligible?: boolean; analysis?: string }
+      | undefined;
+    const legal = prior['step-legal'] as
+      | { amlStatus?: string; analysis?: string }
       | undefined;
     const compare = await this.mcp.callTool({
       bankCode,
@@ -528,6 +674,35 @@ export class SpecialistService {
       recommendedProduct?: string;
       products?: unknown[];
     };
+
+    const fallbackSummary =
+      credit?.eligible === false || collateral?.eligible === false
+        ? 'Product: hồ sơ chưa đủ điều kiện tín dụng/TSĐB — chỉ đề xuất để tham khảo, chưa giải ngân.'
+        : `Product: đề xuất ${out.recommendedProduct ?? 'sản phẩm phù hợp'} (MCP product).`;
+
+    const { analysis, usedLlm } = await this.analyzeExpert({
+      role: 'product',
+      overallGoal,
+      stepGoal: step.goal,
+      facts: {
+        customer,
+        productCompare: compare.output,
+        priorCredit: {
+          eligible: credit?.eligible,
+          analysis: credit?.analysis,
+        },
+        priorLegal: {
+          amlStatus: legal?.amlStatus,
+          analysis: legal?.analysis,
+        },
+        priorCollateral: {
+          status: collateral?.status,
+          eligible: collateral?.eligible,
+          analysis: collateral?.analysis,
+        },
+      },
+      fallbackSummary,
+    });
 
     return {
       mode: 'direct',
@@ -544,10 +719,9 @@ export class SpecialistService {
         },
       ],
       output: {
-        summary:
-          credit?.eligible === false || collateral?.eligible === false
-            ? 'Product: hồ sơ chưa đủ điều kiện tín dụng/TSĐB — chỉ đề xuất để tham khảo, chưa giải ngân.'
-            : `Product: đề xuất ${out.recommendedProduct ?? 'sản phẩm phù hợp'} (MCP product).`,
+        summary: fallbackSummary,
+        analysis,
+        analysisUsedLlm: usedLlm,
         recommendedProduct: out.recommendedProduct ?? null,
         products: out.products ?? [],
         stepGoal: step.goal,
@@ -559,6 +733,7 @@ export class SpecialistService {
     bankCode: string,
     customer: Record<string, string>,
     step: TaskStepPlan,
+    overallGoal: string,
   ): Promise<SpecialistResult> {
     const requestedAmountVnd = customer.requestedHint
       ? Number(customer.requestedHint)
@@ -635,6 +810,32 @@ export class SpecialistService {
         : 'acceptable'
       : 'needs_info';
 
+    const fallbackSummary = out.unsecured
+      ? 'Collateral: khoản vay tín chấp, không áp dụng TSĐB/LTV.'
+      : eligible
+        ? `Collateral: TSĐB đạt kiểm tra sơ bộ; LTV thực ${out.ltvActual ?? '—'}%, định giá còn hiệu lực.`
+        : `Collateral: cần bổ sung — ${missingData.join('; ') || 'chưa đủ dữ liệu'}.`;
+
+    const { analysis, usedLlm } = await this.analyzeExpert({
+      role: 'collateral',
+      overallGoal,
+      stepGoal: step.goal,
+      facts: {
+        customer,
+        collateralPackage: collateral.output,
+        checks: {
+          status,
+          eligible,
+          policyMaxLtv,
+          ltvWithinPolicy,
+          missingData,
+        },
+        citations: kb.citations,
+        policySummary: kb.summary,
+      },
+      fallbackSummary,
+    });
+
     return {
       mode: 'direct',
       toolCalls: [
@@ -660,11 +861,9 @@ export class SpecialistService {
         },
       ],
       output: {
-        summary: out.unsecured
-          ? 'Collateral: khoản vay tín chấp, không áp dụng TSĐB/LTV.'
-          : eligible
-            ? `Collateral: TSĐB đạt kiểm tra sơ bộ; LTV thực ${out.ltvActual ?? '—'}%, định giá còn hiệu lực.`
-            : `Collateral: cần bổ sung — ${missingData.join('; ') || 'chưa đủ dữ liệu'}.`,
+        summary: fallbackSummary,
+        analysis,
+        analysisUsedLlm: usedLlm,
         status,
         eligible,
         collateralType: out.collateralType ?? null,
@@ -706,6 +905,10 @@ export class SpecialistService {
           },
         };
 
+    const summary = pendingApproval
+      ? pendingApproval.preview
+      : `Ops: đề xuất ticket (compare: bỏ qua Approval) — ${step.goal.slice(0, 80)}`;
+
     return {
       mode: 'direct',
       toolCalls: [
@@ -734,9 +937,8 @@ export class SpecialistService {
       ],
       pendingApproval,
       output: {
-        summary: pendingApproval
-          ? pendingApproval.preview
-          : `Ops: đề xuất ticket (compare: bỏ qua Approval) — ${step.goal.slice(0, 80)}`,
+        summary,
+        analysis: summary,
         ...(pendingApproval
           ? {
               approvalReason: 'mutates' as const,

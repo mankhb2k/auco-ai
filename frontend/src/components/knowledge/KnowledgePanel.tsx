@@ -19,13 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   DOMAIN_LABEL,
   KB_STATUS_LABEL,
   formatTime,
@@ -271,6 +264,56 @@ export function KnowledgePanel() {
   const expert = EXPERTS.find((item) => item.domain === selectedDomain)!;
   const ExpertIcon = expert.icon;
 
+  if (selectedDocument) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" onClick={closeDocument}>
+            <ArrowLeft />
+            Danh sách tài liệu
+          </Button>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <ExpertIcon className="size-4" />
+            {DOMAIN_LABEL[selectedDomain]}
+          </div>
+          <Badge
+            variant={
+              selectedDocument.status === "active"
+                ? "default"
+                : selectedDocument.status === "draft"
+                  ? "secondary"
+                  : "outline"
+            }
+          >
+            {labelOf(KB_STATUS_LABEL, selectedDocument.status)}
+          </Badge>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              {selectedDocument.title}
+            </h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {DOMAIN_LABEL[selectedDocument.domain]} · cập nhật{" "}
+              {formatTime(selectedDocument.updatedAt)}
+              {selectedDocument.publishedAt
+                ? ` · xuất bản ${formatTime(selectedDocument.publishedAt)}`
+                : ""}
+            </p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Đọc văn bản ở đây và hỏi Trợ lý AI bên cạnh để tra cứu nhanh có
+              trích dẫn.
+            </p>
+          </div>
+          <div className="whitespace-pre-wrap rounded-lg border bg-background p-4 text-sm leading-relaxed">
+            {selectedDocument.content}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -376,40 +419,6 @@ export function KnowledgePanel() {
           ))}
         </CardContent>
       </Card>
-
-      <Sheet
-        open={Boolean(selectedDocument)}
-        onOpenChange={(open) => {
-          if (!open) closeDocument();
-        }}
-      >
-        <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
-          {selectedDocument ? (
-            <>
-              <SheetHeader>
-                <SheetTitle className="pr-8">
-                  {selectedDocument.title}
-                </SheetTitle>
-                <SheetDescription>
-                  {DOMAIN_LABEL[selectedDocument.domain]} ·{" "}
-                  {labelOf(KB_STATUS_LABEL, selectedDocument.status)} · cập nhật{" "}
-                  {formatTime(selectedDocument.updatedAt)}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="px-4 pb-6">
-                <div className="whitespace-pre-wrap rounded-lg border p-4 text-sm leading-relaxed">
-                  {selectedDocument.content}
-                </div>
-                <div className="text-muted-foreground mt-3 text-xs">
-                  {selectedDocument.publishedAt
-                    ? `Xuất bản: ${formatTime(selectedDocument.publishedAt)}`
-                    : "Chưa xuất bản"}
-                </div>
-              </div>
-            </>
-          ) : null}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

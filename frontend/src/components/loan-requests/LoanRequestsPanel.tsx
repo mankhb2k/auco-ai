@@ -32,7 +32,6 @@ import type {
   LoanRequest,
   LoanRequestStatus,
 } from "@/lib/types/domain";
-import { AGENT_LABEL } from "@/lib/labels";
 import { useAppStore } from "@/stores/app.store";
 import {
   AlertTriangle,
@@ -147,6 +146,7 @@ export function LoanRequestsPanel() {
   );
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [tagFilter, setTagFilter] = useState<AssessmentTagFilter>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = useCallback(
     async (quiet = false) => {
@@ -332,6 +332,166 @@ export function LoanRequestsPanel() {
     }
   }
 
+  const selectedRow = selectedId
+    ? rows.find((row) => row.id === selectedId) ?? null
+    : null;
+
+  if (selectedRow) {
+    const row = selectedRow;
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedId(null)}
+          >
+            <Undo2 />
+            Danh sách hồ sơ
+          </Button>
+          <StatusBadge status={row.status} />
+          {row.assessmentTag ? (
+            <Badge variant="outline">
+              Kết luận NV: {ASSESSMENT_TAG_LABEL[row.assessmentTag]}
+            </Badge>
+          ) : null}
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">
+            {row.customer.fullName}
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {row.customer.customerNo} · {row.externalRef}
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Thông tin khoản vay</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Info
+                label="Số tiền yêu cầu"
+                value={money(row.requestedAmountVnd)}
+              />
+              <Info label="Kỳ hạn" value={`${row.requestedTermMonths} tháng`} />
+              <Info label="Mục đích vay" value={row.loanPurpose} />
+              <Info
+                label="Tài sản bảo đảm"
+                value={row.collateralType ?? "Tín chấp / chưa khai báo"}
+              />
+              <Info
+                label="Thu nhập khai báo"
+                value={money(row.declaredIncomeVnd)}
+              />
+              <Info
+                label="Giá trị TSĐB ước tính"
+                value={money(row.estimatedCollateralVnd)}
+              />
+            </div>
+
+            <div className="bg-muted/50 flex flex-wrap items-center gap-2 rounded-lg border p-3 text-xs">
+              <Banknote className="text-muted-foreground size-4" />
+              <span>Nguồn: App ngân hàng</span>
+              <span className="text-muted-foreground">·</span>
+              <span>{row.customer.branchCode ?? "Chưa rõ chi nhánh"}</span>
+              {row.assignedTo ? (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <UserRoundCheck className="size-4" />
+                  <span>{row.assignedTo.displayName}</span>
+                </>
+              ) : null}
+            </div>
+
+            {row.exceedsBranchLimit ? (
+              <div className="border-destructive/30 bg-destructive/5 text-destructive flex items-start gap-2 rounded-lg border p-3 text-xs">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  Vượt hạn mức chi nhánh {money(row.branchApprovalLimitVnd)}.
+                  Nếu phê duyệt sẽ chuyển trạng thái escalated (cấp trên).
+                </span>
+              </div>
+            ) : null}
+
+            {row.staffNote ? (
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="text-muted-foreground text-xs">
+                  Ý kiến trình duyệt
+                </p>
+                <p className="mt-1 whitespace-pre-line">{row.staffNote}</p>
+              </div>
+            ) : null}
+
+            {row.decisionNote ? (
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="text-muted-foreground text-xs">
+                  Quyết định
+                  {row.decidedBy ? ` · ${row.decidedBy.displayName}` : ""}
+                </p>
+                <p className="mt-1 whitespace-pre-line">{row.decisionNote}</p>
+              </div>
+            ) : null}
+          </CardContent>
+
+          <CardFooter className="bg-muted/20 flex flex-col items-stretch gap-2 border-t py-3">
+            {isManager ? (
+              <ManagerActions
+                row={row}
+                busy={busyId === row.id}
+                creditOfficers={creditOfficers}
+                assignee={assignees[row.id] ?? row.assignedTo?.id ?? ""}
+                decisionNote={decisionNotes[row.id] ?? ""}
+                onAssigneeChange={(value) =>
+                  setAssignees((current) => ({
+                    ...current,
+                    [row.id]: value,
+                  }))
+                }
+                onDecisionNoteChange={(value) =>
+                  setDecisionNotes((current) => ({
+                    ...current,
+                    [row.id]: value,
+                  }))
+                }
+                onAssign={() => void assign(row)}
+                onApprove={() => void decide(row, "approve")}
+                onReject={() => void decide(row, "reject")}
+                onReturn={() => void decide(row, "return")}
+              />
+            ) : (
+              <StaffActions
+                row={row}
+                busy={busyId === row.id}
+                staffNote={staffNotes[row.id] ?? ""}
+                assessmentTag={
+                  assessmentTags[row.id] ?? row.assessmentTag ?? ""
+                }
+                onAssessmentTagChange={(value) =>
+                  setAssessmentTags((current) => ({
+                    ...current,
+                    [row.id]: value,
+                  }))
+                }
+                onStaffNoteChange={(value) =>
+                  setStaffNotes((current) => ({
+                    ...current,
+                    [row.id]: value,
+                  }))
+                }
+                onStartAssessment={() => void startAssessment(row)}
+                onOpenAssessment={() => openAssessmentInAi(row)}
+                onSubmit={() => void submitApproval(row)}
+              />
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -415,152 +575,74 @@ export function LoanRequestsPanel() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
           {visibleRows.map((row) => (
-            <Card key={row.id} className="overflow-hidden">
-              <CardHeader className="gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <CardTitle className="truncate text-base">
-                      {row.customer.fullName}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {row.customer.customerNo} · {row.externalRef}
-                    </CardDescription>
-                  </div>
+            <Card
+              key={row.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(row.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedId(row.id);
+                }
+              }}
+              className="hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-ring cursor-pointer gap-3 py-4 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <CardHeader className="gap-1 px-4">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="min-w-0 truncate text-sm">
+                    {row.customer.fullName}
+                  </CardTitle>
                   <StatusBadge status={row.status} />
                 </div>
-                {row.assessmentTag ? (
-                  <Badge variant="outline">
-                    Kết luận NV: {ASSESSMENT_TAG_LABEL[row.assessmentTag]}
-                  </Badge>
-                ) : null}
+                <CardDescription className="text-xs">
+                  {row.externalRef} · {row.customer.customerNo}
+                </CardDescription>
               </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <Info
-                    label="Số tiền yêu cầu"
-                    value={money(row.requestedAmountVnd)}
-                  />
-                  <Info
-                    label="Kỳ hạn"
-                    value={`${row.requestedTermMonths} tháng`}
-                  />
-                  <Info label="Mục đích vay" value={row.loanPurpose} />
-                  <Info
-                    label="Tài sản bảo đảm"
-                    value={row.collateralType ?? "Tín chấp / chưa khai báo"}
-                  />
+              <CardContent className="space-y-2 px-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-base font-semibold">
+                    {money(row.requestedAmountVnd)}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {row.requestedTermMonths} tháng
+                  </p>
                 </div>
-
-                <div className="bg-muted/50 flex flex-wrap items-center gap-2 rounded-lg border p-3 text-xs">
-                  <Banknote className="text-muted-foreground size-4" />
-                  <span>Nguồn: App ngân hàng</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span>{row.customer.branchCode ?? "Chưa rõ chi nhánh"}</span>
-                  {row.assignedTo ? (
-                    <>
-                      <span className="text-muted-foreground">·</span>
-                      <UserRoundCheck className="size-4" />
-                      <span>{row.assignedTo.displayName}</span>
-                    </>
+                <p className="text-muted-foreground truncate text-xs">
+                  {row.loanPurpose}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {row.assessmentTag ? (
+                    <Badge variant="outline" className="text-[10px]">
+                      {ASSESSMENT_TAG_LABEL[row.assessmentTag]}
+                    </Badge>
+                  ) : null}
+                  {row.exceedsBranchLimit ? (
+                    <Badge variant="destructive" className="text-[10px]">
+                      <AlertTriangle />
+                      Vượt hạn mức
+                    </Badge>
+                  ) : null}
+                  {row.status === "assessing" ? (
+                    <Badge variant="secondary" className="text-[10px]">
+                      <Loader2 className="animate-spin" />
+                      AI đang chạy
+                    </Badge>
                   ) : null}
                 </div>
-
-                {row.exceedsBranchLimit ? (
-                  <div className="border-destructive/30 bg-destructive/5 text-destructive flex items-start gap-2 rounded-lg border p-3 text-xs">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                    <span>
-                      Vượt hạn mức chi nhánh{" "}
-                      {money(row.branchApprovalLimitVnd)}. Nếu phê duyệt sẽ
-                      chuyển trạng thái escalated (cấp trên).
-                    </span>
-                  </div>
-                ) : null}
-
-                {row.staffNote ? (
-                  <div className="rounded-lg border p-3 text-sm">
-                    <p className="text-muted-foreground text-xs">
-                      Ý kiến trình duyệt
-                    </p>
-                    <p className="mt-1 whitespace-pre-line">{row.staffNote}</p>
-                  </div>
-                ) : null}
-
-                {row.decisionNote ? (
-                  <div className="rounded-lg border p-3 text-sm">
-                    <p className="text-muted-foreground text-xs">
-                      Quyết định
-                      {row.decidedBy
-                        ? ` · ${row.decidedBy.displayName}`
-                        : ""}
-                    </p>
-                    <p className="mt-1 whitespace-pre-line">
-                      {row.decisionNote}
-                    </p>
-                  </div>
-                ) : null}
-
-                {row.assessmentTaskRun ? (
-                  <AssessmentSummary
-                    request={row}
-                    onOpen={() => openAssessmentInAi(row)}
-                  />
-                ) : null}
-              </CardContent>
-
-              <CardFooter className="bg-muted/20 flex flex-col items-stretch gap-2 border-t py-3">
-                {isManager ? (
-                  <ManagerActions
-                    row={row}
-                    busy={busyId === row.id}
-                    creditOfficers={creditOfficers}
-                    assignee={assignees[row.id] ?? row.assignedTo?.id ?? ""}
-                    decisionNote={decisionNotes[row.id] ?? ""}
-                    onAssigneeChange={(value) =>
-                      setAssignees((current) => ({
-                        ...current,
-                        [row.id]: value,
-                      }))
-                    }
-                    onDecisionNoteChange={(value) =>
-                      setDecisionNotes((current) => ({
-                        ...current,
-                        [row.id]: value,
-                      }))
-                    }
-                    onAssign={() => void assign(row)}
-                    onApprove={() => void decide(row, "approve")}
-                    onReject={() => void decide(row, "reject")}
-                    onReturn={() => void decide(row, "return")}
-                  />
+                {row.assignedTo ? (
+                  <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                    <UserRoundCheck className="size-3.5" />
+                    {row.assignedTo.displayName}
+                  </p>
                 ) : (
-                  <StaffActions
-                    row={row}
-                    busy={busyId === row.id}
-                    staffNote={staffNotes[row.id] ?? ""}
-                    assessmentTag={
-                      assessmentTags[row.id] ?? row.assessmentTag ?? ""
-                    }
-                    onAssessmentTagChange={(value) =>
-                      setAssessmentTags((current) => ({
-                        ...current,
-                        [row.id]: value,
-                      }))
-                    }
-                    onStaffNoteChange={(value) =>
-                      setStaffNotes((current) => ({
-                        ...current,
-                        [row.id]: value,
-                      }))
-                    }
-                    onStartAssessment={() => void startAssessment(row)}
-                    onOpenAssessment={() => openAssessmentInAi(row)}
-                    onSubmit={() => void submitApproval(row)}
-                  />
+                  <p className="text-muted-foreground text-xs">
+                    Chưa phân bổ
+                  </p>
                 )}
-              </CardFooter>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -684,14 +766,11 @@ function StaffActions({
   onOpenAssessment: () => void;
   onSubmit: () => void;
 }) {
-  if (row.status === "assigned" || row.status === "failed") {
-    return (
-      <Button className="w-full" onClick={onStartAssessment} disabled={busy}>
-        {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-        Đánh giá bằng Trợ lý AI
-      </Button>
-    );
-  }
+  const canManualConclude =
+    row.status === "assigned" ||
+    row.status === "failed" ||
+    row.status === "advised" ||
+    row.status === "needs_info";
 
   if (row.status === "assessing") {
     return (
@@ -702,56 +781,67 @@ function StaffActions({
     );
   }
 
-  if (row.status === "advised" || row.status === "needs_info") {
-    const canResubmit =
-      row.status === "advised" || Boolean(row.assessmentTaskRun);
+  if (canManualConclude) {
     return (
       <>
         {row.status === "needs_info" ? (
           <p className="text-muted-foreground text-xs">
-            Giám đốc yêu cầu bổ sung. Chạy lại đánh giá nếu cần, rồi trình
-            duyệt lại.
+            Giám đốc yêu cầu bổ sung. Có thể chạy lại AI hoặc tự gắn nhãn rồi
+            trình duyệt lại.
           </p>
         ) : null}
-        {canResubmit ? (
-          <>
-            <div className="space-y-1.5">
-              <p className="text-sm font-medium">
-                Kết luận thẩm định của nhân viên
-              </p>
-              <Select
-                value={assessmentTag}
-                onValueChange={(value) =>
-                  onAssessmentTagChange(value as LoanAssessmentTag)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Chọn nhãn trước khi trình duyệt" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(ASSESSMENT_TAG_LABEL).map(
-                    ([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <Textarea
-              value={staffNote}
-              onChange={(e) => onStaffNoteChange(e.target.value)}
-              placeholder="Giải thích căn cứ kết luận cho giám đốc…"
-              rows={2}
-            />
-          </>
+        {row.status === "failed" ? (
+          <p className="text-muted-foreground text-xs">
+            Đánh giá AI lỗi — có thể chạy lại hoặc tự kết luận thủ công.
+          </p>
         ) : null}
+
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            Kết luận thẩm định của nhân viên
+          </p>
+          <Select
+            value={assessmentTag}
+            onValueChange={(value) =>
+              onAssessmentTagChange(value as LoanAssessmentTag)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Chọn nhãn trước khi trình duyệt" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ASSESSMENT_TAG_LABEL).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Textarea
+          value={staffNote}
+          onChange={(e) => onStaffNoteChange(e.target.value)}
+          placeholder="Giải thích căn cứ kết luận cho giám đốc…"
+          rows={2}
+        />
+
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onOpenAssessment} disabled={busy}>
-            <Bot />
-            Mở kết quả trong Trợ lý AI
-          </Button>
+          {row.status === "assigned" || row.status === "failed" ? (
+            <Button
+              variant="outline"
+              onClick={onStartAssessment}
+              disabled={busy}
+            >
+              {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+              Đánh giá bằng Trợ lý AI
+            </Button>
+          ) : null}
+          {row.assessmentTaskRun ? (
+            <Button variant="outline" onClick={onOpenAssessment} disabled={busy}>
+              <Bot />
+              Mở kết quả trong Trợ lý AI
+            </Button>
+          ) : null}
           {row.status === "needs_info" ? (
             <Button
               variant="outline"
@@ -762,16 +852,14 @@ function StaffActions({
               Chạy lại bằng AI
             </Button>
           ) : null}
-          {canResubmit ? (
-            <Button
-              className="flex-1"
-              onClick={onSubmit}
-              disabled={busy || !assessmentTag}
-            >
-              {busy ? <Loader2 className="animate-spin" /> : <Send />}
-              Trình duyệt
-            </Button>
-          ) : null}
+          <Button
+            className="flex-1"
+            onClick={onSubmit}
+            disabled={busy || !assessmentTag}
+          >
+            {busy ? <Loader2 className="animate-spin" /> : <Send />}
+            Trình duyệt
+          </Button>
         </div>
       </>
     );
@@ -824,43 +912,6 @@ function Info({ label, value }: { label: string; value: string }) {
     <div className="min-w-0">
       <p className="text-muted-foreground text-xs">{label}</p>
       <p className="mt-1 line-clamp-2 font-medium">{value}</p>
-    </div>
-  );
-}
-
-function AssessmentSummary({
-  request,
-  onOpen,
-}: {
-  request: LoanRequest;
-  onOpen: () => void;
-}) {
-  const run = request.assessmentTaskRun;
-  if (!run) return null;
-  return (
-    <div className="space-y-3 rounded-lg border p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">Gợi ý AI (không phải quyết định)</p>
-        <Button variant="ghost" size="sm" className="h-7" onClick={onOpen}>
-          Mở trong Trợ lý AI
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {run.steps.map((step) => (
-          <Badge key={step.id} variant="outline">
-            {AGENT_LABEL[step.agentRole]} · {step.status}
-          </Badge>
-        ))}
-      </div>
-      {run.finalAnswer ? (
-        <p className="text-muted-foreground line-clamp-5 whitespace-pre-line text-sm">
-          {run.finalAnswer}
-        </p>
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          Hệ thống đang thu thập CIC, AML, dữ liệu TSĐB và chính sách liên quan.
-        </p>
-      )}
     </div>
   );
 }

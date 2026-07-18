@@ -97,8 +97,8 @@ export class PlannerService {
         agentRole: 'planner',
         purpose: 'synthesize',
         system:
-          'Bạn là Planner ngân hàng SHB. Dựa trên kết quả các chuyên gia (Tín dụng, Tuân thủ, Tài sản bảo đảm, Sản phẩm), viết một bản nhận định tham khảo cho nhân viên tín dụng bằng tiếng Việt. Cấu trúc: (1) Khuyến nghị tổng — chọn một trong proceed_with_conditions | manual_review | do_not_proceed | insufficient_data; (2) Cơ sở đánh giá; (3) Rủi ro cần lưu ý; (4) Điểm chặn/bổ sung nếu có; (5) Trích dẫn quy định. Không bịa số liệu ngoài dữ liệu chuyên gia. Kết thúc bằng lưu ý rằng đây là gợi ý, quyết định thuộc về con người.',
-        prompt: `Goal: ${opts.goal}\n\nPlan: ${opts.plan.summary}\n\nStep outputs:\n${JSON.stringify(opts.stepOutputs, null, 2)}\n\nViết bản nhận định + khuyến nghị cho nhân viên tín dụng.`,
+          'Bạn là Planner ngân hàng SHB. Dựa trên nhận định của các chuyên gia (ưu tiên trường analysis; các field số liệu chỉ để đối chiếu), viết bản nhận định tham khảo cho nhân viên tín dụng bằng tiếng Việt. Cấu trúc: (1) Khuyến nghị tổng — chọn một trong proceed_with_conditions | manual_review | do_not_proceed | insufficient_data; (2) Cơ sở đánh giá — tóm từ analysis của từng chuyên gia; (3) Rủi ro cần lưu ý; (4) Điểm chặn/bổ sung nếu có. Khi dẫn quy định, luôn chèn ngay sau câu liên quan theo đúng định dạng: (Trích dẫn: tên tài liệu — điều khoản). Không thêm mục danh sách trích dẫn riêng ở cuối. Không bịa số liệu ngoài dữ liệu chuyên gia. Kết thúc bằng lưu ý rằng đây là gợi ý, quyết định thuộc về con người.',
+        prompt: `Goal: ${opts.goal}\n\nPlan: ${opts.plan.summary}\n\nExpert step outputs (dùng analysis làm input chính):\n${JSON.stringify(opts.stepOutputs, null, 2)}\n\nViết bản nhận định + khuyến nghị cho nhân viên tín dụng.`,
       });
       return { finalAnswer: text, usedLlm: true };
     } catch (err) {
@@ -142,7 +142,9 @@ export class PlannerService {
         ? (credit.maxAmountVnd as number)
         : null;
     if (credit) {
-      if (creditEligible) {
+      if (typeof credit.analysis === 'string' && credit.analysis.trim()) {
+        reasons.push(`Tín dụng: ${credit.analysis.trim()}`);
+      } else if (creditEligible) {
         reasons.push(
           `Tín dụng: đủ điều kiện sơ bộ${score ? ` (điểm ${score})` : ''}${maxAmount ? `, hạn mức đề xuất ~${this.formatVnd(maxAmount)}` : ''}.`,
         );
@@ -156,7 +158,9 @@ export class PlannerService {
     // Legal / Compliance
     const amlStatus = (legal?.amlStatus as string | null) ?? null;
     if (legal) {
-      if (amlStatus === 'clear' || amlStatus === null) {
+      if (typeof legal.analysis === 'string' && legal.analysis.trim()) {
+        reasons.push(`Tuân thủ: ${legal.analysis.trim()}`);
+      } else if (amlStatus === 'clear' || amlStatus === null) {
         reasons.push('Tuân thủ: AML/KYC không có cảnh báo chặn.');
       } else {
         risks.push(
@@ -170,7 +174,9 @@ export class PlannerService {
     const ltv = collateral?.ltvActual ?? null;
     const policyLtv = collateral?.policyMaxLtv ?? null;
     if (collateral) {
-      if (cStatus === 'not_applicable') {
+      if (typeof collateral.analysis === 'string' && collateral.analysis.trim()) {
+        reasons.push(`Tài sản bảo đảm: ${collateral.analysis.trim()}`);
+      } else if (cStatus === 'not_applicable') {
         reasons.push('Tài sản bảo đảm: khoản vay tín chấp, không áp dụng LTV.');
       } else if (cStatus === 'acceptable') {
         reasons.push(
@@ -189,8 +195,12 @@ export class PlannerService {
     // Product
     const recommendedProduct =
       (product?.recommendedProduct as string | null) ?? null;
-    if (recommendedProduct) {
-      reasons.push(`Sản phẩm gợi ý: ${recommendedProduct}.`);
+    if (product) {
+      if (typeof product.analysis === 'string' && product.analysis.trim()) {
+        reasons.push(`Sản phẩm: ${product.analysis.trim()}`);
+      } else if (recommendedProduct) {
+        reasons.push(`Sản phẩm gợi ý: ${recommendedProduct}.`);
+      }
     }
 
     // Khuyến nghị tổng

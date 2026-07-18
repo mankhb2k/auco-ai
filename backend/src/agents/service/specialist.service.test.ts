@@ -1,5 +1,6 @@
 import { SpecialistService } from './specialist.service';
 import type { ActorsService } from '../../actors/service/actors.service';
+import type { LlmGatewayService } from '../../llm/llm.gateway';
 import type { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import type { RagService } from '../../rag/service/rag.service';
 import type { TaskStepPlan } from '../../planning/task-plan.schema';
@@ -10,12 +11,17 @@ describe('SpecialistService', () => {
   const actors = {
     isCustomerInPortfolio: jest.fn().mockResolvedValue(true),
   } as unknown as ActorsService;
+  const llm = {
+    isPrimaryConfigured: false,
+    isFallbackConfigured: false,
+    generateText: jest.fn(),
+  } as unknown as LlmGatewayService;
   let service: SpecialistService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     (actors.isCustomerInPortfolio as jest.Mock).mockResolvedValue(true);
-    service = new SpecialistService(mcp, rag, actors);
+    service = new SpecialistService(mcp, rag, actors, llm);
     (mcp.callTool as jest.Mock).mockResolvedValue({
       tool: 'compare_products',
       mcp: 'mcp-product',

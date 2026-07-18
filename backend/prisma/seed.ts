@@ -866,15 +866,34 @@ async function seedLoanRequests(bankCode: string) {
     },
   ];
 
-  for (const row of rows) {
-    const approval = {
-      staffNote: row.staffNote ?? null,
-      submittedAt: row.submittedAt ?? null,
-      submittedById: row.submittedById ?? null,
-      decision: row.decision ?? null,
-      decisionNote: row.decisionNote ?? null,
-      decidedAt: row.decidedAt ?? null,
-      decidedById: row.decidedById ?? null,
+  // Seed ở trạng thái test sạch: chia đều toàn bộ hồ sơ cho 3 chuyên viên,
+  // chưa chạy AI và chưa đi qua maker-checker để người dùng test từng hồ sơ.
+  const creditOfficerIds = ["emp-credit-b", "emp-credit-f", "emp-credit-g"];
+  await prisma.loanRequest.updateMany({
+    where: { bankCode },
+    data: { assessmentTaskRunId: null },
+  });
+  await prisma.taskRun.deleteMany({ where: { bankCode } });
+
+  for (const [index, row] of rows.entries()) {
+    const assignedToId = creditOfficerIds[index % creditOfficerIds.length];
+    const assignedAt = new Date(
+      Date.UTC(2026, 6, 18, 1, index),
+    );
+    const cleanWorkflow = {
+      status: "assigned",
+      assignedToId,
+      assignedAt,
+      assessmentTaskRunId: null,
+      assessmentStartedAt: null,
+      assessmentTag: null,
+      staffNote: null,
+      submittedAt: null,
+      submittedById: null,
+      decision: null,
+      decisionNote: null,
+      decidedAt: null,
+      decidedById: null,
     };
     await prisma.loanRequest.upsert({
       where: { externalRef: row.externalRef },
@@ -886,10 +905,7 @@ async function seedLoanRequests(bankCode: string) {
         declaredIncomeVnd: row.declaredIncomeVnd,
         collateralType: row.collateralType,
         estimatedCollateralVnd: row.estimatedCollateralVnd,
-        status: row.status,
-        assignedToId: row.assignedToId,
-        assignedAt: row.assignedAt,
-        ...approval,
+        ...cleanWorkflow,
       },
       create: {
         id: row.id,
@@ -901,10 +917,7 @@ async function seedLoanRequests(bankCode: string) {
         declaredIncomeVnd: row.declaredIncomeVnd,
         collateralType: row.collateralType,
         estimatedCollateralVnd: row.estimatedCollateralVnd,
-        status: row.status,
-        assignedToId: row.assignedToId,
-        assignedAt: row.assignedAt,
-        ...approval,
+        ...cleanWorkflow,
         bankCode,
         source: "mobile_app",
         note: "Yêu cầu vay giả lập nhận từ API ứng dụng ngân hàng",
