@@ -295,7 +295,7 @@ function ChatComposer() {
   const showChips = !activeRun;
 
   return (
-    <div className="bg-background/95 border-t px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
+    <div className="bg-background px-4 py-3 pb-5">
       <div className="mx-auto w-full max-w-2xl space-y-2">
         {showChips ? (
           <div className="flex flex-wrap gap-1.5">
