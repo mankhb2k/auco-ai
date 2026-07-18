@@ -185,7 +185,7 @@ export function AgentCoordinationProgress({
                     {/* Node Dot */}
                     <div
                       className={cn(
-                        "absolute -left-[31px] top-1.5 flex size-5 items-center justify-center rounded-full border bg-white dark:bg-zinc-950 transition-all duration-300 shadow-sm",
+                        "absolute -left-[35px] top-1.5 flex size-5 items-center justify-center rounded-full border bg-white dark:bg-zinc-950 transition-all duration-300 shadow-sm",
                         isStepDone
                           ? "border-emerald-500 text-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
                           : isStepRunning
