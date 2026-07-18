@@ -7,7 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { TaskRunsService } from './task-runs.service';
+import { TaskRunsService } from './service/task-runs.service';
 
 @Controller('api/task-runs')
 export class TaskRunsController {

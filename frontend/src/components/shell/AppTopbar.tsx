@@ -19,14 +19,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
+import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import { useAppStore } from "@/stores/app.store";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, UserRound } from "lucide-react";
 
 export function AppTopbar() {
   const mainTab = useAppStore((s) => s.mainTab);
   const employees = useAppStore((s) => s.employees);
   const employeeId = useAppStore((s) => s.employeeId);
   const setEmployeeId = useAppStore((s) => s.setEmployeeId);
+  const currentEmployee =
+    employees.find((e) => e.id === employeeId) ?? employees[0];
   const mode = useAppStore((s) => s.mode);
   const setMode = useAppStore((s) => s.setMode);
   const outOfPortfolioDemo = useAppStore((s) => s.outOfPortfolioDemo);
@@ -67,6 +70,15 @@ export function AppTopbar() {
         ) : null}
       </div>
 
+      {/* role.md §2 — banner vai đang dùng (3 lớp quyền demo) */}
+      <Badge variant="secondary" className="hidden items-center gap-1 md:inline-flex">
+        <UserRound className="size-3" />
+        <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
+        <span className="text-muted-foreground">
+          · {ACCESS_LAYER_LABEL[currentEmployee.accessLayer]}
+        </span>
+      </Badge>
+
       {mainTab === "workspace" ? (
         <>
           <DropdownMenu>
@@ -100,7 +112,12 @@ export function AppTopbar() {
                   <SelectContent>
                     {employees.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
-                        {e.displayName}
+                        <span className="flex flex-col text-left">
+                          <span>{e.displayName}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {ACCESS_LAYER_LABEL[e.accessLayer]}
+                          </span>
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>

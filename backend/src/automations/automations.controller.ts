@@ -7,7 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { AutomationsService } from './automations.service';
+import { AutomationsService } from './service/automations.service';
 
 @Controller('api/automations')
 export class AutomationsController {

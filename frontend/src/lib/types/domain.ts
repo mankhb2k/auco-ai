@@ -113,12 +113,16 @@ export interface TaskRun {
   steps: TaskStep[];
 }
 
+/** role.md §1 — 3 lớp quyền demo. */
+export type AccessLayer = "it_admin" | "manager" | "employee";
+
 export interface Employee {
   id: string;
   bankCode: string;
   displayName: string;
   role: string;
-  branchCode: string;
+  accessLayer: AccessLayer;
+  branchCode: string | null;
 }
 
 export interface Customer {

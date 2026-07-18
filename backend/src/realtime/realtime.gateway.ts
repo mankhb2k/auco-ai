@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import type { Server, Socket } from 'socket.io';
-import { RealtimeService } from './realtime.service';
+import { RealtimeService } from './service/realtime.service';
 
 @WebSocketGateway({
   namespace: '/ws',

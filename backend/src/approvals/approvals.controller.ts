@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApprovalsService } from './approvals.service';
+import { ApprovalsService } from './service/approvals.service';
 
 @Controller('api/approvals')
 export class ApprovalsController {

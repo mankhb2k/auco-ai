@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
-import { CompareService } from './compare.service';
+import { CompareService } from './service/compare.service';
 
 @Controller('api/compare')
 export class CompareController {

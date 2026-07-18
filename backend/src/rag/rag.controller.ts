@@ -7,7 +7,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { isRagDomain } from './indexes';
-import { RagService } from './rag.service';
+import { RagService } from './service/rag.service';
 
 @Controller('api/rag')
 export class RagController {

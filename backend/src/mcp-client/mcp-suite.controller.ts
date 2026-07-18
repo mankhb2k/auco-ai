@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { McpGatewayService } from './mcp-gateway.service';
-import { McpRegistryService } from './mcp-registry.service';
+import { McpGatewayService } from './service/mcp-gateway.service';
+import { McpRegistryService } from './service/mcp-registry.service';
 
 @Controller('api/mcp')
 export class McpSuiteController {

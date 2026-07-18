@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { EmbeddingsService } from './embeddings/embeddings.service';
-import { IngestService } from './ingest.service';
+import { EmbeddingsService } from './embeddings/service/embeddings.service';
+import { IngestService } from './service/ingest.service';
 import { RagController } from './rag.controller';
-import { RagService } from './rag.service';
-import { RetrieveService } from './retrieve.service';
+import { RagService } from './service/rag.service';
+import { RetrieveService } from './service/retrieve.service';
 
 @Module({
   controllers: [RagController],

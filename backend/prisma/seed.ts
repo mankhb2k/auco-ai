@@ -87,24 +87,35 @@ function loadJson<T>(relativePath: string): T {
 }
 
 async function seedEmployees(bankCode: string) {
+  // role.md §7 — 3 lớp quyền demo: employee | manager | it_admin
   const rows = [
     {
       id: "emp-credit-b",
       displayName: "Nguyễn Thị B — Chuyên viên Tín dụng",
       role: "credit_officer",
+      accessLayer: "employee",
       branchCode: "CN_CAU_GIAY",
     },
     {
       id: "emp-ops-c",
       displayName: "Trần Văn C — Nhân viên Vận hành",
       role: "ops_officer",
+      accessLayer: "employee",
       branchCode: "CN_CAU_GIAY",
     },
     {
       id: "emp-mgr-d",
       displayName: "Lê Minh D — Giám đốc chi nhánh",
       role: "branch_manager",
+      accessLayer: "manager",
       branchCode: "CN_CAU_GIAY",
+    },
+    {
+      id: "emp-it-e",
+      displayName: "Trần IT E — Quản trị Platform",
+      role: "it_admin",
+      accessLayer: "it_admin",
+      branchCode: null,
     },
   ] as const;
 
@@ -114,6 +125,7 @@ async function seedEmployees(bankCode: string) {
       update: {
         displayName: row.displayName,
         role: row.role,
+        accessLayer: row.accessLayer,
         branchCode: row.branchCode,
         bankCode,
       },

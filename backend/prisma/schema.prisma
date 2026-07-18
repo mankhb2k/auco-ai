@@ -48,7 +48,9 @@ model Employee {
   id          String              @id @default(cuid())
   bankCode    String              @default("SHB")
   displayName String
-  role        String // credit_officer | compliance_officer | ops_officer | branch_manager
+  role        String // credit_officer | compliance_officer | ops_officer | branch_manager | it_admin
+  /// role.md §1 — 3 lớp quyền demo: it_admin | manager | employee
+  accessLayer String              @default("employee")
   branchCode  String?
   portfolios  CustomerPortfolio[]
   taskRuns    TaskRun[]
