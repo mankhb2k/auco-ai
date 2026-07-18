@@ -5,6 +5,7 @@ import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
 import { ComparePanel } from "@/components/compare/ComparePanel";
 import { HistoryPanel } from "@/components/history/HistoryPanel";
 import { KnowledgePanel } from "@/components/knowledge/KnowledgePanel";
+import { McpSuitePanel } from "@/components/mcp/McpSuitePanel";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { AppTopbar } from "@/components/shell/AppTopbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -28,6 +29,7 @@ export function AppShell() {
               {mainTab === "history" ? <HistoryPanel /> : null}
               {mainTab === "compare" ? <ComparePanel /> : null}
               {mainTab === "knowledge" ? <KnowledgePanel /> : null}
+              {mainTab === "mcp" ? <McpSuitePanel /> : null}
             </div>
           )}
         </SidebarInset>

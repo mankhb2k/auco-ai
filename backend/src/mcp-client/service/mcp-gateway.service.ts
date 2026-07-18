@@ -110,6 +110,11 @@ export class McpGatewayService implements OnModuleDestroy {
     if (!capability) {
       throw new Error(`Unknown MCP tool: ${opts.tool}`);
     }
+    if (!this.registry.isConnectorEnabled(bankCode, capability)) {
+      throw new Error(
+        `MCP connector disabled by IT: bankCode=${bankCode} capability=${capability}`,
+      );
+    }
     const connector = this.registry.resolve(bankCode, capability);
     const toolMeta = connector.tools.find((t) => t.name === opts.tool);
 

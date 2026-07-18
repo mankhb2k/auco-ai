@@ -22,6 +22,7 @@ import {
   History,
   LayoutDashboard,
   Network,
+  ServerCog,
   TimerReset,
 } from "lucide-react";
 
@@ -46,7 +47,7 @@ const NAV = [
   },
   {
     id: "compare" as const,
-    title: "So sánh & MCP",
+    title: "So sánh",
     description: "Single vs Multi",
     icon: GitCompareArrows,
   },
@@ -56,6 +57,13 @@ const NAV = [
     description: "Draft · Publish · RAG",
     icon: BookOpenCheck,
     managerOnly: true,
+  },
+  {
+    id: "mcp" as const,
+    title: "MCP Suite",
+    description: "Connector · Runtime policy",
+    icon: ServerCog,
+    itOnly: true,
   },
 ];
 
@@ -67,7 +75,9 @@ export function AppSidebar() {
   const employeeId = useAppStore((s) => s.employeeId);
   const employee = employees.find((e) => e.id === employeeId);
   const visibleNav = NAV.filter(
-    (item) => !("managerOnly" in item) || employee?.accessLayer === "manager",
+    (item) =>
+      (!("managerOnly" in item) || employee?.accessLayer === "manager") &&
+      (!("itOnly" in item) || employee?.accessLayer === "it_admin"),
   );
 
   return (

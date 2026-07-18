@@ -1,7 +1,11 @@
 import { McpRegistryService } from './mcp-registry.service';
 
 describe('McpRegistryService', () => {
-  const service = new McpRegistryService();
+  let service: McpRegistryService;
+
+  beforeEach(() => {
+    service = new McpRegistryService();
+  });
 
   it('lists SHB connectors by default', () => {
     const connectors = service.listConnectors();
@@ -24,5 +28,37 @@ describe('McpRegistryService', () => {
     expect(status.suite).toBe('SHB MCP Suite');
     expect(status.connected).toBe(true);
     expect(status.connectorCount).toBe(status.connectors.length);
+    expect(status.enabledCount).toBe(status.connectorCount);
+    expect(status.connectors.every((connector) => connector.enabled)).toBe(
+      true,
+    );
+  });
+
+  it('disables and re-enables connector capability at runtime', () => {
+    const disabled = service.setConnectorEnabled('SHB', 'ops', false);
+
+    expect(disabled).toEqual(
+      expect.objectContaining({
+        capability: 'ops',
+        enabled: false,
+        status: 'disabled',
+        persistence: 'in_memory_demo',
+      }),
+    );
+    expect(service.isConnectorEnabled('SHB', 'ops')).toBe(false);
+    expect(
+      service.suiteStatus('SHB').connectors.find(
+        (connector) => connector.capability === 'ops',
+      ),
+    ).toEqual(expect.objectContaining({ enabled: false, status: 'disabled' }));
+
+    service.setConnectorEnabled('SHB', 'ops', true);
+    expect(service.isConnectorEnabled('SHB', 'ops')).toBe(true);
+  });
+
+  it('rejects override for unknown bank connector', () => {
+    expect(() =>
+      service.setConnectorEnabled('UNKNOWN', 'ops', false),
+    ).toThrow(/No MCP connector/);
   });
 });

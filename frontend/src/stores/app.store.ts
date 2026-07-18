@@ -27,7 +27,8 @@ type MainTab =
   | "automations"
   | "history"
   | "compare"
-  | "knowledge";
+  | "knowledge"
+  | "mcp";
 
 interface AppState {
   employeeId: string;
@@ -82,13 +83,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   setEmployeeId: (id) =>
     set((state) => {
       const next = state.employees.find((employee) => employee.id === id);
+      const inaccessibleControlTab =
+        (state.mainTab === "knowledge" && next?.accessLayer !== "manager") ||
+        (state.mainTab === "mcp" && next?.accessLayer !== "it_admin");
       return {
         employeeId: id,
-        // Knowledge is manager-only; do not leave an inaccessible tab visible.
-        mainTab:
-          state.mainTab === "knowledge" && next?.accessLayer !== "manager"
-            ? "workspace"
-            : state.mainTab,
+        // Control-plane tabs are role-specific.
+        mainTab: inaccessibleControlTab ? "workspace" : state.mainTab,
       };
     }),
 

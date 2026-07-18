@@ -3,7 +3,11 @@ import { McpGatewayService } from './mcp-gateway.service';
 import { McpRegistryService } from './mcp-registry.service';
 
 describe('McpGatewayService', () => {
-  const registry = new McpRegistryService();
+  let registry: McpRegistryService;
+
+  beforeEach(() => {
+    registry = new McpRegistryService();
+  });
 
   function createService(mcpEnabled = 'true') {
     const config = {
@@ -42,5 +46,19 @@ describe('McpGatewayService', () => {
         tool: 'get_credit_score',
       }),
     ).rejects.toThrow(/MCP suite disabled/);
+  });
+
+  it('callTool throws before transport when IT disabled capability', async () => {
+    registry.setConnectorEnabled('SHB', 'core-banking', false);
+
+    await expect(
+      createService().callTool({
+        bankCode: 'SHB',
+        agentRole: 'credit',
+        tool: 'get_credit_score',
+      }),
+    ).rejects.toThrow(
+      /MCP connector disabled by IT.*capability=core-banking/,
+    );
   });
 });

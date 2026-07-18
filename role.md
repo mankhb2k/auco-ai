@@ -257,9 +257,9 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 
 ### Phase R4 — IT connector mock (P1)
 
-- [ ] `PATCH /api/mcp/connectors/:capability` enable flag  
-- [ ] Gateway tôn trọng flag khi `callTool`  
-- [ ] FE tab MCP Suite (it_admin)  
+- [x] `PATCH /api/mcp/connectors/:capability` enable flag  
+- [x] Gateway tôn trọng flag khi `callTool`  
+- [x] FE tab MCP Suite (it_admin)  
 
 ### Phase R5 — Polish (P2)
 

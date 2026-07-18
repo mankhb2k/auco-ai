@@ -5,6 +5,18 @@ export type McpCapability =
   | 'product'
   | 'ops';
 
+export const MCP_CAPABILITIES: readonly McpCapability[] = [
+  'los',
+  'compliance',
+  'core-banking',
+  'product',
+  'ops',
+];
+
+export function isMcpCapability(value: string): value is McpCapability {
+  return (MCP_CAPABILITIES as readonly string[]).includes(value);
+}
+
 export type McpToolMeta = {
   name: string;
   mutates: boolean;
