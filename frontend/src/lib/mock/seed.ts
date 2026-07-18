@@ -57,7 +57,7 @@ export const ACCESS_LAYER_LABEL: Record<
   Employee["accessLayer"],
   string
 > = {
-  it_admin: "IT / Platform",
+  it_admin: "IT / Nền tảng",
   manager: "Trưởng phòng",
   employee: "Nhân viên",
 };
@@ -86,14 +86,14 @@ export function findCustomerByDemoTag(tag: string) {
 }
 
 export const mcpSuite: McpSuiteStatus = {
-  suite: "SHB MCP Suite",
+  suite: "Bộ kết nối MCP SHB",
   connected: true,
   connectors: [
     { id: "mcp-los", name: "LOS", status: "connected", lastTool: "check_loan_eligibility" },
-    { id: "mcp-compliance", name: "Compliance", status: "connected", lastTool: "run_aml_check" },
-    { id: "mcp-core-banking", name: "Core Banking", status: "mock" },
-    { id: "mcp-product", name: "Product", status: "mock", lastTool: "compare_products" },
-    { id: "mcp-ops", name: "Ops", status: "mock" },
+    { id: "mcp-compliance", name: "Tuân thủ", status: "connected", lastTool: "run_aml_check" },
+    { id: "mcp-core-banking", name: "Core banking", status: "mock" },
+    { id: "mcp-product", name: "Sản phẩm", status: "mock", lastTool: "compare_products" },
+    { id: "mcp-ops", name: "Vận hành", status: "mock" },
   ],
 };
 
@@ -121,7 +121,8 @@ export const seedAutomationRuns: AutomationRun[] = [
     status: "done",
     startedAt: "2026-07-01T08:00:12+07:00",
     finishedAt: "2026-07-01T08:01:04+07:00",
-    resultSummary: "Dry-run: 128 KH trong danh mục, 3 cảnh báo rủi ro trung bình.",
+    resultSummary:
+      "Chạy thử: 128 KH trong danh mục, 3 cảnh báo rủi ro trung bình.",
   },
 ];
 
@@ -135,9 +136,9 @@ export const compareByMode: Record<"multi" | "single", CompareMetrics> = {
     totalTokens: 12480,
     costUsd: 0.0142,
     notes: [
-      "Planner chia Credit ‖ Legal → Product",
-      "Tool đúng domain qua allowlist",
-      "Side-effect qua Approval · log token/cost đầy đủ",
+      "Bộ điều phối chia Tín dụng ‖ Pháp lý → Sản phẩm",
+      "Công cụ đúng lĩnh vực nhờ danh sách cho phép",
+      "Tác động hệ thống qua duyệt · nhật ký token/chi phí đầy đủ",
     ],
   },
   single: {
@@ -149,9 +150,9 @@ export const compareByMode: Record<"multi" | "single", CompareMetrics> = {
     totalTokens: 4100,
     costUsd: 0.0051,
     notes: [
-      "1 agent full tool — dễ gọi sai domain",
-      "Ít citation / dễ bịa",
-      "Rẻ token hơn nhưng thiếu audit cộng tác",
+      "Một chuyên gia cầm mọi công cụ — dễ gọi sai lĩnh vực",
+      "Ít trích dẫn / dễ bịa",
+      "Rẻ token hơn nhưng thiếu kiểm soát cộng tác",
     ],
   },
 };
@@ -171,7 +172,7 @@ export function buildHistorySample(): TaskRun {
     status: "done",
     mode: "multi",
     scenario: "home",
-    planJson: { summary: "Triage 1 step — Credit Agent" },
+    planJson: { summary: "Phân loại 1 bước — chuyên gia Tín dụng" },
     finalAnswer:
       "Hạn mức hiện tại 80 triệu VND, dư nợ 12 triệu. Không phát hiện cảnh báo tuân thủ.",
     citations: [
@@ -195,7 +196,7 @@ export function buildHistorySample(): TaskRun {
           kind: "llm_specialist",
           agentRole: "credit",
           stepId: "hist-s1",
-          label: "Credit · tra cứu hạn mức thẻ",
+          label: "Tín dụng · tra cứu hạn mức thẻ",
           usage: stepUsage,
         },
       ],

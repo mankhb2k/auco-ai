@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { DOMAIN_LABEL, KB_STATUS_LABEL, labelOf } from "@/lib/labels";
 import {
   seedKnowledgeDocuments,
   type KnowledgeUiDocument,
@@ -57,7 +58,7 @@ export function KnowledgePanel() {
     setDocuments((prev) => [draft, ...prev]);
     setTitle("");
     setContent("");
-    toast.success("Đã lưu bản nháp (mock)");
+    toast.success("Đã lưu bản nháp (mô phỏng)");
   }
 
   function publish(id: string) {
@@ -74,7 +75,7 @@ export function KnowledgePanel() {
           : document,
       ),
     );
-    toast.success("Đã publish và rebuild RAG index (mock)");
+    toast.success("Đã xuất bản và dựng lại chỉ mục tri thức (mô phỏng)");
   }
 
   if (actor?.accessLayer !== "manager") return null;
@@ -85,11 +86,11 @@ export function KnowledgePanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <BookOpenCheck className="size-4" />
-            Tạo tài liệu RAG
+            Tạo tài liệu tri thức
           </CardTitle>
           <CardDescription>
-            Trưởng phòng chỉ xuất bản tri thức; không sửa Agent Catalog hoặc MCP.
-            Dữ liệu mock để test UI.
+            Trưởng phòng chỉ xuất bản tri thức; không sửa danh mục chuyên gia
+            hoặc kết nối MCP. Dữ liệu mô phỏng để test giao diện.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -108,10 +109,10 @@ export function KnowledgePanel() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="credit">Credit</SelectItem>
-              <SelectItem value="legal">Legal / Compliance</SelectItem>
-              <SelectItem value="product">Product</SelectItem>
-              <SelectItem value="ops">Operations</SelectItem>
+              <SelectItem value="credit">{DOMAIN_LABEL.credit}</SelectItem>
+              <SelectItem value="legal">{DOMAIN_LABEL.legal}</SelectItem>
+              <SelectItem value="product">{DOMAIN_LABEL.product}</SelectItem>
+              <SelectItem value="ops">{DOMAIN_LABEL.ops}</SelectItem>
             </SelectContent>
           </Select>
           <Textarea
@@ -129,12 +130,12 @@ export function KnowledgePanel() {
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Knowledge Documents</CardTitle>
+            <CardTitle className="text-base">Danh sách tài liệu</CardTitle>
             <CardDescription>
-              Chỉ tài liệu active mới được ingest vào live RAG index.
+              Chỉ tài liệu đang dùng mới được đưa vào chỉ mục tri thức.
             </CardDescription>
           </div>
-          <Badge variant="outline">Mock demo</Badge>
+          <Badge variant="outline">Mô phỏng</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           {documents.map((document) => (
@@ -147,7 +148,9 @@ export function KnowledgePanel() {
                   <p className="truncate text-sm font-medium">
                     {document.title}
                   </p>
-                  <Badge variant="outline">{document.domain}</Badge>
+                  <Badge variant="outline">
+                    {labelOf(DOMAIN_LABEL, document.domain)}
+                  </Badge>
                   <Badge
                     variant={
                       document.status === "active"
@@ -157,7 +160,7 @@ export function KnowledgePanel() {
                           : "outline"
                     }
                   >
-                    {document.status}
+                    {labelOf(KB_STATUS_LABEL, document.status)}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
@@ -167,7 +170,7 @@ export function KnowledgePanel() {
               {document.status === "draft" ? (
                 <Button size="sm" onClick={() => publish(document.id)}>
                   <Send />
-                  Publish
+                  Xuất bản
                 </Button>
               ) : null}
             </div>

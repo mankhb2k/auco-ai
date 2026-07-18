@@ -2,7 +2,7 @@ import type { TokenUsage, UsageEvent, RunUsageSummary } from "@/lib/types/domain
 
 /** Mock pricing — gpt-4.1-class (USD / 1M tokens). */
 const PRICE = {
-  model: "gpt-4.1-mini (mock)",
+  model: "gpt-4.1-mini (mô phỏng)",
   inputPer1M: 0.4,
   outputPer1M: 1.6,
 };

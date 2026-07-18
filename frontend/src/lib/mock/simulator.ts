@@ -67,7 +67,7 @@ function buildMultiSteps(
       productLabel: "Đề xuất sản phẩm vay DN / hạn mức",
       productInput: { amount: 40_000_000_000, segment: "sme" },
       approvalPreview:
-        "Dry-run: submit_loan_application + chuẩn bị giải ngân 40 tỷ (mutates) — hồ sơ CT TNHH SHB Mekong.",
+        "Chạy thử: submit_loan_application + chuẩn bị giải ngân 40 tỷ (có tác động) — hồ sơ CT TNHH SHB Mekong.",
     },
     fx: {
       creditLabel: "Đánh giá vay/đổi ngoại tệ · rủi ro tỷ giá",
@@ -85,7 +85,7 @@ function buildMultiSteps(
       productLabel: "Đề xuất sản phẩm vay/đổi ngoại tệ",
       productInput: { currency: "USD" },
       approvalPreview:
-        "Dry-run: flag_transaction (mutates) — đánh dấu giao dịch FX lớn cần giám sát thêm.",
+        "Chạy thử: flag_transaction (có tác động) — đánh dấu giao dịch FX lớn cần giám sát thêm.",
     },
     home: {
       creditLabel: "Đánh giá điều kiện tín dụng vay mua nhà",
@@ -104,7 +104,7 @@ function buildMultiSteps(
       productInput: { amount: 2_000_000_000 },
       approvalPreview: outOfPortfolio
         ? "Nhân viên xin truy cập KH ngoài danh mục (SHB-KH-1004 · Lê Minh Cường · CN Hà Đông)."
-        : "Dry-run: submit_loan_application — tạo hồ sơ vay mua nhà 2 tỷ cho Nguyễn Văn An (mutates).",
+        : "Chạy thử: submit_loan_application — tạo hồ sơ vay mua nhà 2 tỷ cho Nguyễn Văn An (có tác động).",
     },
   };
 
@@ -164,7 +164,7 @@ function buildSingleSteps(taskRunId: string, scenario: ScenarioId): TaskStep[] {
       taskRunId,
       agentRole: "credit",
       mode: "direct",
-      label: "Single-agent · xử lý toàn bộ yêu cầu",
+      label: "Một chuyên gia · xử lý toàn bộ yêu cầu",
       input: { scenario },
       status: "pending",
       dependsOn: [],
@@ -190,9 +190,9 @@ export function createTaskRun(params: {
       : buildSingleSteps(runId, scenario);
 
   const summaries: Record<ScenarioId, string> = {
-    corporate: "DAG ghim: Credit ‖ Legal → Product · DN 50 tỷ / TT39",
-    fx: "DAG ghim: Credit ‖ Legal → Product · cảnh báo FX/IMF",
-    home: "DAG ghim: Credit ‖ Legal → Product · vay mua nhà",
+    corporate: "Sơ đồ ghim: Tín dụng ‖ Pháp lý → Sản phẩm · DN 50 tỷ / TT39",
+    fx: "Sơ đồ ghim: Tín dụng ‖ Pháp lý → Sản phẩm · cảnh báo FX/IMF",
+    home: "Sơ đồ ghim: Tín dụng ‖ Pháp lý → Sản phẩm · vay mua nhà",
   };
 
   return {
@@ -207,7 +207,7 @@ export function createTaskRun(params: {
       summary:
         params.mode === "multi"
           ? summaries[scenario]
-          : "Baseline single-agent — không Planner",
+          : "Đối chứng một chuyên gia — không bộ điều phối",
     },
     citations: [],
     usage: emptyUsageSummary(),
@@ -236,7 +236,7 @@ export class TaskRunSimulator {
       this.logUsage({
         kind: "llm_plan",
         agentRole: "planner",
-        label: "Planner · generateObject TaskPlan",
+        label: "Điều phối · lập kế hoạch tác vụ",
         usage: makeUsage({
           promptTokens: 1200,
           completionTokens: 480,
@@ -303,13 +303,13 @@ export class TaskRunSimulator {
       opsNote:
         this.run.scenario === "corporate"
           ? "Ops: mã hồ sơ đã tạo, sẵn sàng giải ngân sau khi kế toán xác nhận."
-          : "Side-effect đã thực thi trên mock MCP.",
+          : "Hành động có tác động hệ thống đã thực thi trên MCP mô phỏng.",
     };
     this.logUsage({
       kind: "tool",
       agentRole: step.agentRole,
       stepId: step.id,
-      label: `Tool mutate · ${mutateTool.tool}`,
+      label: `Công cụ ghi · ${mutateTool.tool}`,
       usage: makeUsage({ promptTokens: 0, completionTokens: 0, latencyMs: 310 }),
     });
     this.emit();
@@ -325,7 +325,7 @@ export class TaskRunSimulator {
     this.run.status = "failed";
     this.run.usage.wallClockMs = Date.now() - this.startedAtMs;
     this.run.finalAnswer =
-      "Yêu cầu dừng vì hành động side-effect bị từ chối trên Approval panel. Planner điều chỉnh: chưa tạo hồ sơ / chưa giải ngân.";
+      "Yêu cầu dừng vì hành động có tác động hệ thống bị từ chối trên bảng duyệt. Bộ điều phối điều chỉnh: chưa tạo hồ sơ / chưa giải ngân.";
     this.emit();
     this.stop();
   }
@@ -372,7 +372,7 @@ export class TaskRunSimulator {
         kind: "llm_specialist",
         agentRole: "credit",
         stepId: credit.id,
-        label: "Credit · aggregate workers",
+        label: "Tín dụng · tổng hợp worker",
         usage: creditUsage,
       });
       credit.output = this.creditOutput();
@@ -397,14 +397,14 @@ export class TaskRunSimulator {
         kind: "llm_specialist",
         agentRole: "legal",
         stepId: legal.id,
-        label: "Legal · hybrid RAG + compliance",
+        label: "Pháp lý · RAG lai + tuân thủ",
         usage: legalUsage,
       });
       this.logUsage({
         kind: "rag",
         agentRole: "legal",
         stepId: legal.id,
-        label: "RAG retrieval · knowledge lite",
+        label: "Truy xuất tri thức · RAG rút gọn",
         usage: makeUsage({
           promptTokens: 600,
           completionTokens: 0,
@@ -448,16 +448,18 @@ export class TaskRunSimulator {
         kind: "llm_specialist",
         agentRole: "credit",
         stepId: step.id,
-        label: "Single-agent · full tool dump",
+        label: "Một chuyên gia · gọi toàn bộ công cụ",
         usage: u,
       });
       step.status = "done";
       step.finishedAt = nowIso();
-      step.output = { summary: "Trả lời gộp — thiếu tách domain & audit." };
+      step.output = {
+        summary: "Trả lời gộp — thiếu tách lĩnh vực và kiểm soát.",
+      };
       this.run.status = "done";
       this.run.usage.wallClockMs = Date.now() - this.startedAtMs;
       this.run.finalAnswer =
-        "Baseline single-agent: trả lời nhanh hơn nhưng thiếu tách Credit/Legal/Product, citation mỏng, và không có side-effect có Approval. Bật Multi-agent để so sánh đầy đủ.";
+        "Đối chứng một chuyên gia: trả lời nhanh hơn nhưng thiếu tách Tín dụng/Pháp lý/Sản phẩm, trích dẫn mỏng, và không có duyệt hành động có tác động hệ thống. Bật đa chuyên gia để so sánh đầy đủ.";
       this.run.citations = this.legalCitations().slice(0, 1);
       this.emit();
     });
@@ -488,7 +490,7 @@ export class TaskRunSimulator {
         kind: "llm_specialist",
         agentRole: "product",
         stepId: product.id,
-        label: "Product · đề xuất sản phẩm",
+        label: "Sản phẩm · đề xuất sản phẩm",
         usage: u,
       });
       product.status = "done";
@@ -539,7 +541,7 @@ export class TaskRunSimulator {
       this.logUsage({
         kind: "llm_synthesize",
         agentRole: "planner",
-        label: "Planner · synthesize final answer",
+        label: "Điều phối · tổng hợp câu trả lời",
         usage: synth,
       });
       this.run.status = "done";
@@ -648,7 +650,7 @@ export class TaskRunSimulator {
   private creditAssessment(): string {
     if (this.run.scenario === "corporate") {
       return [
-        "**Đánh giá Credit Agent**",
+        "**Đánh giá chuyên gia Tín dụng**",
         "",
         "Đã phân tích BCTC, DTI và LTV nhà xưởng của CT TNHH Sản xuất SHB Mekong.",
         "",
@@ -662,7 +664,7 @@ export class TaskRunSimulator {
     }
     if (this.run.scenario === "fx") {
       return [
-        "**Đánh giá Credit Agent**",
+        "**Đánh giá chuyên gia Tín dụng**",
         "",
         "Khách hàng Trần Thị Bình có nhu cầu vay/đổi ngoại tệ lớn.",
         "",
@@ -674,14 +676,14 @@ export class TaskRunSimulator {
     }
     if (this.outOfPortfolio) {
       return [
-        "**Đánh giá Credit Agent**",
+        "**Đánh giá chuyên gia Tín dụng**",
         "",
         "Yêu cầu truy cập khách hàng ngoài danh mục được giao (CN Hà Đông).",
         "Cần phê duyệt trước khi tiếp tục tra cứu / tạo hồ sơ.",
       ].join("\n");
     }
     return [
-      "**Đánh giá Credit Agent**",
+      "**Đánh giá chuyên gia Tín dụng**",
       "",
       "Nguyễn Văn An đủ điều kiện sơ bộ vay mua nhà 2 tỷ.",
       "• DTI ≈ 32% · LTV ≈ 65% · CIC nhóm 1 (Tốt)",
@@ -693,7 +695,7 @@ export class TaskRunSimulator {
   private legalAssessment(): string {
     if (this.run.scenario === "corporate") {
       return [
-        "**Nhận xét Legal / Compliance**",
+        "**Nhận xét Pháp lý / Tuân thủ**",
         "",
         "Đã đối chiếu Thông tư 39/2016/TT-NHNN với quy trình tín dụng nội bộ SHB (bản đang hiệu lực).",
         "",
@@ -705,7 +707,7 @@ export class TaskRunSimulator {
     }
     if (this.run.scenario === "fx") {
       return [
-        "**Nhận xét Legal / Compliance**",
+        "**Nhận xét Pháp lý / Tuân thủ**",
         "",
         "Giao dịch FX lớn cần KYC/AML tăng cường.",
         `• ${imfFxTrend.recommendation}`,
@@ -714,7 +716,7 @@ export class TaskRunSimulator {
       ].join("\n");
     }
     return [
-      "**Nhận xét Legal / Compliance**",
+      "**Nhận xét Pháp lý / Tuân thủ**",
       "",
       "AML/KYC đạt. Không phát hiện cảnh báo tuân thủ liên quan khoản vay mua nhà.",
     ].join("\n");
@@ -723,7 +725,7 @@ export class TaskRunSimulator {
   private productAssessment(): string {
     if (this.run.scenario === "corporate") {
       return [
-        "**Đề xuất Product Agent**",
+        "**Đề xuất chuyên gia Sản phẩm**",
         "",
         "Sản phẩm phù hợp: **Vay trung dài hạn DN — mở rộng sản xuất**",
         "Hạn mức gợi ý: **40 tỷ VND**, khớp vốn tự có và LTV nội bộ 75%.",
@@ -731,13 +733,13 @@ export class TaskRunSimulator {
     }
     if (this.run.scenario === "fx") {
       return [
-        "**Đề xuất Product Agent**",
+        "**Đề xuất chuyên gia Sản phẩm**",
         "",
         "Ưu tiên **vay ngắn hạn có tài sản đảm bảo**; hạn chế sản phẩm FX dài hạn trong bối cảnh tích trữ ngoại tệ tăng.",
       ].join("\n");
     }
     return [
-      "**Đề xuất Product Agent**",
+      "**Đề xuất chuyên gia Sản phẩm**",
       "",
       "Sản phẩm: **Vay mua nhà lãi suất cố định** — khớp thu nhập và tài sản đảm bảo.",
     ].join("\n");
@@ -966,28 +968,28 @@ export class TaskRunSimulator {
   private finalAnswer(): string {
     if (this.run.scenario === "corporate") {
       return [
-        "Tổng hợp Planner — CT TNHH Sản xuất SHB Mekong (SHB-KH-1002):",
+        "Tổng hợp điều phối — CT TNHH Sản xuất SHB Mekong (SHB-KH-1002):",
         "• Hạn mức tối đa đề xuất: 40 tỷ VND (yêu cầu 50 tỷ vượt ràng buộc vốn tự có).",
         `• Tuân thủ: ${ltvConflict.message}`,
         "• Sản phẩm: Vay trung dài hạn DN — mở rộng sản xuất.",
-        "• Sau Approval: hồ sơ LOS đã tạo, Ops sẵn sàng bước giải ngân mock.",
+        "• Sau duyệt: hồ sơ LOS đã tạo, Vận hành sẵn sàng bước giải ngân (mô phỏng).",
       ].join("\n");
     }
     if (this.run.scenario === "fx") {
       return [
-        "Tổng hợp Planner — Trần Thị Bình (SHB-KH-1003):",
+        "Tổng hợp điều phối — Trần Thị Bình (SHB-KH-1003):",
         `• Macro IMF: nắm giữ FX hộ gia đình tăng từ ${imfFxTrend.decadeAgoPct}% → ${imfFxTrend.currentPct}% (xu hướng EM).`,
         `• ${imfFxTrend.recommendation}`,
         "• Sản phẩm khuyến nghị: vay ngắn hạn có bảo đảm; tránh FX dài hạn.",
-        "• Giao dịch lớn đã gắn flag giám sát sau khi được duyệt.",
+        "• Giao dịch lớn đã gắn cờ giám sát sau khi được duyệt.",
       ].join("\n");
     }
     return [
-      "Tổng hợp Planner — Nguyễn Văn An (SHB-KH-1001):",
+      "Tổng hợp điều phối — Nguyễn Văn An (SHB-KH-1001):",
       "• Đủ điều kiện vay mua nhà 2 tỷ (DTI/LTV trong ngưỡng).",
       "• AML/tuân thủ đạt.",
       "• Sản phẩm: Vay mua nhà lãi suất cố định.",
-      "• Hồ sơ đã được duyệt tạo trên LOS (mock).",
+      "• Hồ sơ đã được duyệt tạo trên LOS (mô phỏng).",
     ].join("\n");
   }
 

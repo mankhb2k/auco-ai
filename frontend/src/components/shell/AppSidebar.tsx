@@ -48,14 +48,14 @@ const NAV: Array<{
 }> = [
   {
     id: "workspace",
-    title: "Workspace",
-    description: "Goal · DAG · Approval",
+    title: "Không gian làm việc",
+    description: "Mục tiêu · Sơ đồ · Duyệt",
     icon: LayoutDashboard,
     layers: ["employee", "manager"],
   },
   {
     id: "automations",
-    title: "Automations",
+    title: "Tự động hóa",
     description: "Lịch & chạy thử",
     icon: TimerReset,
     layers: ["employee", "manager"],
@@ -63,34 +63,34 @@ const NAV: Array<{
   {
     id: "history",
     title: "Lịch sử",
-    description: "TaskRun đã chạy",
+    description: "Các lần chạy đã lưu",
     icon: History,
     layers: ["employee", "manager"],
   },
   {
     id: "compare",
     title: "So sánh",
-    description: "Single vs Multi",
+    description: "Một vs nhiều chuyên gia",
     icon: GitCompareArrows,
     layers: ["employee"],
   },
   {
     id: "knowledge",
-    title: "Knowledge",
-    description: "Draft · Publish · RAG",
+    title: "Tri thức",
+    description: "Nháp · Xuất bản · RAG",
     icon: BookOpenCheck,
     layers: ["manager"],
   },
   {
     id: "mcp",
-    title: "MCP Suite",
-    description: "Connector · Runtime policy",
+    title: "Bộ kết nối MCP",
+    description: "Kết nối · Chính sách runtime",
     icon: ServerCog,
     layers: ["it_admin"],
   },
   {
     id: "audit",
-    title: "Audit",
+    title: "Nhật ký kiểm soát",
     description: "Ai · hành động · tài nguyên",
     icon: ClipboardList,
     layers: ["manager", "it_admin"],
@@ -117,7 +117,7 @@ export function AppSidebar() {
                 <Network className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Digital Experts</span>
+                <span className="truncate font-semibold">Chuyên gia số</span>
                 <span className="text-muted-foreground truncate text-xs">
                   SHB · {ACCESS_LAYER_LABEL[layer]}
                 </span>
@@ -155,14 +155,14 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <div className="text-muted-foreground space-y-2 px-2 py-1.5 text-xs group-data-[collapsible=icon]:hidden">
               <div className="flex items-center justify-between gap-2">
-                <span>MCP Suite</span>
+                <span>Bộ kết nối MCP</span>
                 <Badge variant={mcp.connected ? "default" : "destructive"}>
-                  {mcp.connected ? "Online" : "Offline"}
+                  {mcp.connected ? "Trực tuyến" : "Ngoại tuyến"}
                 </Badge>
               </div>
               <p className="leading-relaxed">{mcp.suite}</p>
               <p className="leading-relaxed">
-                Employee: Chat · Manager: Knowledge · IT: MCP
+                Nhân viên: Chat · Trưởng phòng: Tri thức · IT: MCP
               </p>
             </div>
           </SidebarGroupContent>

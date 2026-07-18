@@ -1,12 +1,92 @@
 import type { AgentRole, TaskRunStatus, TaskStepStatus } from "@/lib/types/domain";
 
+/** Nhãn tiếng Việt cho mockup demo — không đổi key dữ liệu nội bộ. */
+
 export const AGENT_LABEL: Record<AgentRole, string> = {
-  planner: "Planner",
-  credit: "Credit",
-  legal: "Legal / Compliance",
-  product: "Product",
-  ops: "Ops",
+  planner: "Điều phối",
+  credit: "Tín dụng",
+  legal: "Pháp lý / Tuân thủ",
+  product: "Sản phẩm",
+  ops: "Vận hành",
 };
+
+export const DOMAIN_LABEL: Record<string, string> = {
+  credit: "Tín dụng",
+  legal: "Pháp lý / Tuân thủ",
+  product: "Sản phẩm",
+  ops: "Vận hành",
+};
+
+export const KB_STATUS_LABEL: Record<string, string> = {
+  draft: "Nháp",
+  active: "Đang dùng",
+  superseded: "Đã thay thế",
+};
+
+export const MCP_CAPABILITY_LABEL: Record<string, string> = {
+  los: "LOS (Hệ thống vay)",
+  compliance: "Tuân thủ",
+  "core-banking": "Core banking",
+  product: "Sản phẩm",
+  ops: "Vận hành",
+};
+
+export const MCP_IMPL_LABEL: Record<string, string> = {
+  real: "Thật",
+  stub: "Mô phỏng",
+};
+
+export const ON_OFF_LABEL: Record<string, string> = {
+  enabled: "Đang bật",
+  disabled: "Đã tắt",
+};
+
+export const MODE_LABEL: Record<"multi" | "single", string> = {
+  multi: "Đa chuyên gia",
+  single: "Một chuyên gia",
+};
+
+export const AUTOMATION_STATUS_LABEL: Record<string, string> = {
+  draft: "Nháp",
+  pending_approval: "Chờ duyệt",
+  active: "Đang chạy",
+  paused: "Tạm dừng",
+  done: "Xong",
+  failed: "Lỗi",
+  running: "Đang chạy",
+};
+
+export const AUDIT_ACTION_LABEL: Record<string, string> = {
+  "knowledge.publish": "Xuất bản tri thức",
+  "knowledge.create_draft": "Tạo bản nháp tri thức",
+  "approval.approve": "Duyệt yêu cầu",
+  "approval.reject": "Từ chối yêu cầu",
+  "task_run.create": "Tạo tác vụ",
+  "mcp.connector.set_enabled": "Bật/tắt kết nối MCP",
+};
+
+export const APPROVAL_REASON_LABEL: Record<string, string> = {
+  mutates: "Có tác động hệ thống",
+  out_of_portfolio_access: "Ngoài danh mục được giao",
+};
+
+export const USAGE_KIND_LABEL: Record<string, string> = {
+  llm_plan: "Lập kế hoạch",
+  llm_specialist: "Chuyên gia",
+  llm_worker: "Worker",
+  llm_synthesize: "Tổng hợp",
+  rag: "Truy xuất tri thức",
+  tool: "Gọi công cụ",
+};
+
+export function labelOf(
+  map: Record<string, string>,
+  key: string | null | undefined,
+  fallback?: string,
+) {
+  if (!key) return fallback ?? "—";
+  return map[key] ?? fallback ?? key;
+}
 
 export function statusLabel(status: TaskRunStatus | TaskStepStatus) {
   switch (status) {

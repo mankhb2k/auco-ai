@@ -19,6 +19,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
+import { MODE_LABEL } from "@/lib/labels";
 import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import { useAppStore } from "@/stores/app.store";
 import { Plus, Settings2, UserRound } from "lucide-react";
@@ -39,18 +40,18 @@ export function AppTopbar() {
 
   const title =
     mainTab === "workspace"
-      ? "Chat"
+      ? "Trò chuyện"
       : mainTab === "automations"
-        ? "Automations"
+        ? "Tự động hóa"
         : mainTab === "history"
           ? "Lịch sử"
           : mainTab === "knowledge"
-            ? "Knowledge Management"
+            ? "Quản lý tri thức"
             : mainTab === "mcp"
-              ? "MCP Connector Management"
+              ? "Quản lý kết nối MCP"
               : mainTab === "audit"
-                ? "Audit Log"
-                : "So sánh Single vs Multi";
+                ? "Nhật ký kiểm soát"
+                : "So sánh một vs nhiều chuyên gia";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -64,19 +65,18 @@ export function AppTopbar() {
               SHB
             </Badge>
             <Badge variant="outline" className="hidden md:inline-flex">
-              {mode === "multi" ? "Multi-agent" : "Single"}
+              {MODE_LABEL[mode]}
             </Badge>
             <Badge
               variant={mcp.connected ? "outline" : "destructive"}
               className="hidden lg:inline-flex"
             >
-              MCP {mcp.connected ? "on" : "off"}
+              MCP {mcp.connected ? "bật" : "tắt"}
             </Badge>
           </>
         ) : null}
       </div>
 
-      {/* role.md R5 — banner + switcher luôn hiện, không phụ thuộc tab */}
       <Badge variant="secondary" className="hidden items-center gap-1 md:inline-flex">
         <UserRound className="size-3" />
         <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
@@ -112,11 +112,11 @@ export function AppTopbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
-              <DropdownMenuLabel>Cài đặt phiên Workspace</DropdownMenuLabel>
+              <DropdownMenuLabel>Cài đặt phiên làm việc</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="space-y-3 p-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm">Multi-agent</span>
+                  <span className="text-sm">Đa chuyên gia</span>
                   <Switch
                     checked={mode === "multi"}
                     onCheckedChange={(c) => setMode(c ? "multi" : "single")}

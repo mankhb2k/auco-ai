@@ -20,9 +20,9 @@ export function TraceTimeline() {
     return (
       <Card className="h-full">
         <CardHeader>
-          <CardTitle className="text-base">Timeline / Trace</CardTitle>
+          <CardTitle className="text-base">Dòng thời gian / Truy vết</CardTitle>
           <CardDescription>
-            Tool call, citation, token/latency — gửi yêu cầu để xem.
+            Gọi công cụ, trích dẫn, token/độ trễ — gửi yêu cầu để xem.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -48,7 +48,7 @@ export function TraceTimeline() {
     if (step.usage) {
       rows.push({
         key: `${step.id}-usage`,
-        title: `Tokens · ${formatTokens(step.usage.totalTokens)}`,
+        title: `Token · ${formatTokens(step.usage.totalTokens)}`,
         detail: `${formatUsd(step.usage.costUsd)} · ${step.usage.latencyMs}ms · ${step.usage.model}`,
         kind: "usage",
       });
@@ -57,7 +57,7 @@ export function TraceTimeline() {
       rows.push({
         key: tc.id,
         title: `${tc.tool} (${tc.mcp})`,
-        detail: `${tc.mutates ? "mutates · " : ""}${tc.latencyMs ?? "—"} ms`,
+        detail: `${tc.mutates ? "có tác động hệ thống · " : ""}${tc.latencyMs ?? "—"} ms`,
         kind: "tool",
       });
     }
@@ -65,7 +65,7 @@ export function TraceTimeline() {
       rows.push({
         key: `${step.id}-${c.sourceDoc}-${c.section}`,
         title: c.sourceDoc,
-        detail: `${c.section} · score ${c.score.toFixed(2)}`,
+        detail: `${c.section} · điểm ${c.score.toFixed(2)}`,
         kind: "citation",
       });
     }
@@ -76,7 +76,7 @@ export function TraceTimeline() {
     <Card className="flex h-full flex-col">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Timeline / Trace</CardTitle>
+          <CardTitle className="text-base">Dòng thời gian / Truy vết</CardTitle>
           <div className="flex flex-wrap gap-1.5">
             <Badge variant="outline">{activeRun.scenario}</Badge>
             <Badge variant={statusVariant(activeRun.status)}>
@@ -87,7 +87,7 @@ export function TraceTimeline() {
         <CardDescription className="line-clamp-2">
           {activeRun.planJson.summary}
           {activeRun.usage.totalTokens > 0
-            ? ` · ${formatTokens(activeRun.usage.totalTokens)} tok · ${formatUsd(activeRun.usage.costUsd)}`
+            ? ` · ${formatTokens(activeRun.usage.totalTokens)} token · ${formatUsd(activeRun.usage.costUsd)}`
             : ""}
         </CardDescription>
       </CardHeader>
@@ -97,8 +97,14 @@ export function TraceTimeline() {
             {events.map((ev) => (
               <li key={ev.key} className="border-l-2 border-border pl-3">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] uppercase">
-                    {ev.kind}
+                  <Badge variant="outline" className="text-[10px]">
+                    {ev.kind === "step"
+                      ? "Bước"
+                      : ev.kind === "tool"
+                        ? "Công cụ"
+                        : ev.kind === "citation"
+                          ? "Trích dẫn"
+                          : "Sử dụng"}
                   </Badge>
                   {ev.time ? (
                     <span className="text-muted-foreground text-xs">

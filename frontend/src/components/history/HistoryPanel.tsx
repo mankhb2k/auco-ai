@@ -9,7 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatTime, statusLabel, statusVariant } from "@/lib/labels";
+import {
+  formatTime,
+  MODE_LABEL,
+  statusLabel,
+  statusVariant,
+} from "@/lib/labels";
 import { useAppStore } from "@/stores/app.store";
 
 export function HistoryPanel() {
@@ -19,8 +24,10 @@ export function HistoryPanel() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Lịch sử TaskRun</CardTitle>
-        <CardDescription>Chỉ đọc — không rename / archive / pin</CardDescription>
+        <CardTitle className="text-base">Lịch sử tác vụ</CardTitle>
+        <CardDescription>
+          Chỉ đọc — không đổi tên / lưu trữ / ghim
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {history.length === 0 ? (
@@ -37,7 +44,7 @@ export function HistoryPanel() {
                   <Badge variant={statusVariant(run.status)}>
                     {statusLabel(run.status)}
                   </Badge>
-                  <Badge variant="outline">{run.mode}</Badge>
+                  <Badge variant="outline">{MODE_LABEL[run.mode]}</Badge>
                   <span className="text-muted-foreground text-xs">
                     {formatTime(run.createdAt)}
                   </span>

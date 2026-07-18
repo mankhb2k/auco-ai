@@ -10,6 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
+  labelOf,
+  MCP_CAPABILITY_LABEL,
+  MCP_IMPL_LABEL,
+  ON_OFF_LABEL,
+} from "@/lib/labels";
+import {
   seedMcpSuite,
   type McpUiCapability,
   type McpUiSuite,
@@ -54,8 +60,9 @@ export function McpSuitePanel() {
           : connector,
       ),
     }));
+    const name = labelOf(MCP_CAPABILITY_LABEL, capability);
     toast.success(
-      `${capability}: ${enabled ? "đã bật" : "đã tắt"} (mock runtime)`,
+      `${name}: ${enabled ? "đã bật" : "đã tắt"} (mô phỏng runtime)`,
     );
     setBusyCapability(null);
   }
@@ -72,19 +79,21 @@ export function McpSuitePanel() {
               {summary.suite}
             </CardTitle>
             <CardDescription>
-              IT quản đường ống API; Planner vẫn tự điều phối agent theo goal.
-              Toggle mock in-memory — không cần backend.
+              IT quản đường ống API; bộ điều phối vẫn tự chọn chuyên gia theo
+              mục tiêu. Công tắc mô phỏng trong bộ nhớ — không cần backend.
             </CardDescription>
           </div>
-          <Badge variant="outline">Mock demo</Badge>
+          <Badge variant="outline">Mô phỏng</Badge>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap gap-2">
             <Badge variant={summary.connected ? "default" : "destructive"}>
-              {summary.connected ? "Gateway available" : "All disabled"}
+              {summary.connected
+                ? "Cổng kết nối sẵn sàng"
+                : "Tất cả đã tắt"}
             </Badge>
             <Badge variant="outline">
-              {summary.enabledCount}/{summary.connectorCount} enabled
+              {summary.enabledCount}/{summary.connectorCount} đang bật
             </Badge>
             <Badge variant="outline">{summary.bankCode}</Badge>
           </div>
@@ -98,12 +107,16 @@ export function McpSuitePanel() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <ShieldCheck className="size-4" />
-                    <p className="font-medium">{connector.capability}</p>
-                    <Badge variant="outline">{connector.implementation}</Badge>
+                    <p className="font-medium">
+                      {labelOf(MCP_CAPABILITY_LABEL, connector.capability)}
+                    </p>
+                    <Badge variant="outline">
+                      {labelOf(MCP_IMPL_LABEL, connector.implementation)}
+                    </Badge>
                     <Badge
                       variant={connector.enabled ? "default" : "secondary"}
                     >
-                      {connector.status}
+                      {labelOf(ON_OFF_LABEL, connector.status)}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
@@ -119,7 +132,7 @@ export function McpSuitePanel() {
                   onCheckedChange={(enabled) =>
                     setEnabled(connector.capability, enabled)
                   }
-                  aria-label={`Toggle ${connector.capability}`}
+                  aria-label={`Bật tắt ${labelOf(MCP_CAPABILITY_LABEL, connector.capability)}`}
                 />
               </div>
             ))}
