@@ -27,17 +27,15 @@ export function AppTopbar() {
   const title =
     mainTab === "workspace"
       ? "Trò chuyện"
-      : mainTab === "automations"
-        ? "Tự động hóa"
-        : mainTab === "history"
-          ? "Lịch sử"
-          : mainTab === "knowledge"
-            ? "Quản lý tri thức"
-            : mainTab === "mcp"
-              ? "Quản lý kết nối MCP"
-              : mainTab === "audit"
-                ? "Nhật ký kiểm soát"
-                : "So sánh một vs nhiều chuyên gia";
+      : mainTab === "history"
+        ? "Lịch sử"
+        : mainTab === "knowledge"
+          ? "Quản lý tri thức"
+          : mainTab === "mcp"
+            ? "Quản lý kết nối MCP"
+            : mainTab === "audit"
+              ? "Nhật ký kiểm soát"
+              : "So sánh một vs nhiều chuyên gia";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">

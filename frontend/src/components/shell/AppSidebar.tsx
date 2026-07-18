@@ -24,13 +24,11 @@ import {
   LayoutDashboard,
   Network,
   ServerCog,
-  TimerReset,
 } from "lucide-react";
 
 type AccessLayer = Employee["accessLayer"];
 type MainTab =
   | "workspace"
-  | "automations"
   | "history"
   | "compare"
   | "knowledge"
@@ -49,13 +47,6 @@ const NAV: Array<{
     title: "Không gian làm việc",
     description: "Mục tiêu · Sơ đồ · Duyệt",
     icon: LayoutDashboard,
-    layers: ["employee", "manager"],
-  },
-  {
-    id: "automations",
-    title: "Tự động hóa",
-    description: "Lịch & chạy thử",
-    icon: TimerReset,
     layers: ["employee", "manager"],
   },
   {

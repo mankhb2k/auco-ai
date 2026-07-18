@@ -46,15 +46,7 @@ export const MODE_LABEL: Record<"multi" | "single", string> = {
   single: "Một chuyên gia",
 };
 
-export const AUTOMATION_STATUS_LABEL: Record<string, string> = {
-  draft: "Nháp",
-  pending_approval: "Chờ duyệt",
-  active: "Đang chạy",
-  paused: "Tạm dừng",
-  done: "Xong",
-  failed: "Lỗi",
-  running: "Đang chạy",
-};
+
 
 export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "knowledge.publish": "Xuất bản tri thức",
