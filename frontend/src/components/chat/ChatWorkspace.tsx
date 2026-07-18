@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,9 @@ import {
   Network,
   Sparkles,
   X,
+  Paperclip,
+  Image,
+  FileText,
 } from "lucide-react";
 
 // ThinkingBlock replaced by AgentCoordinationProgress
@@ -291,11 +294,101 @@ function ChatComposer() {
   const applyScenarioPreset = useAppStore((s) => s.applyScenarioPreset);
   const scenarioId = useAppStore((s) => s.scenarioId);
 
+  const [selectedFiles, setSelectedFiles] = useState<{ id: string; file: File; type: string }[]>([]);
+  const [selectedImages, setSelectedImages] = useState<{ id: string; file: File; previewUrl: string }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const canSend = !isSimulating && goalDraft.trim().length > 0;
   const showChips = !activeRun;
 
+  const handleSend = () => {
+    if (!canSend) return;
+    submitGoal();
+    setSelectedFiles([]);
+    selectedImages.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    setSelectedImages([]);
+  };
+
   return (
     <div className="bg-background px-4 py-3 pb-5">
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          if (files.length === 0) return;
+
+          let addedCount = 0;
+          const newFiles: { id: string; file: File; type: string }[] = [];
+
+          for (const file of files) {
+            const currentTotal = selectedFiles.length + selectedImages.length + newFiles.length;
+            if (currentTotal >= 10) {
+              toast.error("Giới hạn tối đa 10 tài liệu + hình ảnh cho mỗi lần gửi!");
+              break;
+            }
+            if (file.size > 20 * 1024 * 1024) {
+              toast.error(`Tệp "${file.name}" vượt quá giới hạn dung lượng 20MB!`);
+              continue;
+            }
+            const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
+            newFiles.push({
+              id: Math.random().toString(36).substring(7),
+              file,
+              type: ext,
+            });
+            addedCount++;
+          }
+
+          if (newFiles.length > 0) {
+            setSelectedFiles((prev) => [...prev, ...newFiles]);
+            toast.success(`Đã đính kèm ${addedCount} tài liệu!`);
+          }
+          e.target.value = "";
+        }}
+      />
+      <input
+        type="file"
+        ref={imageInputRef}
+        className="hidden"
+        multiple
+        accept="image/*"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          if (files.length === 0) return;
+
+          let addedCount = 0;
+          const newImages: { id: string; file: File; previewUrl: string }[] = [];
+
+          for (const file of files) {
+            const currentTotal = selectedFiles.length + selectedImages.length + newImages.length;
+            if (currentTotal >= 10) {
+              toast.error("Giới hạn tối đa 10 tài liệu + hình ảnh cho mỗi lần gửi!");
+              break;
+            }
+            if (file.size > 20 * 1024 * 1024) {
+              toast.error(`Hình ảnh "${file.name}" vượt quá giới hạn dung lượng 20MB!`);
+              continue;
+            }
+            newImages.push({
+              id: Math.random().toString(36).substring(7),
+              file,
+              previewUrl: URL.createObjectURL(file),
+            });
+            addedCount++;
+          }
+
+          if (newImages.length > 0) {
+            setSelectedImages((prev) => [...prev, ...newImages]);
+            toast.success(`Đã đính kèm ${addedCount} hình ảnh!`);
+          }
+          e.target.value = "";
+        }}
+      />
       <div className="mx-auto w-full max-w-2xl space-y-2">
         {showChips ? (
           <div className="flex flex-wrap gap-1.5">
@@ -317,14 +410,79 @@ function ChatComposer() {
             ))}
           </div>
         ) : null}
+
         <div className="bg-muted/40 focus-within:ring-ring relative rounded-2xl border shadow-sm focus-within:ring-1">
+          {/* Attachments Row */}
+          {(selectedFiles.length > 0 || selectedImages.length > 0) && (
+            <div className="flex flex-wrap gap-2 px-3 pt-3 pb-1">
+              {/* Selected Files */}
+              {selectedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="relative flex items-center gap-2 bg-background dark:bg-zinc-900 border rounded-xl px-3 py-1.5 max-w-[200px] shadow-sm group animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-rose-500 text-white shadow-sm">
+                    <FileText className="size-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium truncate text-foreground leading-tight">
+                      {file.file.name}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider leading-none mt-0.5">
+                      {file.type}
+                    </p>
+                  </div>
+                  
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFiles((prev) => prev.filter((f) => f.id !== file.id));
+                    }}
+                    className="absolute -top-1.5 -right-1.5 size-4.5 rounded-full bg-white text-zinc-900 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-md border border-zinc-200"
+                    style={{ width: "18px", height: "18px" }}
+                  >
+                    <X className="size-2.5" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Selected Images */}
+              {selectedImages.map((img) => (
+                <div
+                  key={img.id}
+                  className="relative size-12 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-background group animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <img
+                    src={img.previewUrl}
+                    alt="Preview"
+                    className="size-full object-cover"
+                  />
+                  
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(img.previewUrl);
+                      setSelectedImages((prev) => prev.filter((i) => i.id !== img.id));
+                    }}
+                    className="absolute -top-1.5 -right-1.5 size-4.5 rounded-full bg-white text-zinc-900 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-md border border-zinc-200"
+                    style={{ width: "18px", height: "18px" }}
+                  >
+                    <X className="size-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <Textarea
             value={goalDraft}
             onChange={(e) => setGoalDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (canSend) submitGoal();
+                handleSend();
               }
             }}
             rows={showChips ? 3 : 2}
@@ -333,14 +491,35 @@ function ChatComposer() {
             className="max-h-40 min-h-[72px] resize-none border-0 bg-transparent px-4 py-3 shadow-none focus-visible:ring-0"
           />
           <div className="flex items-center justify-between px-3 pb-2">
-            <span className="text-muted-foreground text-[11px]">
-              Enter gửi · Shift+Enter xuống dòng
-            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                title="Đính kèm tài liệu"
+                disabled={isSimulating}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                title="Đính kèm hình ảnh"
+                disabled={isSimulating}
+                onClick={() => imageInputRef.current?.click()}
+              >
+                <Image className="size-4" />
+              </Button>
+            </div>
             <Button
               size="icon"
               className="size-8 rounded-full"
               disabled={!canSend}
-              onClick={submitGoal}
+              onClick={handleSend}
             >
               {isSimulating ? (
                 <Loader2 className="size-4 animate-spin" />
