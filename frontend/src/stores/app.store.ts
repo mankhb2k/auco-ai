@@ -7,13 +7,9 @@ import {
   DEFAULT_SCENARIO,
   employees,
   mcpSuite,
-  seedAutomationRuns,
-  seedAutomations,
 } from "@/lib/mock/seed";
 import { createTaskRun, TaskRunSimulator } from "@/lib/mock/simulator";
 import type {
-  Automation,
-  AutomationRun,
   CompareMetrics,
   Employee,
   McpSuiteStatus,
@@ -24,7 +20,6 @@ import type {
 
 type MainTab =
   | "workspace"
-  | "automations"
   | "history"
   | "compare"
   | "knowledge"
@@ -33,7 +28,6 @@ type MainTab =
 
 const TAB_LAYERS: Record<MainTab, Array<"employee" | "manager" | "it_admin">> = {
   workspace: ["employee", "manager"],
-  automations: ["employee", "manager"],
   history: ["employee", "manager"],
   compare: ["employee"],
   knowledge: ["manager"],
@@ -57,8 +51,6 @@ interface AppState {
   mainTab: MainTab;
   activeRun: TaskRun | null;
   history: TaskRun[];
-  automations: Automation[];
-  automationRuns: AutomationRun[];
   mcp: McpSuiteStatus;
   compare: CompareMetrics;
   goalDraft: string;
@@ -77,8 +69,6 @@ interface AppState {
   selectHistory: (id: string) => void;
   approveStep: (stepId: string) => void;
   rejectStep: (stepId: string) => void;
-  toggleAutomation: (id: string, enabled: boolean) => void;
-  runAutomationNow: (id: string) => void;
 }
 
 let simulator: TaskRunSimulator | null = null;
@@ -91,8 +81,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   mainTab: "workspace",
   activeRun: null,
   history: [buildHistorySample()],
-  automations: seedAutomations,
-  automationRuns: seedAutomationRuns,
   mcp: mcpSuite,
   compare: compareByMode.multi,
   goalDraft: "",
@@ -240,47 +228,4 @@ export const useAppStore = create<AppState>((set, get) => ({
     simulator?.reject(stepId);
   },
 
-  toggleAutomation: (id, enabled) => {
-    set((s) => ({
-      automations: s.automations.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              enabled,
-              status: enabled ? "active" : "paused",
-            }
-          : a,
-      ),
-    }));
-  },
-
-  runAutomationNow: (id) => {
-    const run: AutomationRun = {
-      id: `arun-${Math.random().toString(36).slice(2, 8)}`,
-      automationId: id,
-      status: "running",
-      startedAt: new Date().toISOString(),
-    };
-    set((s) => ({
-      automationRuns: [run, ...s.automationRuns],
-      automations: s.automations.map((a) =>
-        a.id === id ? { ...a, lastRunAt: run.startedAt } : a,
-      ),
-    }));
-    setTimeout(() => {
-      set((s) => ({
-        automationRuns: s.automationRuns.map((r) =>
-          r.id === run.id
-            ? {
-                ...r,
-                status: "done",
-                finishedAt: new Date().toISOString(),
-                resultSummary:
-                  "Chạy thử: đã tổng hợp rủi ro tín dụng tháng (mô phỏng) và gửi thông báo.",
-              }
-            : r,
-        ),
-      }));
-    }, 1200);
-  },
 }));

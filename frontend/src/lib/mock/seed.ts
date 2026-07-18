@@ -1,6 +1,4 @@
 import type {
-  Automation,
-  AutomationRun,
   CompareMetrics,
   Customer,
   CustomerPortfolio,
@@ -96,35 +94,6 @@ export const mcpSuite: McpSuiteStatus = {
     { id: "mcp-ops", name: "Vận hành", status: "mock" },
   ],
 };
-
-export const seedAutomations: Automation[] = [
-  {
-    id: "auto-monthly-risk",
-    name: "Báo cáo rủi ro tín dụng tháng",
-    description:
-      "Mỗi ngày 1 hàng tháng 08:00 — trích xuất KH/giao dịch tháng trước, tóm tắt rủi ro, gửi thông báo.",
-    createdByAgentRole: "credit",
-    triggerType: "schedule",
-    cronExpr: "0 8 1 * *",
-    timezone: "Asia/Ho_Chi_Minh",
-    enabled: false,
-    status: "pending_approval",
-    nextRunAt: "2026-08-01T08:00:00+07:00",
-    createdAt: "2026-07-10T09:00:00+07:00",
-  },
-];
-
-export const seedAutomationRuns: AutomationRun[] = [
-  {
-    id: "arun-1",
-    automationId: "auto-monthly-risk",
-    status: "done",
-    startedAt: "2026-07-01T08:00:12+07:00",
-    finishedAt: "2026-07-01T08:01:04+07:00",
-    resultSummary:
-      "Chạy thử: 128 KH trong danh mục, 3 cảnh báo rủi ro trung bình.",
-  },
-];
 
 export const compareByMode: Record<"multi" | "single", CompareMetrics> = {
   multi: {

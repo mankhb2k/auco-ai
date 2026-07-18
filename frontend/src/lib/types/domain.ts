@@ -138,35 +138,7 @@ export interface CustomerPortfolio {
   customerId: string;
 }
 
-export type AutomationStatus =
-  | "draft"
-  | "pending_approval"
-  | "active"
-  | "paused";
 
-export interface Automation {
-  id: string;
-  name: string;
-  description?: string;
-  createdByAgentRole: Exclude<AgentRole, "planner">;
-  triggerType: "schedule" | "manual";
-  cronExpr?: string;
-  timezone: string;
-  enabled: boolean;
-  status: AutomationStatus;
-  lastRunAt?: string;
-  nextRunAt?: string;
-  createdAt: string;
-}
-
-export interface AutomationRun {
-  id: string;
-  automationId: string;
-  status: "running" | "done" | "failed";
-  startedAt: string;
-  finishedAt?: string;
-  resultSummary?: string;
-}
 
 export interface McpConnector {
   id: string;

@@ -1,7 +1,6 @@
 "use client";
 
 import { AuditPanel } from "@/components/audit/AuditPanel";
-import { AutomationsPanel } from "@/components/automations/AutomationsPanel";
 import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
 import { ComparePanel } from "@/components/compare/ComparePanel";
 import { HistoryPanel } from "@/components/history/HistoryPanel";
@@ -26,7 +25,6 @@ export function AppShell() {
             <ChatWorkspace />
           ) : (
             <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              {mainTab === "automations" ? <AutomationsPanel /> : null}
               {mainTab === "history" ? <HistoryPanel /> : null}
               {mainTab === "compare" ? <ComparePanel /> : null}
               {mainTab === "knowledge" ? <KnowledgePanel /> : null}

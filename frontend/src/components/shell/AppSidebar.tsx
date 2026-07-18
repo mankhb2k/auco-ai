@@ -12,9 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
 import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import type { Employee } from "@/lib/types/domain";
 import { useAppStore } from "@/stores/app.store";
@@ -26,13 +24,11 @@ import {
   LayoutDashboard,
   Network,
   ServerCog,
-  TimerReset,
 } from "lucide-react";
 
 type AccessLayer = Employee["accessLayer"];
 type MainTab =
   | "workspace"
-  | "automations"
   | "history"
   | "compare"
   | "knowledge"
@@ -51,13 +47,6 @@ const NAV: Array<{
     title: "Không gian làm việc",
     description: "Mục tiêu · Sơ đồ · Duyệt",
     icon: LayoutDashboard,
-    layers: ["employee", "manager"],
-  },
-  {
-    id: "automations",
-    title: "Tự động hóa",
-    description: "Lịch & chạy thử",
-    icon: TimerReset,
     layers: ["employee", "manager"],
   },
   {
@@ -100,7 +89,6 @@ const NAV: Array<{
 export function AppSidebar() {
   const mainTab = useAppStore((s) => s.mainTab);
   const setMainTab = useAppStore((s) => s.setMainTab);
-  const mcp = useAppStore((s) => s.mcp);
   const employees = useAppStore((s) => s.employees);
   const employeeId = useAppStore((s) => s.employeeId);
   const employee = employees.find((e) => e.id === employeeId);
@@ -145,26 +133,6 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Hệ thống</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <div className="text-muted-foreground space-y-2 px-2 py-1.5 text-xs group-data-[collapsible=icon]:hidden">
-              <div className="flex items-center justify-between gap-2">
-                <span>Bộ kết nối MCP</span>
-                <Badge variant={mcp.connected ? "default" : "destructive"}>
-                  {mcp.connected ? "Trực tuyến" : "Ngoại tuyến"}
-                </Badge>
-              </div>
-              <p className="leading-relaxed">{mcp.suite}</p>
-              <p className="leading-relaxed">
-                Nhân viên: Chat · Trưởng phòng: Tri thức · IT: MCP
-              </p>
-            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
