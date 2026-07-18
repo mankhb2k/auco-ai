@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAppStore } from "@/stores/app.store";
 import {
+  BookOpenCheck,
   GitCompareArrows,
   History,
   LayoutDashboard,
@@ -49,6 +50,13 @@ const NAV = [
     description: "Single vs Multi",
     icon: GitCompareArrows,
   },
+  {
+    id: "knowledge" as const,
+    title: "Knowledge",
+    description: "Draft · Publish · RAG",
+    icon: BookOpenCheck,
+    managerOnly: true,
+  },
 ];
 
 export function AppSidebar() {
@@ -58,6 +66,9 @@ export function AppSidebar() {
   const employees = useAppStore((s) => s.employees);
   const employeeId = useAppStore((s) => s.employeeId);
   const employee = employees.find((e) => e.id === employeeId);
+  const visibleNav = NAV.filter(
+    (item) => !("managerOnly" in item) || employee?.accessLayer === "manager",
+  );
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -84,7 +95,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Điều hướng</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map((item) => (
+              {visibleNav.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={mainTab === item.id}

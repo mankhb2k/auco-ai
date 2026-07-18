@@ -22,7 +22,12 @@ import type {
   TaskRun,
 } from "@/lib/types/domain";
 
-type MainTab = "workspace" | "automations" | "history" | "compare";
+type MainTab =
+  | "workspace"
+  | "automations"
+  | "history"
+  | "compare"
+  | "knowledge";
 
 interface AppState {
   employeeId: string;
@@ -74,7 +79,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   isSimulating: false,
   outOfPortfolioDemo: false,
 
-  setEmployeeId: (id) => set({ employeeId: id }),
+  setEmployeeId: (id) =>
+    set((state) => {
+      const next = state.employees.find((employee) => employee.id === id);
+      return {
+        employeeId: id,
+        // Knowledge is manager-only; do not leave an inaccessible tab visible.
+        mainTab:
+          state.mainTab === "knowledge" && next?.accessLayer !== "manager"
+            ? "workspace"
+            : state.mainTab,
+      };
+    }),
 
   setMode: (mode) =>
     set({

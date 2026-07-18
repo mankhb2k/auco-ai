@@ -238,22 +238,22 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 
 ### Phase R1 — Seam + Actors (P0)
 
-- [ ] Migration `Employee.accessLayer` + seed 4 employee  
-- [ ] `GET /api/actors`, `GET /api/actors/me`  
-- [ ] Middleware `X-Demo-Employee-Id`  
-- [ ] FE dropdown role switcher trên Dashboard  
+- [x] Migration `Employee.accessLayer` + seed 4 employee  
+- [x] `GET /api/actors`, `GET /api/actors/me`  
+- [x] Middleware `X-Demo-Employee-Id`  
+- [x] FE dropdown role switcher trên Dashboard  
 
 ### Phase R2 — Guard API hiện có (P0)
 
-- [ ] `@RequireLayer` trên TaskRuns create, Approvals decide, MCP suite  
-- [ ] TaskRun luôn ghi `employeeId` từ actor  
-- [ ] (Nếu chưa có) portfolio check → Approval reason `out_of_portfolio_access`  
+- [x] `@RequireLayer` trên TaskRuns create, Approvals decide, MCP suite  
+- [x] TaskRun luôn ghi `employeeId` từ actor  
+- [x] (Nếu chưa có) portfolio check → Approval reason `out_of_portfolio_access`  
 
 ### Phase R3 — Knowledge Manager API (P0 cho câu chuyện RAG)
 
-- [ ] Module `knowledge` (CRUD draft + publish)  
-- [ ] Publish → ingest document/bank  
-- [ ] FE tab Knowledge (manager only)  
+- [x] Module `knowledge` (CRUD draft + publish)  
+- [x] Publish → ingest document/bank  
+- [x] FE tab Knowledge (manager only)  
 
 ### Phase R4 — IT connector mock (P1)
 

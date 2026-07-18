@@ -70,6 +70,31 @@ export class ActorsService {
     };
   }
 
+  /**
+   * Need-to-know check trước MCP (README §2.7).
+   * `grantedCustomerNos` = override sau khi manager duyệt out_of_portfolio.
+   */
+  async isCustomerInPortfolio(
+    employeeId: string,
+    customerNo: string,
+    grantedCustomerNos: string[] = [],
+  ): Promise<boolean> {
+    const no = customerNo.trim().toUpperCase();
+    if (!no) return true;
+    if (grantedCustomerNos.map((g) => g.toUpperCase()).includes(no)) {
+      return true;
+    }
+
+    const hit = await this.prisma.customerPortfolio.findFirst({
+      where: {
+        employeeId,
+        customer: { customerNo: no },
+      },
+      select: { id: true },
+    });
+    return Boolean(hit);
+  }
+
   private toActor(employee: {
     id: string;
     displayName: string;

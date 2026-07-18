@@ -12,7 +12,7 @@ export class IngestService {
     private readonly embeddings: EmbeddingsService,
   ) {}
 
-  /** Re-embed all KnowledgeDocuments into KnowledgeChunk (pgvector). */
+  /** Re-embed published KnowledgeDocuments into KnowledgeChunk (pgvector). */
   async ingestAll(opts?: { bankCode?: string }): Promise<{
     docs: number;
     chunks: number;
@@ -21,7 +21,8 @@ export class IngestService {
   }> {
     const bankCode = opts?.bankCode ?? 'SHB';
     const docs = await this.prisma.knowledgeDocument.findMany({
-      where: { bankCode },
+      // Draft/superseded documents must never enter the live retrieval index.
+      where: { bankCode, status: 'active' },
       orderBy: { id: 'asc' },
     });
 

@@ -1,8 +1,11 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { RequireLayer } from '../common/require-layer.decorator';
+import { RequireLayerGuard } from '../common/require-layer.guard';
 import { McpGatewayService } from './service/mcp-gateway.service';
 import { McpRegistryService } from './service/mcp-registry.service';
 
 @Controller('api/mcp')
+@UseGuards(RequireLayerGuard)
 export class McpSuiteController {
   constructor(
     private readonly registry: McpRegistryService,
@@ -10,6 +13,7 @@ export class McpSuiteController {
   ) {}
 
   @Get('suite')
+  @RequireLayer('it_admin', 'manager')
   suite(@Query('bankCode') bankCode?: string) {
     const status = this.registry.suiteStatus(bankCode?.trim() || 'SHB');
     return {

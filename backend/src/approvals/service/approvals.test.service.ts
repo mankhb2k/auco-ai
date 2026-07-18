@@ -62,6 +62,56 @@ describe('ApprovalsService', () => {
     );
   });
 
+  it('approve grants out-of-portfolio access then resumes task', async () => {
+    const waitingStep = {
+      id: 's-portfolio',
+      taskRunId: 't1',
+      status: 'waiting_approval',
+      toolCalls: [{ status: 'pending_approval' }],
+      output: {
+        summary: 'outside portfolio',
+        pendingApproval: {
+          reason: 'out_of_portfolio_access',
+          preview: 'request access',
+          tool: 'grant_portfolio_access',
+          args: { customerNo: 'SHB-KH-9999' },
+          agentRole: 'credit',
+        },
+      },
+      taskRun: {
+        id: 't1',
+        bankCode: 'SHB',
+        planJson: { summary: 'demo', portfolioGrants: [] },
+      },
+    };
+    (prisma.taskStep.findUnique as jest.Mock)
+      .mockResolvedValueOnce(waitingStep)
+      .mockResolvedValueOnce({ id: 's-portfolio', status: 'done' });
+    (prisma.taskRun.update as jest.Mock).mockResolvedValue({});
+    (prisma.taskStep.update as jest.Mock).mockResolvedValue({});
+    (orchestrator.resumeTaskRun as jest.Mock).mockResolvedValue(undefined);
+
+    const result = await service.approve('s-portfolio', 'emp-mgr-d');
+
+    expect(mcp.callTool).not.toHaveBeenCalled();
+    expect(prisma.taskRun.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: {
+        planJson: expect.objectContaining({
+          portfolioGrants: ['SHB-KH-9999'],
+        }),
+      },
+    });
+    expect(prisma.taskStep.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 's-portfolio' },
+        data: expect.objectContaining({ status: 'pending' }),
+      }),
+    );
+    expect(orchestrator.resumeTaskRun).toHaveBeenCalledWith('t1');
+    expect(result).toEqual({ id: 's-portfolio', status: 'done' });
+  });
+
   it('reject marks step and task failed', async () => {
     (prisma.taskStep.findUnique as jest.Mock)
       .mockResolvedValueOnce({

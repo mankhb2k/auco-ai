@@ -54,6 +54,7 @@ model Employee {
   branchCode  String?
   portfolios  CustomerPortfolio[]
   taskRuns    TaskRun[]
+  uploadedKnowledgeDocuments KnowledgeDocument[] @relation("KnowledgeUploadedBy")
 
   @@index([bankCode])
 }
@@ -128,15 +129,20 @@ model KnowledgeDocument {
   title         String
   sourceUrl     String?
   content       String             @db.Text
-  status        String             @default("active") // active | superseded
+  status        String             @default("draft") // draft | active | superseded
   effectiveFrom DateTime?
   effectiveTo   DateTime?
+  uploadedById  String?
+  uploadedBy    Employee?          @relation("KnowledgeUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  publishedAt   DateTime?
   createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   relationsFrom DocumentRelation[] @relation("FromDoc")
   relationsTo   DocumentRelation[] @relation("ToDoc")
 
   @@index([bankCode, domain])
   @@index([status])
+  @@index([uploadedById])
 }
 
 model DocumentRelation {

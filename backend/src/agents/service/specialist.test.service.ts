@@ -1,4 +1,5 @@
 import { SpecialistService } from './specialist.service';
+import type { ActorsService } from '../../actors/service/actors.service';
 import type { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import type { RagService } from '../../rag/service/rag.service';
 import type { TaskStepPlan } from '../../planning/task-plan.schema';
@@ -6,11 +7,15 @@ import type { TaskStepPlan } from '../../planning/task-plan.schema';
 describe('SpecialistService', () => {
   const mcp = { callTool: jest.fn() } as unknown as McpGatewayService;
   const rag = { kbTool: jest.fn() } as unknown as RagService;
+  const actors = {
+    isCustomerInPortfolio: jest.fn().mockResolvedValue(true),
+  } as unknown as ActorsService;
   let service: SpecialistService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new SpecialistService(mcp, rag);
+    (actors.isCustomerInPortfolio as jest.Mock).mockResolvedValue(true);
+    service = new SpecialistService(mcp, rag, actors);
     (mcp.callTool as jest.Mock).mockResolvedValue({
       tool: 'compare_products',
       mcp: 'mcp-product',
@@ -71,5 +76,26 @@ describe('SpecialistService', () => {
     });
     expect(result.mode).toBe('direct');
     expect(mcp.callTool).toHaveBeenCalled();
+  });
+
+  it('parks out_of_portfolio_access when customer outside portfolio', async () => {
+    (actors.isCustomerInPortfolio as jest.Mock).mockResolvedValue(false);
+    const step: TaskStepPlan = {
+      id: 'step-credit',
+      agentRole: 'credit',
+      goal: 'Đánh giá tín dụng',
+      dependsOn: [],
+      mode: 'spawn_workers',
+    };
+
+    const result = await service.run(step, {
+      goal: 'KH ngoài danh mục SHB-KH-9999 vay mua nhà',
+      priorOutputs: {},
+      employeeId: 'emp-credit-b',
+    });
+
+    expect(result.pendingApproval?.reason).toBe('out_of_portfolio_access');
+    expect(result.pendingApproval?.tool).toBe('grant_portfolio_access');
+    expect(mcp.callTool).not.toHaveBeenCalled();
   });
 });

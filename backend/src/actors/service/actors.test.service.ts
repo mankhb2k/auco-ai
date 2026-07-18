@@ -11,6 +11,7 @@ describe('ActorsService', () => {
     },
     customerPortfolio: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
     },
   } as unknown as PrismaService;
 
@@ -149,6 +150,41 @@ describe('ActorsService', () => {
       await expect(service.portfolio('emp-ghost')).rejects.toBeInstanceOf(
         NotFoundException,
       );
+    });
+  });
+
+  describe('isCustomerInPortfolio', () => {
+    it('returns true when customer is in portfolio', async () => {
+      (prisma.customerPortfolio.findFirst as jest.Mock).mockResolvedValue({
+        id: 'p1',
+      });
+
+      await expect(
+        service.isCustomerInPortfolio('emp-credit-b', 'SHB-KH-1001'),
+      ).resolves.toBe(true);
+    });
+
+    it('returns false when customer is outside portfolio', async () => {
+      (prisma.customerPortfolio.findFirst as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.isCustomerInPortfolio('emp-credit-b', 'SHB-KH-9999'),
+      ).resolves.toBe(false);
+    });
+
+    it('returns true when customerNo is in granted override list', async () => {
+      await expect(
+        service.isCustomerInPortfolio('emp-credit-b', 'SHB-KH-9999', [
+          'SHB-KH-9999',
+        ]),
+      ).resolves.toBe(true);
+      expect(prisma.customerPortfolio.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('returns true when customerNo is empty', async () => {
+      await expect(
+        service.isCustomerInPortfolio('emp-credit-b', '  '),
+      ).resolves.toBe(true);
     });
   });
 });

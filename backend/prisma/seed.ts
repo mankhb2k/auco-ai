@@ -213,6 +213,8 @@ async function seedKnowledge(bankCode: string) {
         status: d.status,
         effectiveFrom: d.effectiveFrom ? new Date(d.effectiveFrom) : null,
         effectiveTo: d.effectiveTo ? new Date(d.effectiveTo) : null,
+        uploadedById: "emp-mgr-d",
+        publishedAt: d.status === "active" ? new Date() : null,
       },
       create: {
         id: d.id,
@@ -224,6 +226,8 @@ async function seedKnowledge(bankCode: string) {
         status: d.status,
         effectiveFrom: d.effectiveFrom ? new Date(d.effectiveFrom) : null,
         effectiveTo: d.effectiveTo ? new Date(d.effectiveTo) : null,
+        uploadedById: "emp-mgr-d",
+        publishedAt: d.status === "active" ? new Date() : null,
       },
     });
   }

@@ -5,11 +5,15 @@ import {
   Get,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { RequireLayer } from '../common/require-layer.decorator';
+import { RequireLayerGuard } from '../common/require-layer.guard';
 import { isRagDomain } from './indexes';
 import { RagService } from './service/rag.service';
 
 @Controller('api/rag')
+@UseGuards(RequireLayerGuard)
 export class RagController {
   constructor(private readonly rag: RagService) {}
 
@@ -19,11 +23,13 @@ export class RagController {
   }
 
   @Post('ingest')
+  @RequireLayer('it_admin', 'manager')
   ingest(@Body() body?: { bankCode?: string }) {
     return this.rag.ingestAll(body?.bankCode);
   }
 
   @Post('search')
+  @RequireLayer('employee', 'manager', 'it_admin')
   async search(
     @Body()
     body: {
@@ -52,6 +58,7 @@ export class RagController {
   }
 
   @Get('search')
+  @RequireLayer('employee', 'manager', 'it_admin')
   async searchGet(
     @Query('domain') domain?: string,
     @Query('q') q?: string,

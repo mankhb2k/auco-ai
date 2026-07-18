@@ -54,6 +54,15 @@ export class ApprovalsService {
     }
 
     const pending = this.readPending(step.output);
+
+    // role.md R2 / README §2.7 — duyệt cấp quyền portfolio, reset step để chạy lại MCP
+    if (
+      pending.reason === 'out_of_portfolio_access' ||
+      pending.tool === 'grant_portfolio_access'
+    ) {
+      return this.approvePortfolioGrant(step, pending, actorId);
+    }
+
     const result = await this.mcp.callTool({
       bankCode: step.taskRun.bankCode,
       agentRole: pending.agentRole,
@@ -170,6 +179,89 @@ export class ApprovalsService {
     return this.prisma.taskStep.findUnique({
       where: { id: stepId },
       include: { taskRun: true },
+    });
+  }
+
+  /**
+   * Duyệt out_of_portfolio: ghi grant vào planJson, reset step → pending, resume để chạy MCP thật.
+   */
+  private async approvePortfolioGrant(
+    step: {
+      id: string;
+      taskRunId: string;
+      toolCalls: unknown;
+      output: unknown;
+      taskRun: { id: string; planJson: unknown };
+    },
+    pending: PendingApproval,
+    actorId?: string,
+  ) {
+    const customerNo = String(pending.args.customerNo ?? '').toUpperCase();
+    const plan =
+      step.taskRun.planJson && typeof step.taskRun.planJson === 'object'
+        ? { ...(step.taskRun.planJson as Record<string, unknown>) }
+        : {};
+    const prevGrants = Array.isArray(plan.portfolioGrants)
+      ? (plan.portfolioGrants as string[])
+      : [];
+    const portfolioGrants = customerNo
+      ? Array.from(new Set([...prevGrants, customerNo]))
+      : prevGrants;
+
+    await this.prisma.taskRun.update({
+      where: { id: step.taskRunId },
+      data: {
+        planJson: { ...plan, portfolioGrants } as Prisma.InputJsonValue,
+      },
+    });
+
+    const prevCalls = Array.isArray(step.toolCalls)
+      ? (step.toolCalls as Array<Record<string, unknown>>)
+      : [];
+    const prevOut =
+      step.output && typeof step.output === 'object'
+        ? (step.output as Record<string, unknown>)
+        : {};
+
+    await this.prisma.taskStep.update({
+      where: { id: step.id },
+      data: {
+        status: 'pending',
+        startedAt: null,
+        finishedAt: null,
+        toolCalls: [
+          ...prevCalls.filter((c) => c.status !== 'pending_approval'),
+          {
+            id: `grant-${Date.now().toString(36)}`,
+            tool: 'grant_portfolio_access',
+            mcp: 'policy',
+            approved: true,
+            actorId: actorId ?? 'demo-reviewer',
+            customerNo,
+            output: { granted: true, customerNo },
+          },
+        ] as Prisma.InputJsonValue[],
+        output: {
+          ...prevOut,
+          pendingApproval: undefined,
+          portfolioGranted: true,
+          approvalActorId: actorId ?? 'demo-reviewer',
+          summary: `${String(prevOut.summary ?? '')} — ĐÃ CẤP QUYỀN portfolio: ${customerNo}`,
+        } as Prisma.InputJsonValue,
+      },
+    });
+
+    this.realtime.emitStepUpdated(step.taskRunId, {
+      stepId: step.id,
+      status: 'pending',
+      portfolioGranted: true,
+      customerNo,
+    });
+
+    await this.orchestrator.resumeTaskRun(step.taskRunId);
+    return this.prisma.taskStep.findUnique({
+      where: { id: step.id },
+      include: { taskRun: { include: { steps: true } } },
     });
   }
 

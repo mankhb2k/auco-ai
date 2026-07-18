@@ -44,7 +44,9 @@ export function AppTopbar() {
         ? "Automations"
         : mainTab === "history"
           ? "Lịch sử"
-          : "So sánh & MCP";
+          : mainTab === "knowledge"
+            ? "Knowledge Management"
+            : "So sánh & MCP";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">

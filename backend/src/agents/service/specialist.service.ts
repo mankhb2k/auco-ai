@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import type { AgentRole } from '../agent-catalog';
+import { ActorsService } from '../../actors/service/actors.service';
 import { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import type { TaskStepPlan } from '../../planning/task-plan.schema';
 import { RagService } from '../../rag/service/rag.service';
 
 export type PendingApproval = {
-  reason: 'mutates';
+  reason: 'mutates' | 'out_of_portfolio_access';
   preview: string;
   tool: string;
   args: Record<string, unknown>;
@@ -26,6 +27,7 @@ export class SpecialistService {
   constructor(
     private readonly mcp: McpGatewayService,
     private readonly rag: RagService,
+    private readonly actors: ActorsService,
   ) {}
 
   async run(
@@ -38,10 +40,30 @@ export class SpecialistService {
       skipApprovalPropose?: boolean;
       /** Phase 9 baseline: one generalist with full tools, no Planner */
       baseline?: boolean;
+      /** Actor tạo TaskRun — scope portfolio (role.md R2 / README §2.7) */
+      employeeId?: string;
+      /** CustomerNo đã được manager cấp quyền ngoài danh mục */
+      portfolioGrants?: string[];
     },
   ): Promise<SpecialistResult> {
     const bankCode = ctx.bankCode ?? 'SHB';
     const customer = this.extractCustomerHints(ctx.goal, step.goal);
+
+    if (
+      ctx.employeeId &&
+      customer.customerNo &&
+      !ctx.skipApprovalPropose &&
+      !ctx.baseline
+    ) {
+      const allowed = await this.actors.isCustomerInPortfolio(
+        ctx.employeeId,
+        customer.customerNo,
+        ctx.portfolioGrants ?? [],
+      );
+      if (!allowed) {
+        return this.parkOutOfPortfolio(step, customer);
+      }
+    }
 
     if (ctx.baseline) {
       return this.runBaseline(bankCode, customer, step, ctx.goal);
@@ -66,6 +88,47 @@ export class SpecialistService {
     }
 
     return this.runCreditWorkers(bankCode, customer, step, ctx.skipApprovalPropose);
+  }
+
+  /** README §2.7 — chặn MCP khi KH ngoài portfolio, xin duyệt manager. */
+  private parkOutOfPortfolio(
+    step: TaskStepPlan,
+    customer: Record<string, string>,
+  ): SpecialistResult {
+    const customerNo = customer.customerNo!;
+    const role = step.agentRole as AgentRole;
+    const pendingApproval: PendingApproval = {
+      reason: 'out_of_portfolio_access',
+      preview: `Nhân viên xin truy cập KH ${customerNo} (${customer.fullName ?? 'ngoài danh mục'}) — ngoài CustomerPortfolio được giao.`,
+      tool: 'grant_portfolio_access',
+      agentRole: role,
+      args: { customerNo, fullName: customer.fullName },
+    };
+
+    return {
+      mode: 'direct',
+      toolCalls: [
+        {
+          id: 'pending-portfolio',
+          tool: pendingApproval.tool,
+          mcp: 'policy',
+          capability: 'portfolio',
+          mutates: false,
+          requiresApproval: true,
+          status: 'pending_approval',
+          reason: 'out_of_portfolio_access',
+          args: pendingApproval.args,
+        },
+      ],
+      pendingApproval,
+      output: {
+        summary: pendingApproval.preview,
+        approvalReason: 'out_of_portfolio_access',
+        approvalPreview: pendingApproval.preview,
+        customerNo,
+        stepGoal: step.goal,
+      },
+    };
   }
 
   /** Single-agent baseline: 1 step, full tools across domains, no allowlist, no Approval. */

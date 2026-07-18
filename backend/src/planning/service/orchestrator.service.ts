@@ -97,6 +97,8 @@ export class OrchestratorService {
               taskRunId,
               goal: task.goal,
               bankCode: task.bankCode,
+              employeeId: task.employeeId ?? undefined,
+              portfolioGrants: this.readPortfolioGrants(plan),
               stepPlan,
               dbStepId: dbStep.id,
               priorOutputs,
@@ -174,6 +176,8 @@ export class OrchestratorService {
     taskRunId: string;
     goal: string;
     bankCode: string;
+    employeeId?: string;
+    portfolioGrants?: string[];
     stepPlan: TaskStepPlan;
     dbStepId: string;
     priorOutputs: Record<string, unknown>;
@@ -202,6 +206,8 @@ export class OrchestratorService {
         priorOutputs,
         skipApprovalPropose: opts.skipApprovalPropose,
         baseline: opts.baseline,
+        employeeId: opts.employeeId,
+        portfolioGrants: opts.portfolioGrants,
       });
 
       if (result.pendingApproval) {
@@ -277,5 +283,11 @@ export class OrchestratorService {
       });
       return 'failed';
     }
+  }
+
+  private readPortfolioGrants(plan: TaskPlan & { portfolioGrants?: unknown }): string[] {
+    const raw = plan.portfolioGrants;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((x): x is string => typeof x === 'string');
   }
 }

@@ -44,6 +44,8 @@
 | 24 | **Không cho user tự tạo session gọi thẳng 1 agent / chat trực tiếp bỏ qua Planner** — nhu cầu "hỏi nhanh 1 miền" giải bằng **Planner triage** (TaskPlan 1 step khi đơn miền); nhu cầu "chat bỏ qua Planner" giải bằng **lộ baseline single-agent (§8) thành toggle UI** (§2.9) | Giữ Planner là điểm vào duy nhất — đúng trọng tâm deliverable #2/#5; không xây thêm hệ thống session/agent-routing song song |
 | 25 | **Go-to-market sau demo: license / on-prem (single-tenant), không SaaS shared** — bank tự triển khai + tự gắn adapter MCP; dữ liệu nằm trong perimeter bank (§1.2, §9.5.4) | Ngân hàng lớn không chấp nhận shared DB đa tenant; kiến trúc registry + `bankCode` khớp bán phần mềm, không khóa SaaS |
 | 26 | **Expert ship sẵn = cấu hình (system prompt + catalog + MCP allowlist + RAG domain), không fine-tune / train model riêng** — mọi agent dùng chung 1 model nền (§3.5.1, §5.4D) | Nghiệp vụ nằm ngoài trọng số model; đủ cho demo; chừa chỗ fine-tune/private model sau |
+| 27 | **App/Planner tự điều phối từng yêu cầu; IT không vẽ DAG cho từng hồ sơ**. IT quản MCP connector và policy hạ tầng; Trưởng phòng/Knowledge Owner chỉ quản vòng đời tài liệu RAG; Nhân viên thực thi | Giữ Planner là giá trị cốt lõi, đồng thời tách đúng trách nhiệm kỹ thuật, nghiệp vụ và vận hành |
+| 28 | **4 Specialist là core platform ship sẵn** (`credit`, `legal`, `product`, `ops`). Phòng ban từng ngân hàng được map vào capability core; không cho Trưởng phòng sửa Agent Catalog/system prompt/tool allowlist trong demo | Các ngân hàng khác nhau chủ yếu ở tri thức, hệ thống tích hợp và policy — không cần viết lại Planner/agent core |
 
 **Đã cân nhắc và loại bỏ:**
 
@@ -679,6 +681,28 @@ Sai:  "Huấn luyện" = fine-tune 4 model riêng cho 4 chuyên gia
 #### Tóm tắt trả lời giám khảo
 
 > Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5) — không phải cấu hình rời. Về UX, chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**, nhân viên dùng ngay không cần setup. “Chuyên gia” không phải model đã train sẵn: cùng một model nền, khác nhau ở **system prompt + catalog + MCP + RAG**. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý sau demo, nhưng không phải việc của người dùng cuối, và không cần trong 48h vì có thể phá vỡ guardrail routing đã chốt.
+
+#### 3.5.2 Ranh giới quản trị khi triển khai cho ngân hàng khác ✅
+
+Platform giữ **Planner + 4 Specialist + Agent Catalog + schema + tool allowlist** làm core ship sẵn. Từng ngân hàng không phải tự xây lại agent; họ cung cấp hai phần khác biệt: **connector MCP** tới hệ thống nội bộ và **tài liệu RAG** đã được duyệt.
+
+| Vai | Được quyết định | Không quyết định |
+|---|---|---|
+| **App / Planner** | Chọn Specialist và sinh DAG cho từng yêu cầu trong catalog + validation đã khóa | Không tự tạo role/tool ngoài catalog |
+| **IT / Platform bank** | MCP nối LOS/core/compliance nào, trạng thái connector, model gateway và policy hạ tầng | Không ngồi chọn Credit/Legal cho từng câu chat; không sửa tài liệu nghiệp vụ |
+| **Trưởng phòng / Knowledge Owner** | Tạo draft, version, publish/supersede tài liệu RAG theo domain | Không sửa Agent Catalog, system prompt, Zod schema hoặc MCP allowlist trong demo |
+| **Nhân viên** | Gửi yêu cầu và thực thi trên phạm vi dữ liệu được giao | Không cấu hình agent, tool hoặc publish KnowledgeDocument |
+
+```text
+IT gắn đường ống (MCP)
+Trưởng phòng xuất bản tri thức (RAG)
+Nhân viên gửi mục tiêu
+App/Planner tự điều phối Specialist
+```
+
+“Chuẩn hóa agent” trong UI quản lý tài liệu phải được hiểu là **chuẩn hóa tri thức mà agent truy xuất**, không phải train model hay thay đổi logic điều phối. RAG chỉ ảnh hưởng câu trả lời của Specialist sau khi Planner đã chọn domain; nó không thay Agent Catalog và không được dùng để invent role mới.
+
+Phòng ban ở từng ngân hàng có thể có tên hoặc cách chia khác nhau (ví dụ Retail Credit / Corporate Credit, Legal gộp Compliance), nhưng được **map vào capability core** trước. Chỉ khi xuất hiện một capability thực sự mới mới cân nhắc Agent Studio — roadmap có review/publish + policy validation, không phải cấu hình sống của Trưởng phòng trong demo.
 
 ---
 

@@ -25,6 +25,10 @@ describe('IngestService', () => {
     (prisma.$executeRawUnsafe as jest.Mock).mockResolvedValue(undefined);
 
     const result = await service.ingestAll({ bankCode: 'SHB' });
+    expect(prisma.knowledgeDocument.findMany).toHaveBeenCalledWith({
+      where: { bankCode: 'SHB', status: 'active' },
+      orderBy: { id: 'asc' },
+    });
     expect(result).toEqual({
       docs: 0,
       chunks: 0,

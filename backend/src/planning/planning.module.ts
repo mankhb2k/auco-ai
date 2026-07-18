@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ActorsModule } from '../actors/actors.module';
 import { SpecialistService } from '../agents/service/specialist.service';
 import { LlmModule } from '../llm/llm.module';
 import { McpClientModule } from '../mcp-client/mcp-client.module';
@@ -10,7 +11,13 @@ import { TaskRunsController } from './task-runs.controller';
 import { TaskRunsService } from './service/task-runs.service';
 
 @Module({
-  imports: [LlmModule, McpClientModule, RagModule, RealtimeModule],
+  imports: [
+    ActorsModule,
+    LlmModule,
+    McpClientModule,
+    RagModule,
+    RealtimeModule,
+  ],
   controllers: [TaskRunsController],
   providers: [
     PlannerService,

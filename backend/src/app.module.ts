@@ -2,10 +2,12 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ActorsModule } from './actors/actors.module';
 import { ApprovalsModule } from './approvals/approvals.module';
+import { CommonModule } from './common/common.module';
 import { DemoActorMiddleware } from './common/demo-actor.middleware';
 import { AutomationsModule } from './automations/automations.module';
 import { CompareModule } from './compare/compare.module';
 import { HealthModule } from './health/health.module';
+import { KnowledgeModule } from './knowledge/knowledge.module';
 import { LlmModule } from './llm/llm.module';
 import { McpClientModule } from './mcp-client/mcp-client.module';
 import { PlanningModule } from './planning/planning.module';
@@ -20,6 +22,7 @@ import { RedisModule } from './redis/redis.module';
       isGlobal: true,
       envFilePath: ['.env'],
     }),
+    CommonModule,
     PrismaModule,
     RedisModule,
     HealthModule,
@@ -32,6 +35,7 @@ import { RedisModule } from './redis/redis.module';
     AutomationsModule,
     CompareModule,
     ActorsModule,
+    KnowledgeModule,
   ],
 })
 export class AppModule implements NestModule {
