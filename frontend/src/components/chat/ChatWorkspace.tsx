@@ -17,7 +17,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { DagView } from "@/components/dashboard/DagView";
 import { TraceTimeline } from "@/components/dashboard/TraceTimeline";
 import { UsagePanel } from "@/components/dashboard/UsagePanel";
-import { AGENT_LABEL, statusLabel } from "@/lib/labels";
+import {
+  AGENT_LABEL,
+  DOMAIN_LABEL,
+  KB_OPERATION_LABEL,
+  statusLabel,
+} from "@/lib/labels";
 import { SCENARIO_PRESETS } from "@/lib/mock/scenarios";
 import { formatTokens, formatUsd } from "@/lib/mock/usage";
 import { cn } from "@/lib/utils";
@@ -35,6 +40,7 @@ import {
   Paperclip,
   Image,
   FileText,
+  Eye,
 } from "lucide-react";
 
 // ThinkingBlock replaced by AgentCoordinationProgress
@@ -199,6 +205,11 @@ function DetailsSheet() {
 function EmptyHero() {
   const applyScenarioPreset = useAppStore((s) => s.applyScenarioPreset);
   const setGoalDraft = useAppStore((s) => s.setGoalDraft);
+  const employeeId = useAppStore((s) => s.employeeId);
+  const employees = useAppStore((s) => s.employees);
+  const isManager =
+    employees.find((employee) => employee.id === employeeId)?.accessLayer ===
+    "manager";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-8">
@@ -206,30 +217,207 @@ function EmptyHero() {
         <Network className="size-5" />
       </div>
       <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
-        Hỏi bộ điều phối bất kỳ yêu cầu nghiệp vụ
+        {isManager
+          ? "Quản trị tri thức bằng hội thoại"
+          : "Hỏi bộ điều phối bất kỳ yêu cầu nghiệp vụ"}
       </h2>
       <p className="text-muted-foreground mt-2 max-w-md text-center text-sm">
-        Một ô trò chuyện duy nhất. Chuyên gia Tín dụng, Pháp lý, Sản phẩm được
-        điều phối tự động — bạn chỉ cần duyệt khi có tác động hệ thống.
+        {isManager
+          ? "Đính kèm nguồn hoặc mô tả điều cần tra cứu, thêm hay sửa. AI đối chiếu và đưa đề xuất; tri thức chỉ cập nhật sau khi bạn duyệt."
+          : "Một ô trò chuyện duy nhất. Chuyên gia Tín dụng, Pháp lý, Sản phẩm được điều phối tự động — bạn chỉ cần duyệt khi có tác động hệ thống."}
       </p>
       <div className="mt-8 flex w-full flex-wrap justify-center gap-2">
-        {SCENARIO_PRESETS.map((p) => (
-          <Button
-            key={p.id}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-            onClick={() => {
-              applyScenarioPreset(p.id, p.goal);
-              setGoalDraft(p.goal);
-            }}
-          >
-            <Sparkles className="size-3.5" />
-            {p.shortLabel}
-          </Button>
-        ))}
+        {isManager ? (
+          <>
+            {[
+              "Kiểm tra chính sách LTV hiện tại",
+              "Đối chiếu nguồn AML mới với tri thức Pháp lý",
+              "Cập nhật biểu lãi suất sản phẩm",
+            ].map((prompt) => (
+              <Button
+                key={prompt}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => setGoalDraft(prompt)}
+              >
+                <Sparkles className="size-3.5" />
+                {prompt}
+              </Button>
+            ))}
+          </>
+        ) : null}
+        {!isManager
+          ? SCENARIO_PRESETS.map((p) => (
+              <Button
+                key={p.id}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => {
+                  applyScenarioPreset(p.id, p.goal);
+                  setGoalDraft(p.goal);
+                }}
+              >
+                <Sparkles className="size-3.5" />
+                {p.shortLabel}
+              </Button>
+            ))
+          : null}
       </div>
     </div>
+  );
+}
+
+function KnowledgeConversation() {
+  const task = useAppStore((s) => s.knowledgeChatTask);
+  const proposals = useAppStore((s) => s.knowledgeProposals);
+  const approve = useAppStore((s) => s.approveKnowledgeProposal);
+  const reject = useAppStore((s) => s.rejectKnowledgeProposal);
+  const openSource = useAppStore((s) => s.openKnowledgeSource);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const proposal = proposals.find((item) => item.id === task?.proposalId);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [task?.status, task?.proposalId]);
+
+  if (!task) return <EmptyHero />;
+
+  return (
+    <ScrollArea className="flex-1">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8">
+        <div className="flex justify-end">
+          <div className="bg-primary text-primary-foreground max-w-[90%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
+            {task.userMessage}
+            {task.sourceLabel ? (
+              <div className="mt-2 flex items-center gap-2 border-t border-primary-foreground/20 pt-2 text-xs">
+                <FileText className="size-3.5" />
+                {task.sourceLabel}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+            <Sparkles className="size-3.5" />
+            Knowledge Curator
+            <Badge variant="outline" className="normal-case">
+              {DOMAIN_LABEL[task.domain]}
+            </Badge>
+          </div>
+
+          {task.status === "analyzing" ? (
+            <div className="flex items-center gap-3 rounded-xl border p-4 text-sm">
+              <Loader2 className="size-4 animate-spin" />
+              Đang đọc nguồn, tra cứu tri thức hiện tại và xác định phần cần
+              thêm/sửa…
+            </div>
+          ) : null}
+
+          {proposal ? (
+            <div className="space-y-4 rounded-xl border p-4">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold">Đề xuất cập nhật tri thức</p>
+                  <Badge variant={task.status === "approved" ? "default" : "secondary"}>
+                    {task.status === "approved"
+                      ? "Đã duyệt"
+                      : task.status === "rejected"
+                        ? "Đã từ chối"
+                        : "Chờ duyệt"}
+                  </Badge>
+                  <Badge variant="outline">
+                    tin cậy {(proposal.confidence * 100).toFixed(0)}%
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {proposal.summary}
+                </p>
+              </div>
+
+              {proposal.operations.map((operation) => (
+                <div
+                  key={operation.id}
+                  className="bg-muted/30 space-y-2 rounded-lg border p-3"
+                >
+                  <Badge variant="outline">
+                    {KB_OPERATION_LABEL[operation.type]}
+                  </Badge>
+                  <p className="text-sm font-medium">{operation.title}</p>
+                  {operation.beforeExcerpt || operation.afterExcerpt ? (
+                    <div className="grid gap-2 text-xs sm:grid-cols-2">
+                      <div className="rounded bg-red-50 p-2 text-red-900 dark:bg-red-950/40 dark:text-red-100">
+                        <p className="mb-1 font-medium">Trước</p>
+                        {operation.beforeExcerpt || "—"}
+                      </div>
+                      <div className="rounded bg-emerald-50 p-2 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+                        <p className="mb-1 font-medium">Sau</p>
+                        {operation.afterExcerpt || operation.content || "—"}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+
+              {proposal.warnings.map((warning) => (
+                <p
+                  key={warning}
+                  className="text-xs text-amber-700 dark:text-amber-400"
+                >
+                  Cảnh báo: {warning}
+                </p>
+              ))}
+
+              {task.status === "pending_review" ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      approve(proposal.id);
+                      toast.success("Đã duyệt và cập nhật tri thức");
+                    }}
+                  >
+                    <Check className="size-4" />
+                    Duyệt cập nhật
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      reject(proposal.id);
+                      toast.error("Đã từ chối đề xuất");
+                    }}
+                  >
+                    <X className="size-4" />
+                    Từ chối
+                  </Button>
+                </div>
+              ) : null}
+
+              {task.status === "approved" && task.documentId ? (
+                <Button
+                  size="sm"
+                  onClick={() => openSource(task.domain, task.documentId!)}
+                >
+                  <Eye className="size-4" />
+                  Xem nguồn đã cập nhật
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {task.status === "rejected" ? (
+            <p className="text-muted-foreground text-sm">
+              Đề xuất đã bị từ chối. Không có thay đổi nào được đưa vào chỉ mục
+              tri thức.
+            </p>
+          ) : null}
+        </div>
+        <div ref={bottomRef} />
+      </div>
+    </ScrollArea>
   );
 }
 
@@ -294,18 +482,41 @@ function ChatComposer() {
   const activeRun = useAppStore((s) => s.activeRun);
   const applyScenarioPreset = useAppStore((s) => s.applyScenarioPreset);
   const scenarioId = useAppStore((s) => s.scenarioId);
+  const employeeId = useAppStore((s) => s.employeeId);
+  const employees = useAppStore((s) => s.employees);
+  const submitKnowledgeRequest = useAppStore(
+    (s) => s.submitKnowledgeRequest,
+  );
+  const isManager =
+    employees.find((employee) => employee.id === employeeId)?.accessLayer ===
+    "manager";
 
   const [selectedFiles, setSelectedFiles] = useState<{ id: string; file: File; type: string }[]>([]);
   const [selectedImages, setSelectedImages] = useState<{ id: string; file: File; previewUrl: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const canSend = !isSimulating && goalDraft.trim().length > 0;
-  const showChips = !activeRun;
+  const canSend =
+    !isSimulating &&
+    (goalDraft.trim().length > 0 || (isManager && selectedFiles.length > 0));
+  const showChips = isManager ? false : !activeRun;
 
   const handleSend = () => {
     if (!canSend) return;
-    submitGoal();
+    if (isManager) {
+      const sourceLabel =
+        selectedFiles.length > 0
+          ? selectedFiles.map((item) => item.file.name).join(", ")
+          : null;
+      submitKnowledgeRequest({
+        message:
+          goalDraft.trim() ||
+          "Hãy phân tích nguồn đính kèm và đề xuất cập nhật tri thức",
+        sourceLabel,
+      });
+    } else {
+      submitGoal();
+    }
     setSelectedFiles([]);
     selectedImages.forEach((img) => URL.revokeObjectURL(img.previewUrl));
     setSelectedImages([]);
@@ -505,7 +716,11 @@ function ChatComposer() {
               }
             }}
             rows={showChips ? 3 : 2}
-            placeholder="Mô tả yêu cầu nghiệp vụ…"
+            placeholder={
+              isManager
+                ? "Hỏi, tra cứu, thêm hoặc sửa nguồn tri thức…"
+                : "Mô tả yêu cầu nghiệp vụ…"
+            }
             disabled={isSimulating}
             className="max-h-40 min-h-[72px] resize-none border-0 bg-transparent px-4 py-3 shadow-none focus-visible:ring-0"
           />
@@ -554,9 +769,15 @@ function ChatComposer() {
 }
 
 export function ChatWorkspace() {
+  const employeeId = useAppStore((s) => s.employeeId);
+  const employees = useAppStore((s) => s.employees);
+  const isManager =
+    employees.find((employee) => employee.id === employeeId)?.accessLayer ===
+    "manager";
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Conversation />
+      {isManager ? <KnowledgeConversation /> : <Conversation />}
       <ChatComposer />
     </div>
   );

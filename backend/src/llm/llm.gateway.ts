@@ -11,6 +11,12 @@ import {
 import type { z } from 'zod';
 import type { LlmEnvConfig } from './llm.config';
 import {
+  DEFAULT_TIER,
+  knownPurposes,
+  tierForPurpose,
+  type ModelTier,
+} from './llm.routing';
+import {
   LlmGatewayError,
   type LlmAttemptTrace,
   type LlmCallTrace,
@@ -22,6 +28,11 @@ import {
 export type LlmCallOpts = {
   agentRole?: string;
   purpose?: string;
+  /**
+   * Override tier thủ công (hiếm dùng). Bình thường gateway tự suy
+   * tier từ purpose — caller không chọn model trực tiếp (§5.4B).
+   */
+  tier?: ModelTier;
   system?: string;
   messages?: ModelMessage[];
   prompt?: string;
@@ -41,6 +52,9 @@ export class LlmGatewayService {
   }
 
   get isPrimaryConfigured(): boolean {
+    if (this.cfg.primaryProvider === 'onprem') {
+      return Boolean(this.cfg.onprem.baseUrl);
+    }
     return Boolean(this.cfg.openaiApiKey);
   }
 
@@ -51,10 +65,16 @@ export class LlmGatewayService {
   getStatus() {
     return {
       primary: {
-        provider: this.cfg.defaultProvider,
+        provider: this.cfg.primaryProvider,
         model: this.cfg.defaultModel,
         configured: this.isPrimaryConfigured,
+        ...(this.cfg.primaryProvider === 'onprem'
+          ? { baseUrl: this.cfg.onprem.baseUrl }
+          : {}),
       },
+      tiers: this.cfg.tierModels,
+      purposeRouting: knownPurposes(),
+      defaultTier: DEFAULT_TIER,
       fallback: {
         provider: this.cfg.fallbackProvider,
         model: this.cfg.fallbackModel,
@@ -100,15 +120,23 @@ export class LlmGatewayService {
     return { object: value, trace };
   }
 
+  /** Tier gateway chọn cho một call (dùng cho log/test). */
+  resolveTier(opts: Pick<LlmCallOpts, 'purpose' | 'tier'>): ModelTier {
+    return opts.tier ?? tierForPurpose(opts.purpose);
+  }
+
   private async withFailover<T>(
     opts: LlmCallOpts,
     run: (model: LanguageModel) => Promise<T>,
   ): Promise<{ value: T; trace: LlmCallTrace }> {
     const attempts: LlmAttemptTrace[] = [];
+    const tier = this.resolveTier(opts);
+    const primaryModel = this.cfg.tierModels[tier] ?? this.cfg.defaultModel;
+
     const chain: Array<{ provider: LlmProvider; model: string }> = [
       {
-        provider: this.cfg.defaultProvider,
-        model: this.cfg.defaultModel,
+        provider: this.cfg.primaryProvider,
+        model: primaryModel,
       },
     ];
 
@@ -122,19 +150,22 @@ export class LlmGatewayService {
     let lastError: unknown;
 
     for (const slot of chain) {
-      const maxTries =
-        slot.provider === this.cfg.defaultProvider
-          ? Math.max(1, this.cfg.maxRetriesPrimary)
-          : 1;
+      const isPrimarySlot = slot.provider === this.cfg.primaryProvider;
+      const maxTries = isPrimarySlot
+        ? Math.max(1, this.cfg.maxRetriesPrimary)
+        : 1;
 
-      if (slot.provider === 'openai' && !this.isPrimaryConfigured) {
+      if (isPrimarySlot && !this.isPrimaryConfigured) {
         attempts.push({
           provider: slot.provider,
           model: slot.model,
           attempt: 1,
           ok: false,
-          errorCode: 'MISSING_API_KEY',
-          errorMessage: 'OPENAI_API_KEY is not set',
+          errorCode: 'MISSING_PROVIDER_CONFIG',
+          errorMessage:
+            slot.provider === 'onprem'
+              ? 'ONPREM_LLM_BASE_URL is not set'
+              : 'OPENAI_API_KEY is not set',
         });
         continue;
       }
@@ -155,14 +186,15 @@ export class LlmGatewayService {
           const trace: LlmCallTrace = {
             agentRole: opts.agentRole,
             purpose: opts.purpose,
+            tier,
             attempts,
             provider: slot.provider,
             model: slot.model,
-            usedFallback: slot.provider !== this.cfg.defaultProvider,
+            usedFallback: !isPrimarySlot,
           };
 
           this.logger.log(
-            `LLM ok provider=${slot.provider} model=${slot.model} attempt=${attempt} fallback=${trace.usedFallback} purpose=${opts.purpose ?? '-'}`,
+            `LLM ok provider=${slot.provider} model=${slot.model} tier=${tier} attempt=${attempt} fallback=${trace.usedFallback} purpose=${opts.purpose ?? '-'}`,
           );
 
           return { value, trace };
@@ -181,7 +213,7 @@ export class LlmGatewayService {
           });
 
           this.logger.warn(
-            `LLM fail provider=${slot.provider} model=${slot.model} attempt=${attempt} code=${errorCode} retryable=${retryable}`,
+            `LLM fail provider=${slot.provider} model=${slot.model} tier=${tier} attempt=${attempt} code=${errorCode} retryable=${retryable}`,
           );
 
           if (!retryable || attempt >= maxTries) {
@@ -195,11 +227,12 @@ export class LlmGatewayService {
     const trace: LlmCallTrace = {
       agentRole: opts.agentRole,
       purpose: opts.purpose,
+      tier,
       attempts,
-      provider: attempts.at(-1)?.provider ?? this.cfg.defaultProvider,
-      model: attempts.at(-1)?.model ?? this.cfg.defaultModel,
+      provider: attempts.at(-1)?.provider ?? this.cfg.primaryProvider,
+      model: attempts.at(-1)?.model ?? primaryModel,
       usedFallback: attempts.some(
-        (a) => a.provider !== this.cfg.defaultProvider,
+        (a) => a.provider !== this.cfg.primaryProvider,
       ),
     };
 
@@ -211,6 +244,15 @@ export class LlmGatewayService {
   }
 
   private resolveModel(provider: LlmProvider, modelId: string): LanguageModel {
+    if (provider === 'onprem') {
+      // Endpoint OpenAI-compatible (vLLM / TGI / Ollama / LiteLLM)
+      // chạy trong VPC/perimeter của bank — cùng contract với cloud.
+      const onprem = createOpenAI({
+        baseURL: this.cfg.onprem.baseUrl,
+        apiKey: this.cfg.onprem.apiKey ?? 'onprem-no-key',
+      });
+      return onprem(modelId);
+    }
     if (provider === 'openai') {
       const openai = createOpenAI({ apiKey: this.cfg.openaiApiKey });
       return openai(modelId);

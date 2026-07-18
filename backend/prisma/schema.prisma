@@ -55,6 +55,8 @@ model Employee {
   portfolios  CustomerPortfolio[]
   taskRuns    TaskRun[]
   uploadedKnowledgeDocuments KnowledgeDocument[] @relation("KnowledgeUploadedBy")
+  knowledgeIngestJobs        KnowledgeIngestJob[] @relation("KnowledgeIngestCreatedBy")
+  knowledgeChangeReviews     KnowledgeChangeProposal[] @relation("KnowledgeProposalReviewedBy")
 
   @@index([bankCode])
 }
@@ -156,6 +158,51 @@ model DocumentRelation {
 
   @@index([fromDocId])
   @@index([toDocId])
+}
+
+/// role.md Phase R6 — upload/URL → Curator → manager review (không auto-publish)
+model KnowledgeIngestJob {
+  id           String                   @id @default(cuid())
+  bankCode     String                   @default("SHB")
+  domain       String // credit | legal | product | ops
+  sourceType   String // upload | url
+  sourceUri    String?
+  fileName     String?
+  rawText      String                   @db.Text
+  status       String                   @default("queued") // queued | parsing | analyzing | pending_review | applied | rejected | failed
+  errorMessage String?                  @db.Text
+  createdById  String?
+  createdBy    Employee?                @relation("KnowledgeIngestCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  proposal     KnowledgeChangeProposal?
+
+  @@index([bankCode, domain])
+  @@index([status])
+  @@index([createdById])
+}
+
+model KnowledgeChangeProposal {
+  id             String             @id @default(cuid())
+  jobId          String             @unique
+  job            KnowledgeIngestJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  bankCode       String             @default("SHB")
+  domain         String
+  status         String             @default("pending_review") // pending_review | approved | rejected
+  summary        String             @db.Text
+  operationsJson Json
+  confidence     Float?
+  warningsJson   Json?
+  reviewedById   String?
+  reviewedBy     Employee?          @relation("KnowledgeProposalReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt     DateTime?
+  reviewNote     String?            @db.Text
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([bankCode, domain])
+  @@index([status])
+  @@index([reviewedById])
 }
 
 /// role.md Phase R5 — audit log demo tối thiểu (không thay SIEM)

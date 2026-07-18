@@ -10,6 +10,12 @@ import {
   seedAutomationRuns,
   seedAutomations,
 } from "@/lib/mock/seed";
+import {
+  seedKnowledgeDocuments,
+  seedKnowledgeProposals,
+  type KnowledgeUiDocument,
+  type KnowledgeUiProposal,
+} from "@/lib/mock/governance";
 import { createTaskRun, TaskRunSimulator } from "@/lib/mock/simulator";
 import type {
   Automation,
@@ -30,6 +36,18 @@ type MainTab =
   | "knowledge"
   | "mcp"
   | "audit";
+
+type KnowledgeDomain = KnowledgeUiDocument["domain"];
+
+type KnowledgeChatTask = {
+  id: string;
+  userMessage: string;
+  domain: KnowledgeDomain;
+  sourceLabel: string | null;
+  status: "analyzing" | "pending_review" | "approved" | "rejected";
+  proposalId: string | null;
+  documentId: string | null;
+};
 
 const TAB_LAYERS: Record<MainTab, Array<"employee" | "manager" | "it_admin">> = {
   workspace: ["employee", "manager"],
@@ -64,6 +82,10 @@ interface AppState {
   goalDraft: string;
   isSimulating: boolean;
   outOfPortfolioDemo: boolean;
+  knowledgeDocuments: KnowledgeUiDocument[];
+  knowledgeProposals: KnowledgeUiProposal[];
+  knowledgeChatTask: KnowledgeChatTask | null;
+  knowledgeFocus: { domain: KnowledgeDomain; documentId: string | null } | null;
 
   setEmployeeId: (id: string) => void;
   setMode: (mode: OrchestrationMode) => void;
@@ -77,6 +99,14 @@ interface AppState {
   selectHistory: (id: string) => void;
   approveStep: (stepId: string) => void;
   rejectStep: (stepId: string) => void;
+  submitKnowledgeRequest: (input: {
+    message: string;
+    sourceLabel?: string | null;
+  }) => void;
+  approveKnowledgeProposal: (proposalId: string) => void;
+  rejectKnowledgeProposal: (proposalId: string) => void;
+  openKnowledgeSource: (domain: KnowledgeDomain, documentId: string) => void;
+  clearKnowledgeFocus: () => void;
   toggleAutomation: (id: string, enabled: boolean) => void;
   runAutomationNow: (id: string) => void;
 }
@@ -98,6 +128,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   goalDraft: "",
   isSimulating: false,
   outOfPortfolioDemo: false,
+  knowledgeDocuments: structuredClone(seedKnowledgeDocuments),
+  knowledgeProposals: structuredClone(seedKnowledgeProposals),
+  knowledgeChatTask: null,
+  knowledgeFocus: null,
 
   setEmployeeId: (id) =>
     set((state) => {
@@ -240,6 +274,177 @@ export const useAppStore = create<AppState>((set, get) => ({
     simulator?.reject(stepId);
   },
 
+  submitKnowledgeRequest: ({ message, sourceLabel }) => {
+    const state = get();
+    const normalized = message.trim() || "Phân tích và đề xuất cập nhật tài liệu đính kèm";
+    const domain = inferKnowledgeDomain(normalized);
+    const taskId = `ktask-${Math.random().toString(36).slice(2, 8)}`;
+
+    set({
+      goalDraft: "",
+      activeRun: null,
+      isSimulating: false,
+      knowledgeChatTask: {
+        id: taskId,
+        userMessage: normalized,
+        domain,
+        sourceLabel: sourceLabel ?? null,
+        status: "analyzing",
+        proposalId: null,
+        documentId: null,
+      },
+    });
+
+    setTimeout(() => {
+      const current = get();
+      if (current.knowledgeChatTask?.id !== taskId) return;
+      const target = current.knowledgeDocuments.find(
+        (doc) => doc.domain === domain && doc.status === "active",
+      );
+      const now = new Date().toISOString();
+      const proposalId = `prop-chat-${Math.random().toString(36).slice(2, 8)}`;
+      const proposedContent = target
+        ? `${target.content} Cập nhật theo yêu cầu: ${normalized}`
+        : `Nội dung tri thức được chuẩn hóa từ yêu cầu: ${normalized}`;
+      const proposal: KnowledgeUiProposal = {
+        id: proposalId,
+        jobId: `job-chat-${Math.random().toString(36).slice(2, 8)}`,
+        domain,
+        status: "pending_review",
+        summary: target
+          ? `Đã đối chiếu nguồn với «${target.title}». Đề xuất cập nhật phần liên quan trong miền ${domain}.`
+          : `Chưa có tài liệu phù hợp. Đề xuất tạo nguồn tri thức mới trong miền ${domain}.`,
+        confidence: target ? 0.76 : 0.58,
+        warnings: [
+          "Đây là đề xuất của AI; chỉ được đưa vào RAG sau khi Trưởng phòng duyệt.",
+        ],
+        operations: target
+          ? [
+              {
+                id: "op-1",
+                type: "patch_doc",
+                title: target.title,
+                targetDocId: target.id,
+                content: proposedContent,
+                beforeExcerpt: target.content.slice(0, 220),
+                afterExcerpt: proposedContent.slice(0, 220),
+                selected: true,
+              },
+            ]
+          : [
+              {
+                id: "op-1",
+                type: "create_doc",
+                title: sourceLabel || `Tri thức ${domain} mới`,
+                content: proposedContent,
+                selected: true,
+              },
+            ],
+        sourceType: sourceLabel ? "upload" : "url",
+        sourceLabel: sourceLabel || "Yêu cầu từ cuộc trò chuyện",
+        createdAt: now,
+        reviewedAt: null,
+      };
+      set((next) => ({
+        knowledgeProposals: [proposal, ...next.knowledgeProposals],
+        knowledgeChatTask: next.knowledgeChatTask?.id === taskId
+          ? {
+              ...next.knowledgeChatTask,
+              status: "pending_review",
+              proposalId,
+            }
+          : next.knowledgeChatTask,
+      }));
+    }, 900);
+  },
+
+  approveKnowledgeProposal: (proposalId) => {
+    const state = get();
+    const proposal = state.knowledgeProposals.find((p) => p.id === proposalId);
+    if (!proposal || proposal.status !== "pending_review") return;
+    const now = new Date().toISOString();
+    let documents = [...state.knowledgeDocuments];
+    let documentId: string | null = null;
+
+    for (const operation of proposal.operations.filter(
+      (op) => op.selected && op.type !== "noop",
+    )) {
+      if (operation.type === "create_doc" && operation.content) {
+        documentId = `kb-chat-${Math.random().toString(36).slice(2, 8)}`;
+        documents = [
+          {
+            id: documentId,
+            domain: proposal.domain,
+            title: operation.title,
+            content: operation.content,
+            status: "active",
+            updatedAt: now,
+            publishedAt: now,
+          },
+          ...documents,
+        ];
+      } else if (
+        operation.type === "patch_doc" &&
+        operation.targetDocId &&
+        operation.content
+      ) {
+        documentId = operation.targetDocId;
+        documents = documents.map((doc) =>
+          doc.id === operation.targetDocId
+            ? {
+                ...doc,
+                title: operation.title,
+                content: operation.content!,
+                status: "active",
+                updatedAt: now,
+                publishedAt: doc.publishedAt ?? now,
+              }
+            : doc,
+        );
+      }
+    }
+
+    set((next) => ({
+      knowledgeDocuments: documents,
+      knowledgeProposals: next.knowledgeProposals.map((p) =>
+        p.id === proposalId
+          ? { ...p, status: "approved", reviewedAt: now }
+          : p,
+      ),
+      knowledgeChatTask:
+        next.knowledgeChatTask?.proposalId === proposalId
+          ? {
+              ...next.knowledgeChatTask,
+              status: "approved",
+              documentId,
+            }
+          : next.knowledgeChatTask,
+    }));
+  },
+
+  rejectKnowledgeProposal: (proposalId) => {
+    const now = new Date().toISOString();
+    set((state) => ({
+      knowledgeProposals: state.knowledgeProposals.map((proposal) =>
+        proposal.id === proposalId
+          ? { ...proposal, status: "rejected", reviewedAt: now }
+          : proposal,
+      ),
+      knowledgeChatTask:
+        state.knowledgeChatTask?.proposalId === proposalId
+          ? { ...state.knowledgeChatTask, status: "rejected" }
+          : state.knowledgeChatTask,
+    }));
+  },
+
+  openKnowledgeSource: (domain, documentId) =>
+    set({
+      mainTab: "knowledge",
+      knowledgeFocus: { domain, documentId },
+    }),
+
+  clearKnowledgeFocus: () => set({ knowledgeFocus: null }),
+
   toggleAutomation: (id, enabled) => {
     set((s) => ({
       automations: s.automations.map((a) =>
@@ -284,3 +489,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     }, 1200);
   },
 }));
+
+function inferKnowledgeDomain(message: string): KnowledgeDomain {
+  const text = message.toLowerCase();
+  if (/aml|kyc|pháp lý|tuân thủ|thông tư|quy định/.test(text)) return "legal";
+  if (/sản phẩm|lãi suất|biểu phí|tiết kiệm/.test(text)) return "product";
+  if (/vận hành|giải ngân|sla|ticket|quy trình/.test(text)) return "ops";
+  return "credit";
+}

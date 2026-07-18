@@ -23,6 +23,21 @@ export const KB_STATUS_LABEL: Record<string, string> = {
   superseded: "Đã thay thế",
 };
 
+export const KB_PROPOSAL_STATUS_LABEL: Record<string, string> = {
+  pending_review: "Chờ duyệt",
+  approved: "Đã chấp thuận",
+  rejected: "Đã từ chối",
+};
+
+export const KB_OPERATION_LABEL: Record<string, string> = {
+  create_doc: "Tạo tài liệu mới",
+  patch_doc: "Sửa tài liệu đang dùng",
+  supersede_doc: "Thay thế tài liệu cũ",
+  amend_relation: "Gắn quan hệ sửa đổi",
+  replaces_clause: "Thay thế điều khoản",
+  noop: "Không đổi",
+};
+
 export const MCP_CAPABILITY_LABEL: Record<string, string> = {
   los: "LOS (Hệ thống vay)",
   compliance: "Tuân thủ",
@@ -59,6 +74,9 @@ export const AUTOMATION_STATUS_LABEL: Record<string, string> = {
 export const AUDIT_ACTION_LABEL: Record<string, string> = {
   "knowledge.publish": "Xuất bản tri thức",
   "knowledge.create_draft": "Tạo bản nháp tri thức",
+  "knowledge.ingest.create": "Tạo job nạp tri thức",
+  "knowledge.proposal.approve": "Chấp thuận đề xuất tri thức",
+  "knowledge.proposal.reject": "Từ chối đề xuất tri thức",
   "approval.approve": "Duyệt yêu cầu",
   "approval.reject": "Từ chối yêu cầu",
   "task_run.create": "Tạo tác vụ",

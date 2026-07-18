@@ -690,7 +690,7 @@ Platform giữ **Planner + 4 Specialist + Agent Catalog + schema + tool allowlis
 |---|---|---|
 | **App / Planner** | Chọn Specialist và sinh DAG cho từng yêu cầu trong catalog + validation đã khóa | Không tự tạo role/tool ngoài catalog |
 | **IT / Platform bank** | MCP nối LOS/core/compliance nào, trạng thái connector, model gateway và policy hạ tầng | Không ngồi chọn Credit/Legal cho từng câu chat; không sửa tài liệu nghiệp vụ |
-| **Trưởng phòng / Knowledge Owner** | Tạo draft, version, publish/supersede tài liệu RAG theo domain | Không sửa Agent Catalog, system prompt, Zod schema hoặc MCP allowlist trong demo |
+| **Trưởng phòng / Knowledge Owner** | Dùng chat để hỏi/upload/URL, xem diff và duyệt đề xuất Curator; tab Tri thức chỉ mở xem nguồn theo domain | Không sửa trực tiếp ngoài chat; không sửa Agent Catalog/system prompt/MCP allowlist; không auto-publish |
 | **Nhân viên** | Gửi yêu cầu và thực thi trên phạm vi dữ liệu được giao | Không cấu hình agent, tool hoặc publish KnowledgeDocument |
 
 ```text
@@ -708,7 +708,7 @@ App/Planner tự điều phối Specialist
 │  MCP connector enable/disable · suite status · audit read   │
 ├─────────────────────────────────────────────────────────────┤
 │  L2 — Manager / Knowledge owner                             │
-│  Knowledge draft→publish · Approval HITL · audit read       │
+│  Chat→Curator proposal→duyệt→Xem nguồn · Knowledge read-only│
 ├─────────────────────────────────────────────────────────────┤
 │  L3 — Employee / Operator                                   │
 │  Chat TaskRun · Compare · portfolio scope                   │
@@ -803,6 +803,31 @@ retrieve(domain, query):
 **Không làm trong 48h:** Neo4j/graph database riêng, BM25 engine độc lập (Elasticsearch/OpenSearch), model NLP chuyên phát hiện mâu thuẫn pháp lý. Chi phí tích hợp cao, rủi ro lớn hơn giá trị tăng thêm cho demo.
 
 **Câu pitch dùng được:** *"Hệ thống hiểu văn bản pháp lý bị sửa đổi nhiều lần — không trích dẫn điều khoản đã hết hiệu lực — bằng cách kết hợp tìm kiếm ngữ nghĩa, từ khóa và quan hệ giữa các văn bản, không cần một hệ thống Graph AI riêng biệt."*
+
+### 4.4 AI-first Knowledge — Chat → Curator → Duyệt → Xem nguồn ✅
+
+Mọi thao tác của Trưởng phòng diễn ra trong **tab Chat**: hỏi nguồn hiện tại, đính file / URL, yêu cầu thêm/sửa/xóa phần tri thức. **Knowledge Curator** đối chiếu KB, trả artifact có diff và nút hành động phù hợp. Sau khi **Duyệt**, nút đổi thành **Xem nguồn**; bấm vào sẽ chuyển tới tab Tri thức và mở đúng expert + tài liệu. Tab Tri thức là thư viện read-only, không chứa form quản trị thủ công.
+
+```text
+Chat + Upload|URL → KnowledgeIngestJob
+  → Curator tools: parse_source · kb_search · list_active_documents
+                 · get_document · diff_sections · propose_operations
+                 · flag_warnings · attach_relation
+  → KnowledgeChangeProposal (pending_review)
+  → chat artifact + Manager approve|reject
+  → (approve) apply + ingest + AuditEvent
+  → View source → Knowledge tab deep-link
+```
+
+| Operation | Ý nghĩa |
+|---|---|
+| `create_doc` | Tài liệu mới |
+| `patch_doc` | Sửa nội dung bản `active` (kèm before/after) |
+| `supersede_doc` | Bản cũ → `superseded`, tạo bản mới |
+| `amend_relation` / `replaces_clause` | Ghi `DocumentRelation` |
+| `noop` | Trùng hoàn toàn — không đổi index |
+
+**Không** auto-publish theo confidence; duyệt tri thức **không** trộn với Approval MCP side-effect của hồ sơ vay. Crawl lịch / allowlist host = giai đoạn sau (IT).
 
 ---
 
@@ -958,14 +983,56 @@ User/nhân viên: không chọn model, không dán key
 **Thuyết trình giám khảo:**  
 > Chúng tôi chọn OpenAI cho độ tin cậy agent (plan có schema + tool). Nghiệp vụ ngân hàng không nằm trong trọng số model mà ở RAG/MCP/approval. Gateway đã sẵn sàng failover sang Gemini và sau này sang model nội bộ SHB.
 
+#### F. Tier routing (purpose → small/mid/large) + provider on-prem ✅
+
+Trả lời trực tiếp lo ngại của ngân hàng (“model dùng dữ liệu nội bộ để train / thất thoát dữ liệu khách hàng”) và bài toán chi phí: **không phải task nào cũng cần model lớn**, và **model không bắt buộc phải là cloud công cộng**. Cả hai đều xử lý ở gateway — caller không đổi một dòng code.
+
+**1. Purpose → tier — gateway tự chọn cỡ model:**
+
+Mỗi lệnh gọi LLM trong code đã khai báo `purpose` (dùng cho trace). Gateway map purpose đó sang tier:
+
+| Tier | Purpose | Vì sao |
+|---|---|---|
+| **large** | `task_plan`, `synthesize`, `conflict_resolution` | Lập plan đa bước, tổng hợp đa chuyên gia, suy luận xung đột quy định — cần reasoning mạnh |
+| **mid** (mặc định) | `specialist`, `knowledge_ingest_propose`, `automation_transform` | Chạy 1 domain với RAG + tool — model vừa là đủ |
+| **small** | `extract`, `classify`, `chunk_summary`, `worker_aggregate`, `smoke` | Bóc field, phân loại, gom JSON — model nhỏ rẻ và nhanh hơn 10–20× |
+
+Purpose lạ rơi về **mid** (không mặc định model lớn). Cấu hình qua env, tier nào không set thì dùng `DEFAULT_LLM_MODEL` — tức **hành vi demo 1-model giữ nguyên** nếu không bật gì thêm:
+
+```text
+LLM_MODEL_SMALL=gpt-4o-mini      # optional
+LLM_MODEL_MID=gpt-4o             # optional
+LLM_MODEL_LARGE=gpt-4.1          # optional
+```
+
+Trace mỗi call giờ có thêm `tier` — Dashboard/audit thấy rõ call nào chạy model nào, vì purpose gì.
+
+**2. Provider on-prem — cùng contract, đổi bằng env:**
+
+Gateway thêm provider `onprem`: bất kỳ endpoint **OpenAI-compatible** (vLLM / TGI / Ollama / LiteLLM) chạy trong VPC/perimeter của bank. Đây chính là tầng 3 trong bảng §5.4D — giờ đã có sẵn trong code, không phải lời hứa:
+
+```text
+LLM_PRIMARY_PROVIDER=onprem
+ONPREM_LLM_BASE_URL=http://vllm.internal.bank:8000/v1
+ONPREM_LLM_API_KEY=              # nếu endpoint yêu cầu
+LLM_MODEL_SMALL=qwen2.5-7b-instruct
+LLM_MODEL_MID=qwen2.5-32b-instruct
+LLM_MODEL_LARGE=llama-3.3-70b-instruct
+```
+
+Không sửa Planner/Specialist/Curator — họ vẫn gọi `generateText/generateObject` với `purpose`. `GET /api/llm/status` trả về primary provider, bảng tier, và map purpose→tier để kiểm chứng cấu hình.
+
+**Nguyên tắc không đổi (§5.4B):** nhân viên/agent vẫn không chọn model. Tier routing là quyết định của **gateway** dựa trên purpose; đổi model = đổi env + deploy.
+
 #### Kết luận chốt
 
 ```text
-Cần:     LLM gateway mỏng (retry + fallback) + trace lỗi
-Model:   MỘT model mặc định (OpenAI) cho mọi agent — env platform quản
+Cần:     LLM gateway mỏng (retry + fallback) + trace lỗi + tier routing theo purpose
+Model:   Demo — MỘT model mặc định (OpenAI); bật tier small/mid/large qua env khi cần cost/latency
 Fallback: Gemini khi primary lỗi — cơ chế hệ thống, không phải lựa chọn user
+On-prem: LLM_PRIMARY_PROVIDER=onprem → endpoint OpenAI-compatible trong VPC bank (vLLM/TGI) — không sửa code agent
 Không:   per-agent model, user đổi model, user dán API key / BYOK
-Tầm nhìn: model/agent do tổ chức kiểm soát; fine-tune / private model sau — không train-from-scratch trong thi
+Tầm nhìn: model/agent do tổ chức kiểm soát; fine-tune / private model qua cùng gateway — không train-from-scratch trong thi
 ```
 
 ---
