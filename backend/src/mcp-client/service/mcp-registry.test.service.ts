@@ -1,10 +1,13 @@
 import { McpRegistryService } from './mcp-registry.service';
+import type { AuditService } from '../../audit/service/audit.service';
 
 describe('McpRegistryService', () => {
   let service: McpRegistryService;
+  const audit = { recordSafe: jest.fn() } as unknown as AuditService;
 
   beforeEach(() => {
-    service = new McpRegistryService();
+    jest.clearAllMocks();
+    service = new McpRegistryService(audit);
   });
 
   it('lists SHB connectors by default', () => {

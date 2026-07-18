@@ -157,3 +157,18 @@ model DocumentRelation {
   @@index([fromDocId])
   @@index([toDocId])
 }
+
+/// role.md Phase R5 — audit log demo tối thiểu (không thay SIEM)
+model AuditEvent {
+  id         String   @id @default(cuid())
+  bankCode   String   @default("SHB")
+  actorId    String
+  action     String // task_run.create | approval.approve | knowledge.publish | mcp.connector.set_enabled ...
+  resource   String // TaskRun:id | TaskStep:id | KnowledgeDocument:id | McpConnector:capability
+  detailJson Json?
+  createdAt  DateTime @default(now())
+
+  @@index([bankCode, createdAt])
+  @@index([actorId])
+  @@index([action])
+}

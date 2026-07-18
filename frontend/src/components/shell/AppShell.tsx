@@ -1,5 +1,6 @@
 "use client";
 
+import { AuditPanel } from "@/components/audit/AuditPanel";
 import { AutomationsPanel } from "@/components/automations/AutomationsPanel";
 import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
 import { ComparePanel } from "@/components/compare/ComparePanel";
@@ -30,6 +31,7 @@ export function AppShell() {
               {mainTab === "compare" ? <ComparePanel /> : null}
               {mainTab === "knowledge" ? <KnowledgePanel /> : null}
               {mainTab === "mcp" ? <McpSuitePanel /> : null}
+              {mainTab === "audit" ? <AuditPanel /> : null}
             </div>
           )}
         </SidebarInset>

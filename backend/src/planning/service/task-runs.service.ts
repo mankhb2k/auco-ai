@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { AuditService } from '../../audit/service/audit.service';
 import { PrismaService } from '../../prisma/service/prisma.service';
 import { OrchestratorService } from './orchestrator.service';
 import { PlannerService } from './planner.service';
@@ -29,6 +30,7 @@ export class TaskRunsService {
     private readonly prisma: PrismaService,
     private readonly planner: PlannerService,
     private readonly orchestrator: OrchestratorService,
+    private readonly audit: AuditService,
   ) {}
 
   async create(dto: CreateTaskRunDto) {
@@ -109,6 +111,21 @@ export class TaskRunsService {
       },
       include: { steps: true },
     });
+
+    if (employeeId) {
+      this.audit.recordSafe({
+        actorId: employeeId,
+        bankCode,
+        action: 'task_run.create',
+        resource: `TaskRun:${taskRun.id}`,
+        detail: {
+          mode,
+          scenario: planned.scenario,
+          planSource: planned.source,
+          async: dto.async === true,
+        },
+      });
+    }
 
     if (dto.async) {
       void this.orchestrator.runTaskRun(taskRun.id);

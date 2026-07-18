@@ -3,6 +3,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { KnowledgeService } from './knowledge.service';
+import type { AuditService } from '../../audit/service/audit.service';
 import type { PrismaService } from '../../prisma/service/prisma.service';
 import type { IngestService } from '../../rag/service/ingest.service';
 
@@ -18,6 +19,7 @@ describe('KnowledgeService', () => {
   const ingest = {
     ingestAll: jest.fn(),
   } as unknown as IngestService;
+  const audit = { recordSafe: jest.fn() } as unknown as AuditService;
 
   const actor = { id: 'emp-mgr-d', bankCode: 'SHB' };
   const draft = {
@@ -40,7 +42,7 @@ describe('KnowledgeService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new KnowledgeService(prisma, ingest);
+    service = new KnowledgeService(prisma, ingest, audit);
   });
 
   it('lists documents filtered by bank, domain and status', async () => {
@@ -90,8 +92,8 @@ describe('KnowledgeService', () => {
     expect(result).toBe(draft);
   });
 
-  it('rejects draft with invalid domain', () => {
-    expect(() =>
+  it('rejects draft with invalid domain', async () => {
+    await expect(
       service.createDraft(
         {
           title: 'Doc',
@@ -100,7 +102,7 @@ describe('KnowledgeService', () => {
         },
         actor,
       ),
-    ).toThrow(BadRequestException);
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('updates draft fields', async () => {

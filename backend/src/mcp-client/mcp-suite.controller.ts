@@ -55,6 +55,7 @@ export class McpSuiteController {
       req.actor!.bankCode,
       capability,
       body.enabled,
+      req.actor!.id,
     );
   }
 }

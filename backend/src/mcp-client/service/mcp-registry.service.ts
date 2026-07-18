@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../../audit/service/audit.service';
 import {
   findConnector,
   SHB_CONNECTORS,
@@ -10,6 +11,8 @@ import {
 export class McpRegistryService {
   /** Phase R4 demo override; production moves this state to Redis/config store. */
   private readonly enabledOverrides = new Map<string, boolean>();
+
+  constructor(private readonly audit: AuditService) {}
 
   listConnectors(bankCode = 'SHB'): BankMcpConnector[] {
     return SHB_CONNECTORS.filter((c) => c.bankCode === bankCode);
@@ -38,10 +41,11 @@ export class McpRegistryService {
     bankCode: string,
     capability: McpCapability,
     enabled: boolean,
+    actorId?: string,
   ) {
     const connector = this.resolve(bankCode, capability);
     this.enabledOverrides.set(this.key(bankCode, capability), enabled);
-    return {
+    const result = {
       bankCode,
       capability,
       serverName: connector.serverName,
@@ -49,6 +53,19 @@ export class McpRegistryService {
       status: enabled ? ('enabled' as const) : ('disabled' as const),
       persistence: 'in_memory_demo' as const,
     };
+    if (actorId) {
+      this.audit.recordSafe({
+        actorId,
+        bankCode,
+        action: 'mcp.connector.set_enabled',
+        resource: `McpConnector:${capability}`,
+        detail: {
+          enabled,
+          serverName: connector.serverName,
+        },
+      });
+    }
+    return result;
   }
 
   suiteStatus(bankCode = 'SHB') {

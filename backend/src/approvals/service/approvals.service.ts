@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { AgentRole } from '../../agents/agent-catalog';
+import { AuditService } from '../../audit/service/audit.service';
 import { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import { OrchestratorService } from '../../planning/service/orchestrator.service';
 import { PrismaService } from '../../prisma/service/prisma.service';
@@ -25,6 +26,7 @@ export class ApprovalsService {
     private readonly mcp: McpGatewayService,
     private readonly orchestrator: OrchestratorService,
     private readonly realtime: RealtimeService,
+    private readonly audit: AuditService,
   ) {}
 
   async listPending(taskRunId?: string) {
@@ -116,6 +118,18 @@ export class ApprovalsService {
       approved: true,
     });
 
+    this.audit.recordSafe({
+      actorId: actorId ?? 'demo-reviewer',
+      bankCode: step.taskRun.bankCode,
+      action: 'approval.approve',
+      resource: `TaskStep:${stepId}`,
+      detail: {
+        taskRunId: step.taskRunId,
+        tool: pending.tool,
+        reason: pending.reason,
+      },
+    });
+
     await this.orchestrator.resumeTaskRun(step.taskRunId);
     return this.prisma.taskStep.findUnique({
       where: { id: stepId },
@@ -176,6 +190,18 @@ export class ApprovalsService {
       rejected: true,
     });
 
+    this.audit.recordSafe({
+      actorId: opts?.actorId ?? 'demo-reviewer',
+      bankCode: step.taskRun.bankCode,
+      action: 'approval.reject',
+      resource: `TaskStep:${stepId}`,
+      detail: {
+        taskRunId: step.taskRunId,
+        tool: pending.tool,
+        reason,
+      },
+    });
+
     return this.prisma.taskStep.findUnique({
       where: { id: stepId },
       include: { taskRun: true },
@@ -191,7 +217,7 @@ export class ApprovalsService {
       taskRunId: string;
       toolCalls: unknown;
       output: unknown;
-      taskRun: { id: string; planJson: unknown };
+      taskRun: { id: string; bankCode?: string; planJson: unknown };
     },
     pending: PendingApproval,
     actorId?: string,
@@ -256,6 +282,20 @@ export class ApprovalsService {
       status: 'pending',
       portfolioGranted: true,
       customerNo,
+    });
+
+    this.audit.recordSafe({
+      actorId: actorId ?? 'demo-reviewer',
+      bankCode: step.taskRun.bankCode ?? 'SHB',
+      action: 'approval.approve',
+      resource: `TaskStep:${step.id}`,
+      detail: {
+        taskRunId: step.taskRunId,
+        tool: pending.tool,
+        reason: pending.reason,
+        customerNo,
+        portfolioGranted: true,
+      },
     });
 
     await this.orchestrator.resumeTaskRun(step.taskRunId);

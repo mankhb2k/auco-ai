@@ -3,6 +3,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ApprovalsService } from './approvals.service';
+import type { AuditService } from '../../audit/service/audit.service';
 import type { McpGatewayService } from '../../mcp-client/service/mcp-gateway.service';
 import type { OrchestratorService } from '../../planning/service/orchestrator.service';
 import type { PrismaService } from '../../prisma/service/prisma.service';
@@ -25,12 +26,13 @@ describe('ApprovalsService', () => {
     emitStepUpdated: jest.fn(),
     emitTaskUpdated: jest.fn(),
   } as unknown as RealtimeService;
+  const audit = { recordSafe: jest.fn() } as unknown as AuditService;
 
   let service: ApprovalsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new ApprovalsService(prisma, mcp, orchestrator, realtime);
+    service = new ApprovalsService(prisma, mcp, orchestrator, realtime, audit);
   });
 
   it('listPending queries waiting_approval steps', async () => {

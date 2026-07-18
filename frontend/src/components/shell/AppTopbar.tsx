@@ -48,7 +48,9 @@ export function AppTopbar() {
             ? "Knowledge Management"
             : mainTab === "mcp"
               ? "MCP Connector Management"
-              : "So sánh Single vs Multi";
+              : mainTab === "audit"
+                ? "Audit Log"
+                : "So sánh Single vs Multi";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -74,7 +76,7 @@ export function AppTopbar() {
         ) : null}
       </div>
 
-      {/* role.md §2 — banner vai đang dùng (3 lớp quyền demo) */}
+      {/* role.md R5 — banner + switcher luôn hiện, không phụ thuộc tab */}
       <Badge variant="secondary" className="hidden items-center gap-1 md:inline-flex">
         <UserRound className="size-3" />
         <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
@@ -82,6 +84,24 @@ export function AppTopbar() {
           · {ACCESS_LAYER_LABEL[currentEmployee.accessLayer]}
         </span>
       </Badge>
+
+      <Select value={employeeId} onValueChange={setEmployeeId}>
+        <SelectTrigger className="h-8 w-[9.5rem] sm:w-[13rem]">
+          <SelectValue placeholder="Đổi vai demo" />
+        </SelectTrigger>
+        <SelectContent>
+          {employees.map((e) => (
+            <SelectItem key={e.id} value={e.id}>
+              <span className="flex flex-col text-left">
+                <span>{e.displayName}</span>
+                <span className="text-muted-foreground text-xs">
+                  {ACCESS_LAYER_LABEL[e.accessLayer]}
+                </span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {mainTab === "workspace" ? (
         <>
@@ -92,7 +112,7 @@ export function AppTopbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
-              <DropdownMenuLabel>Cài đặt phiên</DropdownMenuLabel>
+              <DropdownMenuLabel>Cài đặt phiên Workspace</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="space-y-3 p-2">
                 <div className="flex items-center justify-between gap-3">
@@ -109,23 +129,6 @@ export function AppTopbar() {
                     onCheckedChange={setOutOfPortfolioDemo}
                   />
                 </div>
-                <Select value={employeeId} onValueChange={setEmployeeId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Nhân viên" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        <span className="flex flex-col text-left">
-                          <span>{e.displayName}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {ACCESS_LAYER_LABEL[e.accessLayer]}
-                          </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

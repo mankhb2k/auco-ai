@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import type { AuditService } from '../../audit/service/audit.service';
 import { McpGatewayService } from './mcp-gateway.service';
 import { McpRegistryService } from './mcp-registry.service';
 
@@ -6,7 +7,9 @@ describe('McpGatewayService', () => {
   let registry: McpRegistryService;
 
   beforeEach(() => {
-    registry = new McpRegistryService();
+    registry = new McpRegistryService({
+      recordSafe: jest.fn(),
+    } as unknown as AuditService);
   });
 
   function createService(mcpEnabled = 'true') {

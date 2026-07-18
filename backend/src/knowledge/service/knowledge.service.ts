@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { AuditService } from '../../audit/service/audit.service';
 import { PrismaService } from '../../prisma/service/prisma.service';
 import { isRagDomain, type RagDomain } from '../../rag/indexes';
 import { IngestService } from '../../rag/service/ingest.service';
@@ -23,6 +24,7 @@ export class KnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ingest: IngestService,
+    private readonly audit: AuditService,
   ) {}
 
   list(opts?: { bankCode?: string; domain?: string; status?: string }) {
@@ -66,12 +68,12 @@ export class KnowledgeService {
     return document;
   }
 
-  createDraft(
+  async createDraft(
     dto: CreateKnowledgeDraftDto,
     actor: { id: string; bankCode: string },
   ) {
     const data = this.validateDraft(dto, true);
-    return this.prisma.knowledgeDocument.create({
+    const document = await this.prisma.knowledgeDocument.create({
       data: {
         title: data.title!,
         domain: data.domain!,
@@ -85,6 +87,14 @@ export class KnowledgeService {
         publishedAt: null,
       },
     });
+    this.audit.recordSafe({
+      actorId: actor.id,
+      bankCode: actor.bankCode,
+      action: 'knowledge.create_draft',
+      resource: `KnowledgeDocument:${document.id}`,
+      detail: { domain: document.domain, title: document.title },
+    });
+    return document;
   }
 
   async updateDraft(
@@ -101,7 +111,11 @@ export class KnowledgeService {
     });
   }
 
-  async publish(id: string, bankCode: string) {
+  async publish(
+    id: string,
+    bankCode: string,
+    actorId?: string,
+  ) {
     const draft = await this.getEditableDraft(id, bankCode);
     const publishedAt = new Date();
 
@@ -116,6 +130,13 @@ export class KnowledgeService {
 
     try {
       const ingest = await this.ingest.ingestAll({ bankCode });
+      this.audit.recordSafe({
+        actorId: actorId ?? draft.uploadedById ?? 'unknown',
+        bankCode,
+        action: 'knowledge.publish',
+        resource: `KnowledgeDocument:${document.id}`,
+        detail: { domain: document.domain, title: document.title },
+      });
       return { document, ingest };
     } catch (error) {
       // Avoid a document appearing active while the live index was not rebuilt.

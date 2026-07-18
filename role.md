@@ -263,9 +263,9 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 
 ### Phase R5 — Polish (P2)
 
-- [ ] Nav ẩn theo layer  
-- [ ] Audit log đơn giản: `{ actorId, action, resource, at }` JSON hoặc bảng `AuditEvent`  
-- [ ] README / slide: sơ đồ 3 lớp  
+- [x] Nav ẩn theo layer  
+- [x] Audit log đơn giản: `{ actorId, action, resource, at }` JSON hoặc bảng `AuditEvent`  
+- [x] README / slide: sơ đồ 3 lớp  
 
 ---
 
@@ -295,12 +295,12 @@ FE: `RoleSwitcher` + route/nav `visibleIfLayer`.
 
 ## 11. Tiêu chí “xong demo”
 
-- [ ] Đổi 3 vai trên UI **không** reload mất context banner  
-- [ ] Employee tạo task được; IT/Manager **bị 403** khi POST task-runs  
-- [ ] Chỉ Manager approve/reject  
-- [ ] Manager publish 1 doc → search/citation phản ánh (sau ingest)  
-- [ ] IT xem MCP suite; (P1) tắt capability thấy tool fail rõ  
-- [ ] Không có màn login/password  
+- [x] Đổi 3 vai trên UI **không** reload mất context banner  
+- [x] Employee tạo task được; IT/Manager **bị 403** khi POST task-runs  
+- [x] Chỉ Manager approve/reject  
+- [x] Manager publish 1 doc → search/citation phản ánh (sau ingest)  
+- [x] IT xem MCP suite; (P1) tắt capability thấy tool fail rõ  
+- [x] Không có màn login/password  
 
 ---
 

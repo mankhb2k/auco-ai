@@ -65,6 +65,6 @@ export class KnowledgeController {
   @Post(':id/publish')
   @RequireLayer('manager')
   publish(@Req() req: RequestWithActor, @Param('id') id: string) {
-    return this.knowledge.publish(id, req.actor!.bankCode);
+    return this.knowledge.publish(id, req.actor!.bankCode, req.actor!.id);
   }
 }

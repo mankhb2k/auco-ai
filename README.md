@@ -700,6 +700,26 @@ Nhân viên gửi mục tiêu
 App/Planner tự điều phối Specialist
 ```
 
+#### Slide pitch — 3 lớp quyền (demo)
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  L1 — IT / Platform                                         │
+│  MCP connector enable/disable · suite status · audit read   │
+├─────────────────────────────────────────────────────────────┤
+│  L2 — Manager / Knowledge owner                             │
+│  Knowledge draft→publish · Approval HITL · audit read       │
+├─────────────────────────────────────────────────────────────┤
+│  L3 — Employee / Operator                                   │
+│  Chat TaskRun · Compare · portfolio scope                   │
+└─────────────────────────────────────────────────────────────┘
+         ▲                        ▲
+         │ X-Demo-Employee-Id     │ AuditEvent
+         │ (không login)          │ actorId · action · resource · at
+```
+
+Demo UI: **một Dashboard + role switcher** — nav ẩn theo `accessLayer`; không JWT/SSO. Chi tiết triển khai: `role.md`.
+
 “Chuẩn hóa agent” trong UI quản lý tài liệu phải được hiểu là **chuẩn hóa tri thức mà agent truy xuất**, không phải train model hay thay đổi logic điều phối. RAG chỉ ảnh hưởng câu trả lời của Specialist sau khi Planner đã chọn domain; nó không thay Agent Catalog và không được dùng để invent role mới.
 
 Phòng ban ở từng ngân hàng có thể có tên hoặc cách chia khác nhau (ví dụ Retail Credit / Corporate Credit, Legal gộp Compliance), nhưng được **map vào capability core** trước. Chỉ khi xuất hiện một capability thực sự mới mới cân nhắc Agent Studio — roadmap có review/publish + policy validation, không phải cấu hình sống của Trưởng phòng trong demo.

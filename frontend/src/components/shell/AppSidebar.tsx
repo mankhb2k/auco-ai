@@ -15,9 +15,12 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
+import type { Employee } from "@/lib/types/domain";
 import { useAppStore } from "@/stores/app.store";
 import {
   BookOpenCheck,
+  ClipboardList,
   GitCompareArrows,
   History,
   LayoutDashboard,
@@ -26,44 +29,71 @@ import {
   TimerReset,
 } from "lucide-react";
 
-const NAV = [
+type AccessLayer = Employee["accessLayer"];
+type MainTab =
+  | "workspace"
+  | "automations"
+  | "history"
+  | "compare"
+  | "knowledge"
+  | "mcp"
+  | "audit";
+
+const NAV: Array<{
+  id: MainTab;
+  title: string;
+  description: string;
+  icon: typeof LayoutDashboard;
+  layers: AccessLayer[];
+}> = [
   {
-    id: "workspace" as const,
+    id: "workspace",
     title: "Workspace",
     description: "Goal · DAG · Approval",
     icon: LayoutDashboard,
+    layers: ["employee", "manager"],
   },
   {
-    id: "automations" as const,
+    id: "automations",
     title: "Automations",
     description: "Lịch & chạy thử",
     icon: TimerReset,
+    layers: ["employee", "manager"],
   },
   {
-    id: "history" as const,
+    id: "history",
     title: "Lịch sử",
     description: "TaskRun đã chạy",
     icon: History,
+    layers: ["employee", "manager"],
   },
   {
-    id: "compare" as const,
+    id: "compare",
     title: "So sánh",
     description: "Single vs Multi",
     icon: GitCompareArrows,
+    layers: ["employee"],
   },
   {
-    id: "knowledge" as const,
+    id: "knowledge",
     title: "Knowledge",
     description: "Draft · Publish · RAG",
     icon: BookOpenCheck,
-    managerOnly: true,
+    layers: ["manager"],
   },
   {
-    id: "mcp" as const,
+    id: "mcp",
     title: "MCP Suite",
     description: "Connector · Runtime policy",
     icon: ServerCog,
-    itOnly: true,
+    layers: ["it_admin"],
+  },
+  {
+    id: "audit",
+    title: "Audit",
+    description: "Ai · hành động · tài nguyên",
+    icon: ClipboardList,
+    layers: ["manager", "it_admin"],
   },
 ];
 
@@ -74,11 +104,8 @@ export function AppSidebar() {
   const employees = useAppStore((s) => s.employees);
   const employeeId = useAppStore((s) => s.employeeId);
   const employee = employees.find((e) => e.id === employeeId);
-  const visibleNav = NAV.filter(
-    (item) =>
-      (!("managerOnly" in item) || employee?.accessLayer === "manager") &&
-      (!("itOnly" in item) || employee?.accessLayer === "it_admin"),
-  );
+  const layer = employee?.accessLayer ?? "employee";
+  const visibleNav = NAV.filter((item) => item.layers.includes(layer));
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -92,7 +119,7 @@ export function AppSidebar() {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Digital Experts</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  SHB · Planner
+                  SHB · {ACCESS_LAYER_LABEL[layer]}
                 </span>
               </div>
             </SidebarMenuButton>
@@ -102,14 +129,14 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Điều hướng</SidebarGroupLabel>
+          <SidebarGroupLabel>Điều hướng theo lớp quyền</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleNav.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={mainTab === item.id}
-                    tooltip={item.title}
+                    tooltip={`${item.title} — ${item.description}`}
                     onClick={() => setMainTab(item.id)}
                   >
                     <item.icon />
@@ -134,6 +161,9 @@ export function AppSidebar() {
                 </Badge>
               </div>
               <p className="leading-relaxed">{mcp.suite}</p>
+              <p className="leading-relaxed">
+                Employee: Chat · Manager: Knowledge · IT: MCP
+              </p>
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -145,7 +175,10 @@ export function AppSidebar() {
           <p className="text-muted-foreground mt-1 line-clamp-2">
             {employee?.displayName ?? "—"}
           </p>
-          <p className="text-muted-foreground mt-0.5">{employee?.branchCode}</p>
+          <p className="text-muted-foreground mt-0.5">
+            {ACCESS_LAYER_LABEL[layer]}
+            {employee?.branchCode ? ` · ${employee.branchCode}` : ""}
+          </p>
         </div>
       </SidebarFooter>
       <SidebarRail />

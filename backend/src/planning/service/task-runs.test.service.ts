@@ -1,4 +1,5 @@
 import { TaskRunsService } from './task-runs.service';
+import type { AuditService } from '../../audit/service/audit.service';
 import type { OrchestratorService } from './orchestrator.service';
 import type { PlannerService } from './planner.service';
 import type { PrismaService } from '../../prisma/service/prisma.service';
@@ -15,12 +16,13 @@ describe('TaskRunsService', () => {
   const orchestrator = {
     runTaskRun: jest.fn(),
   } as unknown as OrchestratorService;
+  const audit = { recordSafe: jest.fn() } as unknown as AuditService;
 
   let service: TaskRunsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new TaskRunsService(prisma, planner, orchestrator);
+    service = new TaskRunsService(prisma, planner, orchestrator, audit);
   });
 
   it('rejects empty goal', async () => {

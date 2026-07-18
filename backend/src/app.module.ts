@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ActorsModule } from './actors/actors.module';
 import { ApprovalsModule } from './approvals/approvals.module';
+import { AuditModule } from './audit/audit.module';
 import { CommonModule } from './common/common.module';
 import { DemoActorMiddleware } from './common/demo-actor.middleware';
 import { AutomationsModule } from './automations/automations.module';
@@ -25,6 +26,7 @@ import { RedisModule } from './redis/redis.module';
     CommonModule,
     PrismaModule,
     RedisModule,
+    AuditModule,
     HealthModule,
     LlmModule,
     McpClientModule,
