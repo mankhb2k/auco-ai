@@ -4,11 +4,6 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -27,6 +22,7 @@ import { SCENARIO_PRESETS } from "@/lib/mock/scenarios";
 import { formatTokens, formatUsd } from "@/lib/mock/usage";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app.store";
+import { AgentCoordinationProgress } from "@/components/chat/AgentCoordinationProgress";
 import {
   ArrowUp,
   Brain,
@@ -38,77 +34,7 @@ import {
   X,
 } from "lucide-react";
 
-function ThinkingBlock() {
-  const activeRun = useAppStore((s) => s.activeRun);
-  const isSimulating = useAppStore((s) => s.isSimulating);
-  if (!activeRun) return null;
-
-  const openDefault =
-    (isSimulating || activeRun.status === "running") &&
-    !activeRun.steps.some((s) => s.status === "waiting_approval");
-
-  return (
-    <Collapsible defaultOpen={openDefault} className="group/think w-full">
-      <CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-left text-sm transition-colors">
-        <Brain className="size-3.5 shrink-0" />
-        <span className="font-medium">
-          {isSimulating || activeRun.status === "running"
-            ? "Đang suy nghĩ & điều phối…"
-            : `Đã xử lý · ${activeRun.steps.filter((s) => s.status === "done").length}/${activeRun.steps.length} bước`}
-        </span>
-        {(isSimulating || activeRun.status === "running") && (
-          <Loader2 className="size-3.5 animate-spin" />
-        )}
-        <ChevronDown className="ml-auto size-4 transition-transform group-data-[state=open]/think:rotate-180" />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-3 space-y-2 border-l border-border pl-3">
-        <p className="text-muted-foreground text-xs">{activeRun.planJson.summary}</p>
-        {activeRun.steps.map((step) => (
-          <div key={step.id} className="space-y-1 py-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <Badge
-                variant={
-                  step.status === "done"
-                    ? "default"
-                    : step.status === "waiting_approval"
-                      ? "outline"
-                      : "secondary"
-                }
-                className="text-[10px]"
-              >
-                {statusLabel(step.status)}
-              </Badge>
-              <span className="font-medium">{AGENT_LABEL[step.agentRole]}</span>
-              <span className="text-muted-foreground">{step.label}</span>
-            </div>
-            {step.workers && step.workers.length > 0 ? (
-              <ul className="text-muted-foreground space-y-0.5 pl-2 text-[11px]">
-                {step.workers.map((w) => (
-                  <li key={w.id}>
-                    · {w.label}
-                    {w.status === "done" ? " ✓" : w.status === "running" ? " …" : ""}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {step.toolCalls.length > 0 ? (
-              <p className="text-muted-foreground text-[11px]">
-                Tools: {step.toolCalls.map((t) => t.tool).join(", ")}
-              </p>
-            ) : null}
-          </div>
-        ))}
-        {activeRun.usage.totalTokens > 0 ? (
-          <p className="text-muted-foreground pt-1 text-[11px]">
-            {formatTokens(activeRun.usage.totalTokens)} tokens ·{" "}
-            {formatUsd(activeRun.usage.costUsd)} ·{" "}
-            {(activeRun.usage.wallClockMs / 1000).toFixed(1)}s
-          </p>
-        ) : null}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
+// ThinkingBlock replaced by AgentCoordinationProgress
 
 function renderAssessment(text: string) {
   return text.split("\n").map((line, i) => {
@@ -305,6 +231,7 @@ function EmptyHero() {
 
 function Conversation() {
   const activeRun = useAppStore((s) => s.activeRun);
+  const isSimulating = useAppStore((s) => s.isSimulating);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -338,7 +265,7 @@ function Conversation() {
             </Badge>
           </div>
 
-          <ThinkingBlock />
+          <AgentCoordinationProgress activeRun={activeRun} isSimulating={isSimulating} />
           <AgentAssessments />
           <ApprovalActions />
           <AssistantAnswer />
