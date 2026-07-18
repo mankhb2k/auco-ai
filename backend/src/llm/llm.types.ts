@@ -1,4 +1,4 @@
-export type LlmProvider = 'openai' | 'google';
+export type LlmProvider = 'openai' | 'google' | 'onprem';
 
 export type LlmAttemptTrace = {
   provider: LlmProvider;
@@ -13,6 +13,8 @@ export type LlmAttemptTrace = {
 export type LlmCallTrace = {
   agentRole?: string;
   purpose?: string;
+  /** §5.4 — tier gateway đã chọn theo purpose (small/mid/large). */
+  tier?: string;
   attempts: LlmAttemptTrace[];
   provider: LlmProvider;
   model: string;

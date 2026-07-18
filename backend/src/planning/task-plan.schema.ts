@@ -2,13 +2,18 @@ import { z } from 'zod';
 
 export const AgentRoleSchema = z.enum(['credit', 'legal', 'product', 'ops']);
 
+/**
+ * OpenAI strict structured output yêu cầu mọi key trong `properties`
+ * đều nằm trong `required` — không dùng `.optional()` ở đây.
+ * Model luôn trả đủ field; caller có thể dùng giá trị rỗng / default.
+ */
 export const TaskStepPlanSchema = z.object({
   id: z.string().min(1),
   agentRole: AgentRoleSchema,
   goal: z.string().min(1),
   dependsOn: z.array(z.string()),
-  requiredCapabilities: z.array(z.string()).optional(),
-  mode: z.enum(['direct', 'spawn_workers']).optional(),
+  requiredCapabilities: z.array(z.string()),
+  mode: z.enum(['direct', 'spawn_workers']),
 });
 
 export const TaskPlanSchema = z.object({

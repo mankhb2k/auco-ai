@@ -10,6 +10,40 @@ export type KnowledgeUiDocument = {
   publishedAt: string | null;
 };
 
+export type KnowledgeUiOperation = {
+  id: string;
+  type:
+    | "create_doc"
+    | "patch_doc"
+    | "supersede_doc"
+    | "amend_relation"
+    | "replaces_clause"
+    | "noop";
+  title: string;
+  content?: string;
+  targetDocId?: string | null;
+  beforeExcerpt?: string | null;
+  afterExcerpt?: string | null;
+  relationType?: "amends" | "supersedes" | "replaces_clause" | null;
+  relationNote?: string | null;
+  selected: boolean;
+};
+
+export type KnowledgeUiProposal = {
+  id: string;
+  jobId: string;
+  domain: KnowledgeUiDocument["domain"];
+  status: "pending_review" | "approved" | "rejected";
+  summary: string;
+  confidence: number;
+  warnings: string[];
+  operations: KnowledgeUiOperation[];
+  sourceType: "upload" | "url";
+  sourceLabel: string;
+  createdAt: string;
+  reviewedAt: string | null;
+};
+
 export type McpUiCapability =
   | "los"
   | "compliance"
@@ -93,6 +127,79 @@ export const seedKnowledgeDocuments: KnowledgeUiDocument[] = [
     status: "active",
     updatedAt: "2026-07-12T16:45:00+07:00",
     publishedAt: "2026-07-12T16:45:00+07:00",
+  },
+];
+
+export const seedKnowledgeProposals: KnowledgeUiProposal[] = [
+  {
+    id: "prop-credit-ltv",
+    jobId: "job-credit-ltv",
+    domain: "credit",
+    status: "pending_review",
+    summary:
+      "Đối chiếu nguồn tải lên với «Thông tư 39/2016/TT-NHNN — trích LTV» (độ giống 62%). Đề xuất cập nhật LTV nhà xưởng và gắn quan hệ sửa đổi.",
+    confidence: 0.72,
+    warnings: [
+      "Không nhận diện được ngày hiệu lực — nên bổ sung trước khi duyệt.",
+      "Nghi ngờ mâu thuẫn nhẹ với bản DTI đã thay thế — chỉ mang tính cảnh báo.",
+    ],
+    sourceType: "upload",
+    sourceLabel: "chinh-sach-ltv-nha-xuong-2026.pdf",
+    createdAt: "2026-07-18T10:15:00+07:00",
+    reviewedAt: null,
+    operations: [
+      {
+        id: "op-1",
+        type: "patch_doc",
+        title: "Thông tư 39/2016/TT-NHNN — trích LTV",
+        targetDocId: "kb-active-tt39",
+        content:
+          "Tỷ lệ cho vay tối đa trên giá trị tài sản bảo đảm (LTV) đối với BĐS sản xuất kinh doanh: tối đa 75% với nhà xưởng (cập nhật Q3/2026).",
+        beforeExcerpt:
+          "Tỷ lệ cho vay tối đa trên giá trị tài sản bảo đảm (LTV) đối với BĐS sản xuất kinh doanh có thể lên tới 80%.",
+        afterExcerpt:
+          "Tỷ lệ cho vay tối đa trên giá trị tài sản bảo đảm (LTV) đối với BĐS sản xuất kinh doanh: tối đa 75% với nhà xưởng (cập nhật Q3/2026).",
+        selected: true,
+      },
+      {
+        id: "op-2",
+        type: "amend_relation",
+        title: "Chính sách LTV nhà xưởng 2026",
+        targetDocId: "kb-active-tt39",
+        relationType: "amends",
+        relationNote: "Nguồn mới sửa đổi điều khoản LTV nhà xưởng",
+        selected: true,
+      },
+    ],
+  },
+  {
+    id: "prop-legal-aml",
+    jobId: "job-legal-aml",
+    domain: "legal",
+    status: "pending_review",
+    summary:
+      "Nguồn URL SBV gần khớp «SBV-4889 AML / KYC — Điều 8». Đề xuất bổ sung điều khoản KYC giao dịch ngoại tệ.",
+    confidence: 0.68,
+    warnings: ["Nguồn URL công khai — kiểm tra phiên bản chính thức trước khi duyệt."],
+    sourceType: "url",
+    sourceLabel: "https://www.sbv.gov.vn/webcenter/portal/vi/menu/trangchu/ttsk",
+    createdAt: "2026-07-18T11:02:00+07:00",
+    reviewedAt: null,
+    operations: [
+      {
+        id: "op-1",
+        type: "patch_doc",
+        title: "SBV-4889 AML / KYC — Điều 8",
+        targetDocId: "kb-active-aml",
+        content:
+          "Yêu cầu KYC đầy đủ trước khi cấp tín dụng hoặc giao dịch ngoại tệ lớn. Bổ sung xác minh nguồn tiền khi giao dịch ≥ 500 triệu đồng.",
+        beforeExcerpt:
+          "Yêu cầu KYC đầy đủ trước khi cấp tín dụng hoặc giao dịch ngoại tệ lớn.",
+        afterExcerpt:
+          "Yêu cầu KYC đầy đủ trước khi cấp tín dụng hoặc giao dịch ngoại tệ lớn. Bổ sung xác minh nguồn tiền khi giao dịch ≥ 500 triệu đồng.",
+        selected: true,
+      },
+    ],
   },
 ];
 

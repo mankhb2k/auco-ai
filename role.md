@@ -37,7 +37,7 @@
 | Layer | Code | Ai (seed demo) | Trách nhiệm | Không được |
 |---|---|---|---|---|
 | **IT** | `it_admin` | “Trần IT — Platform SHB” | Xem MCP Suite, bật/tắt connector (mock), xem health/llm status | Upload KB production; chạy TaskRun nghiệp vụ |
-| **Manager** | `manager` | “Lê Quản lý — Trưởng phòng / Risk” | Upload/list/publish KnowledgeDocument; duyệt Approval | Đổi MCP entry URL; gọi tool ngoài policy |
+| **Manager** | `manager` | “Lê Quản lý — Trưởng phòng / Risk” | Nói chuyện với Curator để tra cứu/thêm/sửa nguồn; duyệt proposal trong chat; xem thư viện KnowledgeDocument | Đổi MCP entry URL; gọi tool ngoài policy; sửa tri thức trực tiếp ngoài chat |
 | **Employee** | `employee` | “Nguyễn Thị B — CV Tín dụng” (và ops/compliance officer) | Tạo TaskRun, xem task/compare; chỉ KH trong portfolio | Publish KB; sửa connector |
 
 ### Map với `Employee.role` hiện có (schema)
@@ -161,10 +161,36 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 | `PATCH` | `/api/knowledge/documents/:id` | `manager` | Sửa draft |
 | `POST` | `/api/knowledge/documents/:id/publish` | `manager` | `draft`→`active` + trigger ingest doc/bank |
 | `POST` | `/api/knowledge/documents/:id/supersede` | `manager` | Optional: gắn quan hệ supersedes |
+| `POST` | `/api/knowledge/ingest/jobs` | `manager` | Tạo job từ upload text hoặc URL → Curator phân tích |
+| `GET` | `/api/knowledge/ingest/jobs` | `manager` | Filter domain, status |
+| `GET` | `/api/knowledge/ingest/proposals` | `manager` | Hàng chờ đề xuất (`pending_review`…) |
+| `GET` | `/api/knowledge/ingest/proposals/:id` | `manager` | Chi tiết + operationsJson + warnings |
+| `POST` | `/api/knowledge/ingest/proposals/:id/approve` | `manager` | Apply docs/relations → ingest + audit |
+| `POST` | `/api/knowledge/ingest/proposals/:id/reject` | `manager` | Từ chối — không đụng index |
 | `POST` | `/api/rag/search` | `employee`, `manager` | Giữ search/citation (đã có) |
 | `POST` | `/api/rag/ingest` | `it_admin` hoặc `manager` sau publish | Full re-ingest bank — hạn chế gọi tay |
 
-> FE Manager: form text/markdown là đủ; **không** cần OCR→KB.
+### 5.4.1 AI-first Knowledge — Chat → Curator → Duyệt → Xem nguồn
+
+```text
+Chat + Upload/URL → KnowledgeIngestJob → Knowledge Curator (tools)
+  → KnowledgeChangeProposal (pending_review)
+  → card trong chat + nút Chấp thuận / Từ chối
+  → (approve) KnowledgeDocument + DocumentRelation → ingestAll → AuditEvent
+  → nút "Xem nguồn" → tab Tri thức → mở đúng expert + tài liệu
+```
+
+| Status job | Ý nghĩa |
+|---|---|
+| `queued` → `parsing` → `analyzing` | Đang xử lý |
+| `pending_review` | Đã có proposal, chờ Trưởng phòng |
+| `applied` / `rejected` / `failed` | Kết thúc |
+
+**Curator tools (domain-scoped):** `parse_source`, `kb_search`, `list_active_documents`, `get_document`, `diff_sections`, `propose_operations`, `flag_warnings`, `attach_relation`.
+
+**Không auto-publish.** Duyệt tri thức ≠ Approval MCP side-effect của hồ sơ vay.
+
+> FE: **Chat là nơi làm việc** (hỏi, upload/URL, xem diff, duyệt); tab Tri thức chỉ là thư viện read-only theo expert để mở nguồn. OCR ảnh → KB ngoài scope demo.
 
 ### 5.5 IT / MCP — **đã có + siết**
 
@@ -193,6 +219,7 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 | Compare | ❌ | ❌ | ✅ |
 | Approvals decide | ❌ | ✅ | ❌ |
 | Knowledge draft/publish | ❌ | ✅ | ❌ |
+| Knowledge ingest job/proposal | ❌ | ✅ | ❌ |
 | RAG search | ✅ | ✅ | ✅ |
 | MCP suite + patch enable | ✅ | read | ❌ |
 | Health / LLM status | ✅ | ❌ | ❌ |
@@ -229,8 +256,9 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 1. **Switch → Nhân viên tín dụng** → chat vay nhà → DAG Credit‖Legal→Product → citation RAG.  
 2. Hỏi KH **ngoài portfolio** → step `waiting_approval` / out_of_portfolio.  
 3. **Switch → Trưởng phòng** → Approvals → Duyệt.  
-4. Cùng Manager → Knowledge → Publish doc LTV mới → (ingest) → nhân viên hỏi lại thấy citation mới.  
-5. **Switch → IT** → MCP Suite → tắt mock `ops` → giải thích “IT gắn/tháo đường ống, không đụng tri thức”.
+4. Cùng Manager → Chat → đính nguồn / yêu cầu cập nhật → xem đề xuất Curator (diff) → Chấp thuận → nút **Xem nguồn**.  
+5. Bấm **Xem nguồn** → tab Tri thức tự mở đúng expert + tài liệu vừa cập nhật.  
+6. **Switch → IT** → MCP Suite → tắt mock `ops` → giải thích “IT gắn/tháo đường ống, không đụng tri thức”.
 
 ---
 
@@ -267,6 +295,13 @@ Scope portfolio (đã thiết kế §2.7): trước MCP cần `customerId` → c
 - [x] Audit log đơn giản: `{ actorId, action, resource, at }` JSON hoặc bảng `AuditEvent`  
 - [x] README / slide: sơ đồ 3 lớp  
 
+### Phase R6 — Knowledge Ingest (Upload → Curator → Duyệt)
+
+- [x] Schema `KnowledgeIngestJob` + `KnowledgeChangeProposal`  
+- [x] Knowledge Curator tools + analyze → `pending_review`  
+- [x] Approve → apply docs/relations → ingest + audit  
+- [x] FE AI-first: thao tác + action button trong chat; Knowledge read-only + deep-link mở nguồn  
+
 ---
 
 ## 10. Cấu trúc code gợi ý
@@ -282,11 +317,15 @@ backend/src/
     demo-actor.middleware.ts
     require-layer.decorator.ts
     require-layer.guard.ts
-  knowledge/                    # hoặc mở rộng rag/
+  knowledge/
     knowledge.module.ts
     knowledge.controller.ts
+    knowledge-ingest.controller.ts
+    schemas/change-proposal.schema.ts
     service/knowledge.service.ts
-    service/knowledge.test.service.ts
+    service/knowledge-curator.service.ts
+    service/knowledge-curator.tools.ts
+    service/knowledge-ingest.service.ts
 ```
 
 FE: `RoleSwitcher` + route/nav `visibleIfLayer`.

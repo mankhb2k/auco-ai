@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,28 +11,56 @@ import {
 } from "@/components/ui/card";
 import { MODE_LABEL } from "@/lib/labels";
 import { useAppStore } from "@/stores/app.store";
+import { GitCompareArrows } from "lucide-react";
 
 export function ComparePanel() {
   const compare = useAppStore((s) => s.compare);
   const mode = useAppStore((s) => s.mode);
+  const compareVerdict = useAppStore((s) => s.compareVerdict);
+  const isSimulating = useAppStore((s) => s.isSimulating);
+  const liveApi = useAppStore((s) => s.liveApi);
+  const runCompare = useAppStore((s) => s.runCompare);
+  const goalDraft = useAppStore((s) => s.goalDraft);
+  const activeRun = useAppStore((s) => s.activeRun);
+
+  const goalHint =
+    goalDraft.trim() || activeRun?.goal || "Goal demo (vay mua nhà / …)";
 
   return (
     <div className="grid gap-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            So sánh một vs nhiều chuyên gia
-          </CardTitle>
-          <CardDescription>
-            Chỉ số theo chế độ đang chọn trên thanh công cụ (mô phỏng)
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base">
+              So sánh một vs nhiều chuyên gia
+            </CardTitle>
+            <CardDescription>
+              {liveApi
+                ? "Chạy POST /api/compare trên backend (multi rồi single, bỏ HITL)."
+                : "Chỉ số mô phỏng — bật NEXT_PUBLIC_API_URL để chạy so sánh thật."}
+            </CardDescription>
+          </div>
+          <Button
+            size="sm"
+            disabled={isSimulating}
+            onClick={() => void runCompare()}
+          >
+            <GitCompareArrows className="size-4" />
+            {isSimulating ? "Đang chạy…" : "Chạy so sánh"}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-muted-foreground line-clamp-2 text-xs">
+            Goal: {goalHint}
+          </p>
           <Badge>
             {mode === "multi"
-              ? "Đa chuyên gia (khuyến nghị)"
-              : "Một chuyên gia (đối chứng)"}
+              ? "Đang xem chỉ số: Đa chuyên gia"
+              : "Đang xem chỉ số: Một chuyên gia"}
           </Badge>
+          {compareVerdict ? (
+            <p className="bg-muted/50 rounded-lg p-3 text-sm">{compareVerdict}</p>
+          ) : null}
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-muted/50 rounded-lg p-3">
               <dt className="text-muted-foreground text-xs">Độ trễ</dt>
@@ -82,7 +111,9 @@ export function ComparePanel() {
             ))}
           </ul>
           <p className="text-muted-foreground text-xs">
-            Chế độ hiện tại: {MODE_LABEL[mode]}
+            Chế độ hiện tại trên thanh công cụ: {MODE_LABEL[mode]} — đổi mode
+            để xem lại chỉ số multi/single sau khi chạy so sánh (lần chạy lưu
+            verdict; chỉ số panel theo mode đang chọn).
           </p>
         </CardContent>
       </Card>
