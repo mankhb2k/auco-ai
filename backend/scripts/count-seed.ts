@@ -12,7 +12,7 @@ async function main() {
     portfolios: await prisma.customerPortfolio.count(),
     knowledgeDocuments: await prisma.knowledgeDocument.count(),
     documentRelations: await prisma.documentRelation.count(),
-    automations: await prisma.automation.count(),
+    loanRequests: await prisma.loanRequest.count(),
   };
   console.log(JSON.stringify(counts, null, 2));
   await prisma.$disconnect();

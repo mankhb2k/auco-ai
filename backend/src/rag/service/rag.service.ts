@@ -6,12 +6,14 @@ import { RetrieveService, type RagHit } from './retrieve.service';
 export type DomainKbTool =
   | 'credit_kb_search'
   | 'legal_kb_search'
+  | 'collateral_kb_search'
   | 'product_kb_search'
   | 'ops_kb_search';
 
 const TOOL_DOMAIN: Record<DomainKbTool, string> = {
   credit_kb_search: 'credit',
   legal_kb_search: 'legal',
+  collateral_kb_search: 'collateral',
   product_kb_search: 'product',
   ops_kb_search: 'ops',
 };

@@ -13,7 +13,8 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     id: "corporate",
     title: "Vay DN 50 tỷ + Thông tư 39",
     shortLabel: "DN 50 tỷ",
-    description: "Credit ‖ Legal → Product · LTV conflict 80%/75% · hạn mức ~40 tỷ",
+    description:
+      "Credit ‖ Legal ‖ Collateral → Product · LTV conflict 80%/75% · hạn mức ~40 tỷ",
     goal:
       "Phân tích hồ sơ vay của Công ty TNHH Sản xuất SHB Mekong (SHB-KH-1002), khoản vay 50 tỷ, mục đích mở rộng nhà máy. Cho biết hạn mức tối đa theo quy định hiện tại, có mâu thuẫn với Thông tư 39/2016/TT-NHNN không? Nếu đủ điều kiện thì chuẩn bị tạo hồ sơ và giải ngân.",
   },

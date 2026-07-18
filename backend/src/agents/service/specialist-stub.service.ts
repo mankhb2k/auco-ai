@@ -83,8 +83,41 @@ export class SpecialistStubService {
       };
     }
 
+    if (role === 'collateral') {
+      return {
+        mode: 'direct',
+        toolCalls: [
+          {
+            id: 'tc-collateral',
+            tool: 'get_collateral_package',
+            mcp: 'mcp-los',
+            mutates: false,
+            output: {
+              appraisedValueVnd: 3_200_000_000,
+              ltvActual: 62.5,
+              appraisalFresh: true,
+              ownershipStatus: 'valid',
+              securityRegistrationStatus: 'registered',
+            },
+            stub: true,
+          },
+        ],
+        output: {
+          summary: 'Collateral stub: TSĐB hợp lệ, LTV 62,5%.',
+          status: 'acceptable',
+          eligible: true,
+          ltvActual: 62.5,
+          missingData: [],
+          stepGoal: step.goal,
+        },
+      };
+    }
+
     if (role === 'product') {
       const credit = ctx.priorOutputs['step-credit'] as
+        | { eligible?: boolean }
+        | undefined;
+      const collateral = ctx.priorOutputs['step-collateral'] as
         | { eligible?: boolean }
         | undefined;
       return {
@@ -103,7 +136,7 @@ export class SpecialistStubService {
         ],
         output: {
           summary:
-            credit?.eligible === false
+            credit?.eligible === false || collateral?.eligible === false
               ? 'Product stub: hồ sơ chưa đủ điều kiện — chưa đề xuất giải ngân.'
               : 'Product stub: đề xuất SHB Home Loan Standard / Preferential Mortgage.',
           recommendedProduct: 'SHB Home Loan Standard',

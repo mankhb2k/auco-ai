@@ -56,6 +56,13 @@ export const SHB_CONNECTORS: BankMcpConnector[] = [
         description: 'Kiểm tra khả năng vay / hạn mức',
       },
       {
+        name: 'get_collateral_package',
+        mutates: false,
+        requiresApproval: false,
+        riskLevel: 'low',
+        description: 'Hồ sơ TSĐB, định giá và LTV thực tế',
+      },
+      {
         name: 'submit_loan_application',
         mutates: true,
         requiresApproval: true,
@@ -211,6 +218,7 @@ export const ROLE_TOOL_ALLOWLIST: Record<string, string[]> = {
     'submit_loan_application',
   ],
   legal: ['run_aml_check', 'search_regulation', 'flag_transaction'],
+  collateral: ['get_collateral_package'],
   product: [
     'list_products',
     'check_product_eligibility',

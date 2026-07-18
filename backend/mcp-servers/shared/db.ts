@@ -43,6 +43,12 @@ export type CustomerProfile = {
   requestedLoanVnd?: number;
   loanPurpose?: string;
   loanCollateralType?: string;
+  collateralDescription?: string | null;
+  appraisedValueVnd?: number | null;
+  appraisalDate?: string | null;
+  appraiser?: string | null;
+  ownershipStatus?: string;
+  securityRegistrationStatus?: string;
   demoTag?: string;
   customerType?: string;
   segment?: string;

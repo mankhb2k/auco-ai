@@ -2,7 +2,7 @@
 
 export type KnowledgeUiDocument = {
   id: string;
-  domain: "credit" | "legal" | "product" | "ops";
+  domain: "credit" | "legal" | "collateral" | "product" | "ops";
   title: string;
   content: string;
   status: "draft" | "active" | "superseded";

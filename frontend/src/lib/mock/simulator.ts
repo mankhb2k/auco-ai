@@ -37,6 +37,7 @@ function buildMultiSteps(
 ): TaskStep[] {
   const creditId = id("step");
   const legalId = id("step");
+  const collateralId = id("step");
   const productId = id("step");
 
   const configs: Record<
@@ -46,6 +47,7 @@ function buildMultiSteps(
       creditInput: Record<string, unknown>;
       creditWorkers: string[];
       legalLabel: string;
+      collateralLabel: string;
       productLabel: string;
       productInput: Record<string, unknown>;
       approvalPreview: string;
@@ -64,6 +66,7 @@ function buildMultiSteps(
         "Worker · CIC doanh nghiệp",
       ],
       legalLabel: "Đối chiếu Thông tư 39 vs quy trình nội bộ",
+      collateralLabel: "Đánh giá nhà xưởng · LTV · hồ sơ bảo đảm",
       productLabel: "Đề xuất sản phẩm vay DN / hạn mức",
       productInput: { amount: 40_000_000_000, segment: "sme" },
       approvalPreview:
@@ -82,6 +85,7 @@ function buildMultiSteps(
         "Worker · CIC cá nhân",
       ],
       legalLabel: "AML/KYC + khuyến nghị mục đích vốn FX",
+      collateralLabel: "Xác nhận khoản vay tín chấp · không áp dụng TSĐB",
       productLabel: "Đề xuất sản phẩm vay/đổi ngoại tệ",
       productInput: { currency: "USD" },
       approvalPreview:
@@ -100,6 +104,7 @@ function buildMultiSteps(
         "Worker · lịch sử tín dụng",
       ],
       legalLabel: "Kiểm tra AML / tuân thủ",
+      collateralLabel: "Định giá BĐS · LTV · quyền sở hữu",
       productLabel: "Đề xuất sản phẩm vay mua nhà",
       productInput: { amount: 2_000_000_000 },
       approvalPreview: outOfPortfolio
@@ -150,7 +155,19 @@ function buildMultiSteps(
       label: c.productLabel,
       input: c.productInput,
       status: "pending",
-      dependsOn: [creditId, legalId],
+      dependsOn: [creditId, legalId, collateralId],
+      toolCalls: [],
+      citations: [],
+    },
+    {
+      id: collateralId,
+      taskRunId,
+      agentRole: "collateral",
+      mode: "direct",
+      label: c.collateralLabel,
+      input: c.creditInput,
+      status: "pending",
+      dependsOn: [],
       toolCalls: [],
       citations: [],
     },
@@ -331,7 +348,12 @@ export class TaskRunSimulator {
   }
 
   private simulateMulti() {
-    const [credit, legal, product] = this.run.steps;
+    const credit = this.run.steps.find((s) => s.agentRole === "credit")!;
+    const legal = this.run.steps.find((s) => s.agentRole === "legal")!;
+    const collateral = this.run.steps.find(
+      (s) => s.agentRole === "collateral",
+    )!;
+    const product = this.run.steps.find((s) => s.agentRole === "product")!;
 
     this.schedule(700, () => {
       credit.status = "running";
@@ -339,6 +361,8 @@ export class TaskRunSimulator {
       if (credit.workers) for (const w of credit.workers) w.status = "running";
       legal.status = "running";
       legal.startedAt = nowIso();
+      collateral.status = "running";
+      collateral.startedAt = nowIso();
       this.emit();
     });
 
@@ -382,6 +406,33 @@ export class TaskRunSimulator {
         ? "out_of_portfolio_access"
         : "mutates";
       this.emit();
+    });
+
+    this.schedule(2300, () => {
+      collateral.toolCalls.push({
+        id: id("tc"),
+        tool: "get_collateral_package",
+        mcp: "mcp-los",
+        mutates: false,
+        input: collateral.input,
+        output: {
+          appraisedValueVnd: 3_200_000_000,
+          ltvActual: 62.5,
+          appraisalFresh: true,
+          ownershipStatus: "valid",
+          securityRegistrationStatus: "registered",
+        },
+        latencyMs: 320,
+      });
+      collateral.status = "done";
+      collateral.finishedAt = nowIso();
+      collateral.output = {
+        summary: "TSĐB đạt kiểm tra sơ bộ; LTV 62,5%.",
+        eligible: true,
+        ltvActual: 62.5,
+      };
+      this.emit();
+      this.tryStartProduct(product);
     });
 
     this.schedule(2600, () => {

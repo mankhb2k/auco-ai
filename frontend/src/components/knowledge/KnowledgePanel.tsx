@@ -38,11 +38,16 @@ import {
   BookOpen,
   ChevronRight,
   Landmark,
+  Loader2,
   Package,
+  RefreshCw,
   Scale,
   Search,
+  ShieldCheck,
   Wrench,
 } from "lucide-react";
+import { syncKnowledgeFromHqApi } from "@/lib/api";
+import { toast } from "sonner";
 
 type ExpertDomain = KnowledgeUiDocument["domain"];
 type StatusFilter = "all" | KnowledgeUiDocument["status"];
@@ -63,6 +68,11 @@ const EXPERTS: Array<{
     mission: "AML/KYC, thông tư SBV, quy định tuân thủ nội bộ.",
   },
   {
+    domain: "collateral",
+    icon: ShieldCheck,
+    mission: "LTV, định giá, quyền sở hữu và đăng ký giao dịch bảo đảm.",
+  },
+  {
     domain: "product",
     icon: Package,
     mission: "Biểu lãi suất, phí, danh mục sản phẩm vay/tiết kiệm.",
@@ -76,12 +86,11 @@ const EXPERTS: Array<{
 
 export function KnowledgePanel() {
   const employeeId = useAppStore((s) => s.employeeId);
-  const employees = useAppStore((s) => s.employees);
   const documents = useAppStore((s) => s.knowledgeDocuments);
   const focus = useAppStore((s) => s.knowledgeFocus);
   const openKnowledgeSource = useAppStore((s) => s.openKnowledgeSource);
   const clearKnowledgeFocus = useAppStore((s) => s.clearKnowledgeFocus);
-  const actor = employees.find((employee) => employee.id === employeeId);
+  const refreshKnowledge = useAppStore((s) => s.refreshKnowledge);
 
   const [selectedDomain, setSelectedDomain] = useState<ExpertDomain | null>(
     focus?.domain ?? null,
@@ -91,6 +100,24 @@ export function KnowledgePanel() {
   );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [syncing, setSyncing] = useState(false);
+
+  async function syncFromHq() {
+    setSyncing(true);
+    try {
+      const result = await syncKnowledgeFromHqApi(employeeId);
+      await refreshKnowledge();
+      toast.success(
+        `Đã đồng bộ ${result.documents} văn bản từ Hội sở (phiên bản ${result.version})`,
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Đồng bộ Hội sở thất bại",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   useEffect(() => {
     if (!focus) return;
@@ -159,11 +186,34 @@ export function KnowledgePanel() {
     clearKnowledgeFocus();
   }
 
-  if (actor?.accessLayer !== "manager") return null;
-
   if (!selectedDomain) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Tri thức chuẩn hóa
+            </h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Nguồn do Hội sở phát hành qua API — app chỉ đồng bộ về làm RAG,
+              không chỉnh sửa. Tra cứu trực tiếp hoặc hỏi qua Trợ lý AI.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={syncing}
+            onClick={() => void syncFromHq()}
+          >
+            {syncing ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <RefreshCw />
+            )}
+            Đồng bộ từ Hội sở
+          </Button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {EXPERTS.map((expert) => {
           const stats = expertStats.get(expert.domain)!;
           const Icon = expert.icon;
@@ -213,6 +263,7 @@ export function KnowledgePanel() {
             </Card>
           );
         })}
+        </div>
       </div>
     );
   }
@@ -248,8 +299,8 @@ export function KnowledgePanel() {
               Nguồn tri thức — {DOMAIN_LABEL[selectedDomain]}
             </CardTitle>
             <CardDescription>
-              Mở tài liệu để xem nội dung và trạng thái. Mọi yêu cầu thêm, sửa,
-              đối chiếu và duyệt được thực hiện trong tab Trò chuyện.
+              Văn bản chuẩn hóa do Hội sở phát hành. Mở tài liệu để xem nội
+              dung, hoặc hỏi Trợ lý AI để tra cứu nhanh có trích dẫn.
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">

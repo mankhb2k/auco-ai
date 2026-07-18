@@ -26,6 +26,22 @@ export const employees: Employee[] = [
     branchCode: "CN_CAU_GIAY",
   },
   {
+    id: "emp-credit-f",
+    bankCode: "SHB",
+    displayName: "Phạm Quốc F — Chuyên viên Tín dụng",
+    role: "credit_officer",
+    accessLayer: "employee",
+    branchCode: "CN_CAU_GIAY",
+  },
+  {
+    id: "emp-credit-g",
+    bankCode: "SHB",
+    displayName: "Hoàng Mai G — Chuyên viên Tín dụng",
+    role: "credit_officer",
+    accessLayer: "employee",
+    branchCode: "CN_CAU_GIAY",
+  },
+  {
     id: "emp-ops-c",
     bankCode: "SHB",
     displayName: "Trần Văn C — Nhân viên Vận hành",
@@ -56,7 +72,7 @@ export const ACCESS_LAYER_LABEL: Record<
   string
 > = {
   it_admin: "IT / Nền tảng",
-  manager: "Trưởng phòng",
+  manager: "Giám đốc",
   employee: "Nhân viên",
 };
 
@@ -71,11 +87,13 @@ export const customers: Customer[] = customerCatalog.map((c) => ({
   branchCode: c.branchCode,
 }));
 
-/** Portfolio của nhân viên CN Cầu Giấy — không gồm KH Hà Đông (cus-004, cus-022). */
+/** Portfolio CN Cầu Giấy — 3 chuyên viên tín dụng + ops; không gồm KH Hà Đông. */
 export const portfolios: CustomerPortfolio[] = customerCatalog
   .filter((c) => c.branchCode === "CN_CAU_GIAY")
   .flatMap((c) => [
     { employeeId: "emp-credit-b", customerId: c.id },
+    { employeeId: "emp-credit-f", customerId: c.id },
+    { employeeId: "emp-credit-g", customerId: c.id },
     { employeeId: "emp-ops-c", customerId: c.id },
   ]);
 

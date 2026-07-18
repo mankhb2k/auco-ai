@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
-export const AgentRoleSchema = z.enum(['credit', 'legal', 'product', 'ops']);
+export const AgentRoleSchema = z.enum([
+  'credit',
+  'legal',
+  'collateral',
+  'product',
+  'ops',
+]);
 
 /**
  * OpenAI strict structured output yêu cầu mọi key trong `properties`
@@ -25,4 +31,4 @@ export type TaskStepPlan = z.infer<typeof TaskStepPlanSchema>;
 export type TaskPlan = z.infer<typeof TaskPlanSchema>;
 
 export const MAX_STEPS_OFFSCRIPT = 5;
-export const DEMO_STEPS = 3;
+export const DEMO_STEPS = 4;

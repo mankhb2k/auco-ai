@@ -6,6 +6,7 @@ export const AGENT_LABEL: Record<AgentRole, string> = {
   planner: "Điều phối",
   credit: "Tín dụng",
   legal: "Pháp lý / Tuân thủ",
+  collateral: "Tài sản bảo đảm",
   product: "Sản phẩm",
   ops: "Vận hành",
 };
@@ -13,6 +14,7 @@ export const AGENT_LABEL: Record<AgentRole, string> = {
 export const DOMAIN_LABEL: Record<string, string> = {
   credit: "Tín dụng",
   legal: "Pháp lý / Tuân thủ",
+  collateral: "Tài sản bảo đảm",
   product: "Sản phẩm",
   ops: "Vận hành",
 };

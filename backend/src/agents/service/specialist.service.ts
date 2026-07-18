@@ -52,7 +52,6 @@ export class SpecialistService {
     if (
       ctx.employeeId &&
       customer.customerNo &&
-      !ctx.skipApprovalPropose &&
       !ctx.baseline
     ) {
       const allowed = await this.actors.isCustomerInPortfolio(
@@ -79,6 +78,9 @@ export class SpecialistService {
 
     if (role === 'legal') {
       return this.runLegal(bankCode, customer, step, ctx.skipApprovalPropose);
+    }
+    if (role === 'collateral') {
+      return this.runCollateral(bankCode, customer, step);
     }
     if (role === 'product') {
       return this.runProduct(bankCode, customer, step, ctx.priorOutputs);
@@ -510,6 +512,9 @@ export class SpecialistService {
     prior: Record<string, unknown>,
   ): Promise<SpecialistResult> {
     const credit = prior['step-credit'] as { eligible?: boolean } | undefined;
+    const collateral = prior['step-collateral'] as
+      | { status?: string; eligible?: boolean }
+      | undefined;
     const compare = await this.mcp.callTool({
       bankCode,
       agentRole: 'product',
@@ -540,11 +545,139 @@ export class SpecialistService {
       ],
       output: {
         summary:
-          credit?.eligible === false
-            ? 'Product: hồ sơ chưa đủ điều kiện — chưa đề xuất giải ngân.'
+          credit?.eligible === false || collateral?.eligible === false
+            ? 'Product: hồ sơ chưa đủ điều kiện tín dụng/TSĐB — chỉ đề xuất để tham khảo, chưa giải ngân.'
             : `Product: đề xuất ${out.recommendedProduct ?? 'sản phẩm phù hợp'} (MCP product).`,
         recommendedProduct: out.recommendedProduct ?? null,
         products: out.products ?? [],
+        stepGoal: step.goal,
+      },
+    };
+  }
+
+  private async runCollateral(
+    bankCode: string,
+    customer: Record<string, string>,
+    step: TaskStepPlan,
+  ): Promise<SpecialistResult> {
+    const requestedAmountVnd = customer.requestedHint
+      ? Number(customer.requestedHint)
+      : undefined;
+    const collateral = await this.mcp.callTool({
+      bankCode,
+      agentRole: 'collateral',
+      tool: 'get_collateral_package',
+      args: { bankCode, ...customer, requestedAmountVnd },
+    });
+    const out = collateral.output as {
+      error?: string;
+      collateralType?: string | null;
+      appraisedValueVnd?: number | null;
+      appraisalFresh?: boolean;
+      appraisalAgeMonths?: number | null;
+      maxAgeMonths?: number;
+      ownershipStatus?: string;
+      securityRegistrationStatus?: string;
+      ltvActual?: number | null;
+      unsecured?: boolean;
+    };
+
+    const kb = await this.rag.kbTool('collateral_kb_search', {
+      bankCode,
+      query: 'LTV định giá quyền sở hữu đăng ký giao dịch bảo đảm',
+      limit: 3,
+    });
+
+    const ownershipOk = ['valid', 'not_applicable'].includes(
+      out.ownershipStatus ?? 'unknown',
+    );
+    const registrationOk = ['registered', 'not_applicable'].includes(
+      out.securityRegistrationStatus ?? 'unknown',
+    );
+    const freshnessOk = out.appraisalFresh === true;
+    const policyMaxLtv = /nhà xưởng/i.test(out.collateralType ?? '')
+      ? 75
+      : /ô tô/i.test(out.collateralType ?? '')
+        ? 80
+        : /bất động sản/i.test(out.collateralType ?? '')
+          ? 70
+          : null;
+    const ltvWithinPolicy =
+      out.unsecured === true ||
+      (out.ltvActual !== null &&
+        out.ltvActual !== undefined &&
+        policyMaxLtv !== null &&
+        out.ltvActual <= policyMaxLtv);
+    const missingData: string[] = [];
+    if (out.error) missingData.push('Không tìm thấy hồ sơ tài sản bảo đảm');
+    if (!out.unsecured && !out.appraisedValueVnd)
+      missingData.push('Thiếu giá trị định giá TSĐB');
+    if (!ownershipOk) missingData.push('Quyền sở hữu TSĐB chưa hợp lệ');
+    if (!registrationOk)
+      missingData.push('Chưa hoàn tất đăng ký giao dịch bảo đảm');
+    if (!freshnessOk && !out.unsecured)
+      missingData.push('Kết quả định giá TSĐB đã quá hạn');
+    if (!ltvWithinPolicy && out.ltvActual !== null)
+      missingData.push(
+        `LTV ${out.ltvActual}% vượt ngưỡng chính sách ${policyMaxLtv ?? 'chưa xác định'}%`,
+      );
+
+    const eligible =
+      !out.error &&
+      (out.unsecured === true ||
+        (missingData.length === 0 &&
+          out.ltvActual !== null &&
+          out.ltvActual !== undefined &&
+          ltvWithinPolicy));
+    const status = eligible
+      ? out.unsecured
+        ? 'not_applicable'
+        : 'acceptable'
+      : 'needs_info';
+
+    return {
+      mode: 'direct',
+      toolCalls: [
+        {
+          id: 'tc-collateral',
+          tool: collateral.tool,
+          mcp: collateral.mcp,
+          capability: collateral.capability,
+          mutates: false,
+          latencyMs: collateral.latencyMs,
+          domainCorrect: true,
+          output: collateral.output,
+        },
+        {
+          id: 'tc-rag-collateral',
+          tool: kb.tool,
+          mcp: 'rag',
+          capability: 'rag',
+          mutates: false,
+          mode: kb.mode,
+          domainCorrect: true,
+          output: { summary: kb.summary, citations: kb.citations },
+        },
+      ],
+      output: {
+        summary: out.unsecured
+          ? 'Collateral: khoản vay tín chấp, không áp dụng TSĐB/LTV.'
+          : eligible
+            ? `Collateral: TSĐB đạt kiểm tra sơ bộ; LTV thực ${out.ltvActual ?? '—'}%, định giá còn hiệu lực.`
+            : `Collateral: cần bổ sung — ${missingData.join('; ') || 'chưa đủ dữ liệu'}.`,
+        status,
+        eligible,
+        collateralType: out.collateralType ?? null,
+        appraisedValueVnd: out.appraisedValueVnd ?? null,
+        ltvActual: out.ltvActual ?? null,
+        policyMaxLtv,
+        ltvWithinPolicy,
+        appraisalFresh: out.appraisalFresh ?? false,
+        ownershipStatus: out.ownershipStatus ?? 'unknown',
+        securityRegistrationStatus:
+          out.securityRegistrationStatus ?? 'unknown',
+        missingData,
+        citations: kb.citations,
         stepGoal: step.goal,
       },
     };
@@ -641,6 +774,12 @@ export class SpecialistService {
     if (amountTy) {
       const n = Number(amountTy[1].replace(',', '.'));
       if (!Number.isNaN(n)) hints.requestedHint = String(Math.round(n * 1e9));
+    } else {
+      const amountVnd = text.match(/(\d[\d.,]*)\s*VND/i);
+      if (amountVnd) {
+        const n = Number(amountVnd[1].replace(/[.,]/g, ''));
+        if (!Number.isNaN(n)) hints.requestedHint = String(Math.round(n));
+      }
     }
 
     return hints;
