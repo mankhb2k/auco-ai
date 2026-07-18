@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -13,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Auco AI - Chuyên Gia Nghiệp Vụ SHB",
-  description: "Hệ thống điều phối chuyên gia nghiệp vụ ngân hàng SHB",
+  title: "Chuyên gia số — SHB",
+  description:
+    "Bảng điều khiển đa chuyên gia cho vận hành ngân hàng (bản demo mô phỏng)",
 };
 
 export default function RootLayout({
@@ -27,7 +29,10 @@ export default function RootLayout({
       lang="vi"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="h-full overflow-hidden flex flex-col font-sans">
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   );
 }

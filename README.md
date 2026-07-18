@@ -42,6 +42,10 @@
 | 22 | **RAG nâng cấp "lite":** hybrid vector + Postgres full-text, bảng `DocumentRelation` (amends/supersedes), `effectiveFrom/To` versioning trên `KnowledgeDocument` — **không** xây Graph DB / BM25 engine / Conflict Detector NLP riêng (§4.3) | Giải đúng bài toán "quy định sửa đổi nhiều lần" với chi phí thấp, tránh rủi ro tích hợp hệ thống R&D riêng trong 48h |
 | 23 | **Không có Group / multi-session như Aucobot** — "session" = 1 `TaskRun`; chỉ cần 1 Planner (hạ tầng, ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) | Chọn chuyên gia là việc của Planner có kiểm soát, không phải user tự ráp bot; giữ UX tối giản đúng scope 48h |
 | 24 | **Không cho user tự tạo session gọi thẳng 1 agent / chat trực tiếp bỏ qua Planner** — nhu cầu "hỏi nhanh 1 miền" giải bằng **Planner triage** (TaskPlan 1 step khi đơn miền); nhu cầu "chat bỏ qua Planner" giải bằng **lộ baseline single-agent (§8) thành toggle UI** (§2.9) | Giữ Planner là điểm vào duy nhất — đúng trọng tâm deliverable #2/#5; không xây thêm hệ thống session/agent-routing song song |
+| 25 | **Go-to-market sau demo: license / on-prem (single-tenant), không SaaS shared** — bank tự triển khai + tự gắn adapter MCP; dữ liệu nằm trong perimeter bank (§1.2, §9.5.4) | Ngân hàng lớn không chấp nhận shared DB đa tenant; kiến trúc registry + `bankCode` khớp bán phần mềm, không khóa SaaS |
+| 26 | **Expert ship sẵn = cấu hình (system prompt + catalog + MCP allowlist + RAG domain), không fine-tune / train model riêng** — mọi agent dùng chung 1 model nền (§3.5.1, §5.4D) | Nghiệp vụ nằm ngoài trọng số model; đủ cho demo; chừa chỗ fine-tune/private model sau |
+| 27 | **App/Planner tự điều phối từng yêu cầu; IT không vẽ DAG cho từng hồ sơ**. IT quản MCP connector và policy hạ tầng; Trưởng phòng/Knowledge Owner chỉ quản vòng đời tài liệu RAG; Nhân viên thực thi | Giữ Planner là giá trị cốt lõi, đồng thời tách đúng trách nhiệm kỹ thuật, nghiệp vụ và vận hành |
+| 28 | **4 Specialist là core platform ship sẵn** (`credit`, `legal`, `product`, `ops`). Phòng ban từng ngân hàng được map vào capability core; không cho Trưởng phòng sửa Agent Catalog/system prompt/tool allowlist trong demo | Các ngân hàng khác nhau chủ yếu ở tri thức, hệ thống tích hợp và policy — không cần viết lại Planner/agent core |
 
 **Đã cân nhắc và loại bỏ:**
 
@@ -51,7 +55,9 @@
 - Mesh agent↔agent tự do — vòng lặp / khó audit; thay bằng fractal star có trần worker
 - Một MCP server khổng lồ chứa toàn bộ tool SHB — mất ranh giới hệ thống và audit
 - Auto-approve làm mặc định demo — loại; chỉ người thật duyệt side-effect
-- **User tự dán API key / BYOK per agent trong demo** — loại: conflict với không auth, rủi ro lộ key trên UI, không chứng minh multi-agent banking; để sau demo nếu làm SaaS
+- **User tự dán API key / BYOK per agent trong demo** — loại: conflict với không auth, rủi ro lộ key trên UI, không chứng minh multi-agent banking; BYOK chỉ hợp lý sau này nếu có auth (SaaS SMB), không phải mô hình bank on-prem đã chốt (§1.2)
+- **SaaS shared multi-tenant (một DB chung nhiều ngân hàng)** — loại cho go-to-market ngân hàng lớn; thay bằng license / single-tenant / on-prem + bank tự gắn adapter (§9.5.4)
+- **Fine-tune / train model riêng cho từng chuyên gia trong 48h** — loại: nghiệp vụ đến từ prompt + catalog + MCP + RAG; fine-tune chỉ là lộ trình sau khi có data nội bộ đã duyệt (§3.5.1, §5.4D)
 - **RBAC engine tổng quát / vault / tenant-switcher UI trong 48h** — loại: chi phí cao, không đổi kết quả demo; chỉ giữ seam schema (§9.5.1)
 
 ---
@@ -81,6 +87,17 @@ Dùng cho slide pitch — ai dùng hệ thống và ai hưởng lợi, khớp v�
 | | Đối tượng hưởng lợi từ tốc độ duyệt | Ví dụ: DN cần vốn gấp nhập hàng trong ngày — multi-agent chạy song song (Credit ‖ Legal) rút thời gian duyệt từ 2–3 ngày xuống còn vài phút cho case đủ điều kiện rõ ràng |
 
 **Câu pitch dùng được ngay:** *"Hệ thống không chỉ giúp nhân viên trả lời nhanh hơn — nó rút ngắn thời gian một doanh nghiệp cần vốn gấp phải chờ, từ vài ngày xuống vài phút, nhờ 3 chuyên gia số làm việc song song thay vì tuần tự qua nhiều phòng ban."*
+
+### 1.2 Mô hình thương mại sau demo — license / on-prem, không SaaS shared ✅
+
+> **✅ Đã chốt tầm nhìn sản phẩm:** không bán SaaS multi-tenant kiểu “một cloud chung, nhiều ngân hàng chung DB”. Ngân hàng lớn yêu cầu dữ liệu và hệ thống lõi **nằm trong perimeter của họ**. Mô hình đúng: bán **nền tảng phần mềm** (Planner, Specialist, Approval, RAG, Dashboard, MCP registry) — bank **tự triển khai** (single-tenant / VPC / on-prem) và **tự thêm adapter** MCP vào LOS / core / compliance của mình.
+
+| Bên | Trách nhiệm |
+|---|---|
+| **Đội sản phẩm** | Nền tảng + capability contract chuẩn + support / license theo năm |
+| **Ngân hàng** | Deploy trong môi trường của họ + adapter MCP + data + model gateway nội bộ |
+
+Khớp kiến trúc đã chốt: `bankCode` seam (§9.5.2) + Bank Connector Registry (§3.2) — mở rộng bank mới = cấu hình + connector, không viết lại Orchestrator. Chi tiết pitch giám khảo: §9.5.4, §12.16k.
 
 ---
 
@@ -602,7 +619,7 @@ Registry dùng metadata để: allowlist theo domain agent, ép approval, hiện
 | ✅ Stub nông `mcp-core-banking`, `mcp-product`, `mcp-ops` | Auth, vault, rate limit, per-bank SLA |
 | Dashboard: “Connected: SHB MCP Suite” + tool trace | Connector health, permission matrix |
 
-Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector đầu tiên; cùng kiến trúc gắn MCP ngân hàng khác qua capability registry.**
+Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector đầu tiên; cùng kiến trúc gắn MCP ngân hàng khác qua capability registry.** Go-to-market sau demo: bán nền tảng + bank tự gắn adapter — không SaaS shared (§1.2, §9.5.4).
 
 ### 3.5 Agent nào được gọi API/tool nào? — Ma trận quyền + UX "ship sẵn expert" ✅
 
@@ -643,9 +660,69 @@ Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector �
 
 **Roadmap (không làm trong 48h):** "Agent Studio" cho admin/quản trị SHB — thêm agent mới, gán tool mới, đổi allowlist — nhưng vẫn qua review/publish, không phải end-user tự bật tool sống ngay.
 
+#### 3.5.1 Chuyên gia “biết việc” thế nào? — Không train, cấu hình 4 lớp ✅
+
+**Không** fine-tune / train model riêng cho Credit/Legal/Product/Ops trong demo. Cả 4 dùng **cùng một model nền** (OpenAI; Gemini chỉ fallback gateway — §5.4). Khác biệt chuyên môn nằm ở cấu hình:
+
+| Lớp | Nội dung | Nơi sống |
+|---|---|---|
+| **1. System prompt theo role** | Mission, phạm vi, không làm gì, format trả lời | `backend/src/agents/<role>/system.ts` (hoặc tương đương) |
+| **2. Agent Catalog** | Intent, capability, `allowedMcp`, output schema Zod | `agent-catalog.ts` seed — §2.5 |
+| **3. Tool allowlist (MCP)** | Chỉ inject tool đúng domain lúc runtime | Orchestrator đọc catalog — §3.5 ma trận |
+| **4. RAG theo domain** | Tri thức SBV/SHB/sản phẩm + citation | `credit_kb_search` / `legal_kb_search` / … — §4 |
+
+```text
+Sai:  "Huấn luyện" = fine-tune 4 model riêng cho 4 chuyên gia
+Đúng: "Ship sẵn" = 1 model nền + 4 bộ (prompt + catalog + tools + RAG)
+```
+
+**Lộ trình sau demo** (đã có ở §5.4D, không đổi): (1) RAG + prompt + tool → (2) fine-tune/adapter nếu bank có data đã duyệt → (3) private/on-prem model qua gateway. Train từ zero không cần.
+
 #### Tóm tắt trả lời giám khảo
 
-> Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5) — không phải cấu hình rời. Về UX, chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**, nhân viên dùng ngay không cần setup. Cho phép admin ngân hàng tùy biến catalog là hướng mở rộng hợp lý sau demo, nhưng không phải việc của người dùng cuối, và không cần trong 48h vì có thể phá vỡ guardrail routing đã chốt.
+> Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5) — không phải cấu hình rời. Về UX, chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**, nhân viên dùng ngay không cần setup. “Chuyên gia” không phải model đã train sẵn: cùng một model nền, khác nhau ở **system prompt + catalog + MCP + RAG**. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý sau demo, nhưng không phải việc của người dùng cuối, và không cần trong 48h vì có thể phá vỡ guardrail routing đã chốt.
+
+#### 3.5.2 Ranh giới quản trị khi triển khai cho ngân hàng khác ✅
+
+Platform giữ **Planner + 4 Specialist + Agent Catalog + schema + tool allowlist** làm core ship sẵn. Từng ngân hàng không phải tự xây lại agent; họ cung cấp hai phần khác biệt: **connector MCP** tới hệ thống nội bộ và **tài liệu RAG** đã được duyệt.
+
+| Vai | Được quyết định | Không quyết định |
+|---|---|---|
+| **App / Planner** | Chọn Specialist và sinh DAG cho từng yêu cầu trong catalog + validation đã khóa | Không tự tạo role/tool ngoài catalog |
+| **IT / Platform bank** | MCP nối LOS/core/compliance nào, trạng thái connector, model gateway và policy hạ tầng | Không ngồi chọn Credit/Legal cho từng câu chat; không sửa tài liệu nghiệp vụ |
+| **Trưởng phòng / Knowledge Owner** | Tạo draft, version, publish/supersede tài liệu RAG theo domain | Không sửa Agent Catalog, system prompt, Zod schema hoặc MCP allowlist trong demo |
+| **Nhân viên** | Gửi yêu cầu và thực thi trên phạm vi dữ liệu được giao | Không cấu hình agent, tool hoặc publish KnowledgeDocument |
+
+```text
+IT gắn đường ống (MCP)
+Trưởng phòng xuất bản tri thức (RAG)
+Nhân viên gửi mục tiêu
+App/Planner tự điều phối Specialist
+```
+
+#### Slide pitch — 3 lớp quyền (demo)
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  L1 — IT / Platform                                         │
+│  MCP connector enable/disable · suite status · audit read   │
+├─────────────────────────────────────────────────────────────┤
+│  L2 — Manager / Knowledge owner                             │
+│  Knowledge draft→publish · Approval HITL · audit read       │
+├─────────────────────────────────────────────────────────────┤
+│  L3 — Employee / Operator                                   │
+│  Chat TaskRun · Compare · portfolio scope                   │
+└─────────────────────────────────────────────────────────────┘
+         ▲                        ▲
+         │ X-Demo-Employee-Id     │ AuditEvent
+         │ (không login)          │ actorId · action · resource · at
+```
+
+Demo UI: **một Dashboard + role switcher** — nav ẩn theo `accessLayer`; không JWT/SSO. Chi tiết triển khai: `role.md`.
+
+“Chuẩn hóa agent” trong UI quản lý tài liệu phải được hiểu là **chuẩn hóa tri thức mà agent truy xuất**, không phải train model hay thay đổi logic điều phối. RAG chỉ ảnh hưởng câu trả lời của Specialist sau khi Planner đã chọn domain; nó không thay Agent Catalog và không được dùng để invent role mới.
+
+Phòng ban ở từng ngân hàng có thể có tên hoặc cách chia khác nhau (ví dụ Retail Credit / Corporate Credit, Legal gộp Compliance), nhưng được **map vào capability core** trước. Chỉ khi xuất hiện một capability thực sự mới mới cân nhắc Agent Studio — roadmap có review/publish + policy validation, không phải cấu hình sống của Trưởng phòng trong demo.
 
 ---
 
@@ -842,7 +919,7 @@ Sai (không làm):
 
 | Tầng | Ý nghĩa thực tế | Khi nào |
 |---|---|---|
-| **1. RAG + prompt + tool** (đang làm) | “Hiểu” nghiệp vụ SHB qua tài liệu + MCP, không cần train | **Demo / giai 1** |
+| **1. RAG + prompt + tool** (đang làm) | “Hiểu” nghiệp vụ SHB qua tài liệu + MCP, không cần train — chi tiết 4 lớp ở §3.5.1 | **Demo / giai 1** |
 | **2. Fine-tune / adapter** trên model nền | Giọng văn, format hồ sơ, thuật ngữ tín dụng–pháp chế | Sau khi có dữ liệu nội bộ đã duyệt |
 | **3. Private / on-prem model** qua gateway | Llama/Qwen/model nội bộ trong VPC — không phụ thuộc cloud công cộng | Khi SHB yêu cầu data residency |
 | **4. Train từ zero** | Hiếm, cực đắt, ít đội startup/hackathon làm | Thường **không** cần; fine-tune + RAG đủ hầu hết |
@@ -1039,6 +1116,35 @@ Với ràng buộc 48h và team dùng AI Agent để build, ưu tiên theo P0 (b
 
 **Lằn ranh "vừa đủ, tránh over-engineer":** mọi seam ở P1 chỉ là **field + 1 check logic**, không kéo theo UI phức tạp hay migration lớn. Nếu một ý tưởng cần thêm bảng mới + UI mới + luồng duyệt mới → mặc định đẩy xuống P2/không làm, trừ khi nó tái dùng cơ chế đã có (như §2.7 tái dùng Approval).
 
+### 9.5.4 Go-to-market — bán phần mềm + bank tự gắn adapter, không SaaS shared ✅
+
+Kiến trúc multi-bank (`bankCode` + MCP registry) **không** đồng nghĩa với SaaS shared tenancy. Với ngân hàng Việt Nam (và hầu hết ngân hàng có giám sát chặt):
+
+| Mô hình | Ngân hàng lớn chấp nhận? | Ghi chú |
+|---|---|---|
+| SaaS shared (1 cloud, nhiều bank chung DB) | Rất khó | Lo ngại cư trú dữ liệu, audit, rò rỉ chéo tenant |
+| Single-tenant / VPC riêng mỗi bank | Có thể | Vẫn “subscription vận hành”, dữ liệu tách |
+| On-prem / private cloud của bank | Ưa thích khi đụng KH / tín dụng / side-effect | Phổ biến với hệ thống lõi |
+| Hybrid | Thực tế nhất | Platform trong perimeter bank; LLM qua gateway nội bộ; MCP gọi core của bank |
+
+**Chốt mô hình bán hàng sau demo:**
+
+```text
+Bán nền tảng (license / subscription theo năm)
+  ├─ Planner / Orchestrator, Specialist, Approval, RAG, Dashboard
+  ├─ MCP Connector Registry + capability contract
+  └─ Bank tự triển khai + tự viết / gắn adapter MCP
+       (LOS, core-banking, compliance, product, ops của họ)
+```
+
+- **Không** giả định “đổi URL là nối mọi ngân hàng” (§3.2) — mỗi bank vẫn cần adapter riêng.
+- **Không** pitch production như multi-tenant SaaS chung DB; pitch đúng: *platform isolated per bank, bank sở hữu data và connector*.
+- Có thể thu phí như SaaS (license năm + support), nhưng **triển khai và dữ liệu** theo hướng software / single-tenant / on-prem — khớp kỳ vọng ngân hàng.
+
+**Câu trả lời giám khảo:**
+
+> Chúng tôi không bán SaaS kiểu nhiều ngân hàng dùng chung một database. Ngân hàng cần dữ liệu chỉ nằm trong môi trường của họ. Sản phẩm là nền tảng multi-agent + registry MCP; mỗi ngân hàng triển khai riêng và tự gắn adapter vào hệ thống vận hành của mình. SHB MCP Suite là connector đầu tiên chứng minh contract đó.
+
 ---
 
 ## 10. Cấu trúc thư mục & API
@@ -1134,6 +1240,8 @@ Giai đoạn 2: FE trỏ NEXT_PUBLIC_API_URL → backend thật
 | 26 | Có xây Graph DB / BM25 engine / Conflict Detector riêng cho văn bản sửa đổi không? | ✅ Đã chốt — **không**; dùng bản lite: Postgres full-text + `DocumentRelation` + versioning field + prompt engineering (§4.3) |
 | 27 | Có cần Group / multi-session như Aucobot không? | ✅ Đã chốt — **không**; "session" = 1 `TaskRun`; chỉ 1 Planner (ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) |
 | 28 | User tự tạo session gọi thẳng 1 agent, chat trực tiếp bỏ qua Planner? | ✅ Đã chốt — **không**; giải bằng Planner triage (1-step fast path) + lộ baseline single-agent (§8) thành toggle UI (§2.9) |
+| 29 | Sau demo bán SaaS shared hay phần mềm cho bank? | ✅ Đã chốt — **license / on-prem (single-tenant)**; bank tự triển khai + tự gắn adapter MCP; không SaaS shared DB (§1.2, §9.5.4) |
+| 30 | Expert ship sẵn huấn luyện thế nào — fine-tune hay prompt? | ✅ Đã chốt — **không fine-tune**; 4 lớp: system prompt + Agent Catalog + MCP allowlist + RAG domain; chung 1 model nền (§3.5.1) |
 
 ---
 
@@ -1233,9 +1341,17 @@ Ba tiêu chí nhấn mạnh:
 
 > Không hard-code SHB. `bankCode` là field seam trên mọi model lõi (TaskRun, Automation, KnowledgeDocument, Customer, Employee) và trên MCP Connector Registry (§3.2). Bản demo chỉ seed một giá trị `bankCode = "SHB"` vì đó là phạm vi đề bài — không xây tenant-switcher UI, không multi-tenant billing. Nhưng vì seam đã có sẵn ở data layer, mở rộng ngân hàng thứ hai là thêm seed + connector mock, không phải viết lại orchestrator hay Planner.
 
+### 12.16k “Sau này bán SaaS cho nhiều ngân hàng được không? Họ có chấp nhận dữ liệu ra ngoài không?”
+
+> Khả thi về sản phẩm, nhưng **không** theo hướng SaaS shared (một cloud / một DB cho nhiều bank). Ngân hàng lớn thường chỉ chấp nhận dữ liệu và hệ thống lõi nằm trong perimeter của họ (single-tenant, VPC, hoặc on-prem). Mô hình đúng: bán **nền tảng phần mềm** — bank tự triển khai, tự gắn adapter MCP vào LOS/core/compliance; đội sản phẩm cung cấp capability contract + license/support. Kiến trúc hiện tại (`bankCode` + registry) đã khớp lộ trình đó; SHB MCP Suite chỉ là connector đầu tiên (§1.2, §9.5.4).
+
 ### 12.16g “Agent có quyền gọi API/tool nào? Nhân viên có tự cấu hình được không?”
 
 > Mỗi chuyên gia có allowlist tool cố định trong Agent Catalog (§2.5, §3.5) — ví dụ Credit Agent chỉ gọi `mcp-core-banking` + `mcp-los`, Legal chỉ gọi `mcp-compliance`. Chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**; nhân viên dùng ngay, không tự thêm/xóa tool. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý, nhưng không cần trong bản demo — thêm UI cấu hình lúc này có thể phá vỡ chính cơ chế chống điều phối nhầm đã dựng.
+
+### 12.16l “Chuyên gia ship sẵn được huấn luyện thế nào — train model hay chỉ system prompt?”
+
+> Không train / fine-tune model riêng cho từng chuyên gia trong demo. Cả bốn dùng **cùng một model nền**. “Biết việc” nhờ bốn lớp cấu hình: (1) **system prompt** theo role (mission, phạm vi, format), (2) **Agent Catalog** (intent, capability, output schema), (3) **MCP tool allowlist** đúng domain, (4) **RAG** chuyên biệt có citation. Nghiệp vụ ngân hàng nằm ở prompt + catalog + tool + tài liệu — không nằm trong trọng số model. Fine-tune / private model là lộ trình sau khi có dữ liệu nội bộ đã duyệt (§3.5.1, §5.4D).
 
 ### 12.16h “Đề xuất Vector+BM25+Graph+Versioning+Conflict Detector cho văn bản pháp lý — có áp dụng được không?”
 
