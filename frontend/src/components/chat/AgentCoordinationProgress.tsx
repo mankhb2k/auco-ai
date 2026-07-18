@@ -51,6 +51,8 @@ export function AgentCoordinationProgress({
         return "Tín dụng (Thẩm định)";
       case "legal":
         return "Pháp lý / Tuân thủ";
+      case "collateral":
+        return "Tài sản bảo đảm";
       case "product":
         return "Sản phẩm";
       case "ops":
@@ -98,12 +100,12 @@ export function AgentCoordinationProgress({
 
   const getDagPinText = () => {
     if (activeRun.scenario === "corporate") {
-      return "Tín dụng ‖ Pháp lý ➔ Sản phẩm (DN 50 tỷ / TT39)";
+      return "Tín dụng ‖ Pháp lý ‖ TSĐB ➔ Sản phẩm (DN / TT39)";
     }
     if (activeRun.scenario === "fx") {
-      return "Vận hành ➔ Pháp lý (Mua bán ngoại tệ / TT02)";
+      return "Tín dụng ‖ Pháp lý ‖ TSĐB ➔ Sản phẩm (FX)";
     }
-    return "Tín dụng ➔ Vận hành (Vay thế chấp / TT01)";
+    return "Tín dụng ‖ Pháp lý ‖ TSĐB ➔ Sản phẩm";
   };
 
   return (

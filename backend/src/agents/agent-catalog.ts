@@ -1,4 +1,4 @@
-export type AgentRole = 'credit' | 'legal' | 'product' | 'ops';
+export type AgentRole = 'credit' | 'legal' | 'collateral' | 'product' | 'ops';
 
 export type AgentCapability = {
   role: AgentRole;
@@ -38,6 +38,22 @@ export const AGENT_CATALOG: AgentCapability[] = [
     allowedMcp: ['compliance'],
     inputHints: ['customerId', 'transactionAmount', 'currency'],
     outputSchemaKey: 'complianceAssessment',
+  },
+  {
+    role: 'collateral',
+    displayName: 'Collateral Agent',
+    mission:
+      'Đánh giá tài sản bảo đảm, LTV thực tế, quyền sở hữu, đăng ký giao dịch bảo đảm và độ mới của định giá.',
+    intents: ['tài sản bảo đảm', 'TSĐB', 'LTV', 'định giá', 'thế chấp'],
+    capabilities: [
+      'collateral_lookup',
+      'ltv_check',
+      'ownership_check',
+      'appraisal_freshness',
+    ],
+    allowedMcp: ['los'],
+    inputHints: ['customerId', 'amount', 'collateralType'],
+    outputSchemaKey: 'collateralAssessment',
   },
   {
     role: 'product',

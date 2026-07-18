@@ -9,9 +9,3 @@ export async function listActors(employeeId?: string): Promise<Employee[]> {
   });
   return rows.map(mapEmployee);
 }
-
-export async function getMe(employeeId: string): Promise<Employee> {
-  return mapEmployee(
-    await apiFetch<unknown>("/api/actors/me", { employeeId }),
-  );
-}

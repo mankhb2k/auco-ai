@@ -10,16 +10,17 @@ datasource db {
 }
 
 model TaskRun {
-  id          String     @id @default(cuid())
-  bankCode    String     @default("SHB")
+  id          String       @id @default(cuid())
+  bankCode    String       @default("SHB")
   employeeId  String?
-  employee    Employee?  @relation(fields: [employeeId], references: [id])
-  goal        String     @db.Text
+  employee    Employee?    @relation(fields: [employeeId], references: [id])
+  goal        String       @db.Text
   status      String // planning | running | done | failed
   planJson    Json
-  finalAnswer String?    @db.Text
-  createdAt   DateTime   @default(now())
+  finalAnswer String?      @db.Text
+  createdAt   DateTime     @default(now())
   steps       TaskStep[]
+  loanRequest LoanRequest?
 
   @@index([bankCode])
   @@index([status])
@@ -27,17 +28,17 @@ model TaskRun {
 }
 
 model TaskStep {
-  id        String    @id @default(cuid())
-  taskRunId String
-  taskRun   TaskRun   @relation(fields: [taskRunId], references: [id], onDelete: Cascade)
-  agentRole String // credit | legal | product | ops
-  mode      String    @default("direct") // direct | spawn_workers
-  input     Json
-  output    Json?
-  status    String // pending | running | waiting_approval | done | failed
-  dependsOn String[]
-  toolCalls Json[]    @default([])
-  startedAt DateTime?
+  id         String    @id @default(cuid())
+  taskRunId  String
+  taskRun    TaskRun   @relation(fields: [taskRunId], references: [id], onDelete: Cascade)
+  agentRole  String // credit | legal | product | ops
+  mode       String    @default("direct") // direct | spawn_workers
+  input      Json
+  output     Json?
+  status     String // pending | running | waiting_approval | done | failed
+  dependsOn  String[]
+  toolCalls  Json[]    @default([])
+  startedAt  DateTime?
   finishedAt DateTime?
 
   @@index([taskRunId])
@@ -45,31 +46,34 @@ model TaskStep {
 }
 
 model Employee {
-  id          String              @id @default(cuid())
-  bankCode    String              @default("SHB")
-  displayName String
-  role        String // credit_officer | compliance_officer | ops_officer | branch_manager | it_admin
+  id                         String                    @id @default(cuid())
+  bankCode                   String                    @default("SHB")
+  displayName                String
+  role                       String // credit_officer | compliance_officer | ops_officer | branch_manager | it_admin
   /// role.md §1 — 3 lớp quyền demo: it_admin | manager | employee
-  accessLayer String              @default("employee")
-  branchCode  String?
-  portfolios  CustomerPortfolio[]
-  taskRuns    TaskRun[]
+  accessLayer                String                    @default("employee")
+  branchCode                 String?
+  portfolios                 CustomerPortfolio[]
+  taskRuns                   TaskRun[]
+  createdLoanRequests        LoanRequest[]             @relation("LoanRequestCreatedBy")
+  assignedLoanRequests       LoanRequest[]             @relation("LoanRequestAssignedTo")
+  submittedLoanRequests      LoanRequest[]             @relation("LoanRequestSubmittedBy")
+  decidedLoanRequests        LoanRequest[]             @relation("LoanRequestDecidedBy")
   uploadedKnowledgeDocuments KnowledgeDocument[] @relation("KnowledgeUploadedBy")
-  knowledgeIngestJobs        KnowledgeIngestJob[] @relation("KnowledgeIngestCreatedBy")
-  knowledgeChangeReviews     KnowledgeChangeProposal[] @relation("KnowledgeProposalReviewedBy")
 
   @@index([bankCode])
 }
 
 model Customer {
-  id         String              @id @default(cuid())
-  bankCode   String              @default("SHB")
-  fullName   String
-  customerNo String
-  branchCode String?
+  id           String              @id @default(cuid())
+  bankCode     String              @default("SHB")
+  fullName     String
+  customerNo   String
+  branchCode   String?
   /// Full FE mock profile (cic, income, demoTag, etc.) — Phase 2 seed
-  profileJson Json?
-  portfolios CustomerPortfolio[]
+  profileJson  Json?
+  portfolios   CustomerPortfolio[]
+  loanRequests LoanRequest[]
 
   @@unique([bankCode, customerNo])
   @@index([bankCode])
@@ -87,41 +91,50 @@ model CustomerPortfolio {
   @@index([bankCode])
 }
 
-model Automation {
-  id                 String          @id @default(cuid())
-  bankCode           String          @default("SHB")
-  name               String
-  description        String?         @db.Text
-  createdByAgentRole String
-  triggerType        String // schedule | manual
-  cronExpr           String?
-  timezone           String          @default("Asia/Ho_Chi_Minh")
-  enabled            Boolean         @default(false)
-  status             String // draft | pending_approval | active | paused
-  graphJson          Json? // pinned step graph (trigger/extract/llm-transform/notification)
-  botVersionId       String?
-  lastRunAt          DateTime?
-  nextRunAt          DateTime?
-  createdAt          DateTime        @default(now())
-  runs               AutomationRun[]
+/// Yêu cầu vay giả lập nhận từ app ngân hàng; entity trung tâm của MVP đánh giá khoản vay.
+model LoanRequest {
+  id                     String    @id @default(cuid())
+  bankCode               String    @default("SHB")
+  externalRef            String    @unique
+  customerId             String
+  customer               Customer  @relation(fields: [customerId], references: [id])
+  createdById            String?
+  createdBy              Employee? @relation("LoanRequestCreatedBy", fields: [createdById], references: [id])
+  assignedToId           String?
+  assignedTo             Employee? @relation("LoanRequestAssignedTo", fields: [assignedToId], references: [id])
+  assessmentTaskRunId    String?   @unique
+  assessmentTaskRun      TaskRun?  @relation(fields: [assessmentTaskRunId], references: [id], onDelete: SetNull)
+  requestedAmountVnd     Decimal   @db.Decimal(20, 0)
+  loanPurpose            String
+  requestedTermMonths    Int
+  declaredIncomeVnd      Decimal?  @db.Decimal(20, 0)
+  collateralType         String?
+  estimatedCollateralVnd Decimal?  @db.Decimal(20, 0)
+  source                 String    @default("mobile_app")
+  note                   String?   @db.Text
+  /// unassigned | assigned | assessing | advised | pending_approval | approved | rejected | escalated | needs_info | failed
+  status                 String    @default("unassigned")
+  assignedAt             DateTime?
+  assessmentStartedAt    DateTime?
+  /// recommend_approve | manual_review | needs_documents | recommend_reject
+  assessmentTag          String?
+  staffNote              String?   @db.Text
+  submittedAt            DateTime?
+  submittedById          String?
+  submittedBy            Employee? @relation("LoanRequestSubmittedBy", fields: [submittedById], references: [id])
+  /// approved | rejected | returned | escalated
+  decision               String?
+  decisionNote           String?   @db.Text
+  decidedAt              DateTime?
+  decidedById            String?
+  decidedBy              Employee? @relation("LoanRequestDecidedBy", fields: [decidedById], references: [id])
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  @@index([bankCode])
-  @@index([enabled])
-}
-
-model AutomationRun {
-  id            String     @id @default(cuid())
-  automationId  String
-  automation    Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  status        String // running | done | failed
-  startedAt     DateTime   @default(now())
-  finishedAt    DateTime?
-  resultSummary String?    @db.Text
-  traceJson     Json?
-  actorId       String? // who triggered (user/system)
-
-  @@index([automationId])
-  @@index([status])
+  @@index([bankCode, status, createdAt])
+  @@index([bankCode, assignedToId, status])
+  @@index([bankCode, assessmentTag])
+  @@index([customerId])
 }
 
 model KnowledgeDocument {
@@ -160,52 +173,7 @@ model DocumentRelation {
   @@index([toDocId])
 }
 
-/// role.md Phase R6 — upload/URL → Curator → manager review (không auto-publish)
-model KnowledgeIngestJob {
-  id           String                   @id @default(cuid())
-  bankCode     String                   @default("SHB")
-  domain       String // credit | legal | product | ops
-  sourceType   String // upload | url
-  sourceUri    String?
-  fileName     String?
-  rawText      String                   @db.Text
-  status       String                   @default("queued") // queued | parsing | analyzing | pending_review | applied | rejected | failed
-  errorMessage String?                  @db.Text
-  createdById  String?
-  createdBy    Employee?                @relation("KnowledgeIngestCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
-  proposal     KnowledgeChangeProposal?
-
-  @@index([bankCode, domain])
-  @@index([status])
-  @@index([createdById])
-}
-
-model KnowledgeChangeProposal {
-  id             String             @id @default(cuid())
-  jobId          String             @unique
-  job            KnowledgeIngestJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  bankCode       String             @default("SHB")
-  domain         String
-  status         String             @default("pending_review") // pending_review | approved | rejected
-  summary        String             @db.Text
-  operationsJson Json
-  confidence     Float?
-  warningsJson   Json?
-  reviewedById   String?
-  reviewedBy     Employee?          @relation("KnowledgeProposalReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
-  reviewedAt     DateTime?
-  reviewNote     String?            @db.Text
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-
-  @@index([bankCode, domain])
-  @@index([status])
-  @@index([reviewedById])
-}
-
-/// role.md Phase R5 — audit log demo tối thiểu (không thay SIEM)
+/// Audit log demo tối thiểu (không thay SIEM)
 model AuditEvent {
   id         String   @id @default(cuid())
   bankCode   String   @default("SHB")

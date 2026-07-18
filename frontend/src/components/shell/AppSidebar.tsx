@@ -15,74 +15,31 @@ import {
 } from "@/components/ui/sidebar";
 import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import type { Employee } from "@/lib/types/domain";
-import { useAppStore } from "@/stores/app.store";
-import {
-  BookOpenCheck,
-  ClipboardList,
-  GitCompareArrows,
-  History,
-  LayoutDashboard,
-  Network,
-  ServerCog,
-} from "lucide-react";
+import { useAppStore, type MainTab } from "@/stores/app.store";
+import { BookOpenCheck, HandCoins, Network } from "lucide-react";
 
 type AccessLayer = Employee["accessLayer"];
-type MainTab =
-  | "workspace"
-  | "history"
-  | "compare"
-  | "knowledge"
-  | "mcp"
-  | "audit";
 
 const NAV: Array<{
   id: MainTab;
   title: string;
   description: string;
-  icon: typeof LayoutDashboard;
+  icon: typeof HandCoins;
   layers: AccessLayer[];
 }> = [
   {
-    id: "workspace",
-    title: "Không gian làm việc",
-    description: "Mục tiêu · Sơ đồ · Duyệt",
-    icon: LayoutDashboard,
+    id: "loans",
+    title: "Yêu cầu khoản vay",
+    description: "Hàng đợi · Phân bổ · Đánh giá",
+    icon: HandCoins,
     layers: ["employee", "manager"],
-  },
-  {
-    id: "history",
-    title: "Lịch sử",
-    description: "Các lần chạy đã lưu",
-    icon: History,
-    layers: ["employee", "manager"],
-  },
-  {
-    id: "compare",
-    title: "So sánh",
-    description: "Một vs nhiều chuyên gia",
-    icon: GitCompareArrows,
-    layers: ["employee"],
   },
   {
     id: "knowledge",
     title: "Tri thức",
-    description: "Nháp · Xuất bản · RAG",
+    description: "Chuẩn hóa từ Hội sở · Tra cứu RAG",
     icon: BookOpenCheck,
-    layers: ["manager"],
-  },
-  {
-    id: "mcp",
-    title: "Bộ kết nối MCP",
-    description: "Kết nối · Chính sách runtime",
-    icon: ServerCog,
-    layers: ["it_admin"],
-  },
-  {
-    id: "audit",
-    title: "Nhật ký kiểm soát",
-    description: "Ai · hành động · tài nguyên",
-    icon: ClipboardList,
-    layers: ["manager", "it_admin"],
+    layers: ["employee", "manager", "it_admin"],
   },
 ];
 
@@ -117,7 +74,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Điều hướng theo lớp quyền</SidebarGroupLabel>
+          <SidebarGroupLabel>One Job — đánh giá khoản vay</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleNav.map((item) => (

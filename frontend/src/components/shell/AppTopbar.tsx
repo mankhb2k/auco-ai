@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import { useAppStore } from "@/stores/app.store";
-import { Plus, UserRound } from "lucide-react";
+import { Sparkles, UserRound } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,20 +22,15 @@ export function AppTopbar() {
   const setEmployeeId = useAppStore((s) => s.setEmployeeId);
   const currentEmployee =
     employees.find((e) => e.id === employeeId) ?? employees[0];
-  const newRequest = useAppStore((s) => s.newRequest);
+  const askAiOpen = useAppStore((s) => s.askAiOpen);
+  const setAskAiOpen = useAppStore((s) => s.setAskAiOpen);
 
   const title =
-    mainTab === "workspace"
-      ? "Trò chuyện"
-      : mainTab === "history"
-        ? "Lịch sử"
-        : mainTab === "knowledge"
-          ? "Quản lý tri thức"
-          : mainTab === "mcp"
-            ? "Quản lý kết nối MCP"
-            : mainTab === "audit"
-              ? "Nhật ký kiểm soát"
-              : "So sánh một vs nhiều chuyên gia";
+    mainTab === "loans"
+      ? currentEmployee?.accessLayer === "manager"
+        ? "Hàng đợi yêu cầu vay"
+        : "Hồ sơ vay của tôi"
+      : "Tri thức chuẩn hóa";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -43,20 +38,23 @@ export function AppTopbar() {
       <Separator orientation="vertical" className="mr-1 hidden h-4 sm:block" />
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <h1 className="truncate text-sm font-semibold tracking-tight">{title}</h1>
-        {mainTab === "workspace" ? (
-          <Badge variant="secondary" className="hidden sm:inline-flex">
-            SHB
-          </Badge>
-        ) : null}
+        <Badge variant="secondary" className="hidden sm:inline-flex">
+          SHB
+        </Badge>
       </div>
 
-      <Badge variant="secondary" className="hidden items-center gap-1 md:inline-flex">
-        <UserRound className="size-3" />
-        <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
-        <span className="text-muted-foreground">
-          · {ACCESS_LAYER_LABEL[currentEmployee.accessLayer]}
-        </span>
-      </Badge>
+      {currentEmployee ? (
+        <Badge
+          variant="secondary"
+          className="hidden items-center gap-1 md:inline-flex"
+        >
+          <UserRound className="size-3" />
+          <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
+          <span className="text-muted-foreground">
+            · {ACCESS_LAYER_LABEL[currentEmployee.accessLayer]}
+          </span>
+        </Badge>
+      ) : null}
 
       <Select value={employeeId} onValueChange={setEmployeeId}>
         <SelectTrigger className="h-8 w-[9.5rem] sm:w-[13rem]">
@@ -76,12 +74,15 @@ export function AppTopbar() {
         </SelectContent>
       </Select>
 
-      {mainTab === "workspace" ? (
-        <Button variant="outline" size="sm" className="h-8" onClick={newRequest}>
-          <Plus className="size-4" />
-          <span className="hidden sm:inline">Mới</span>
-        </Button>
-      ) : null}
+      <Button
+        variant={askAiOpen ? "default" : "outline"}
+        size="sm"
+        className="h-8"
+        onClick={() => setAskAiOpen(!askAiOpen)}
+      >
+        <Sparkles className="size-4" />
+        <span className="hidden sm:inline">Hỏi AI</span>
+      </Button>
     </header>
   );
 }

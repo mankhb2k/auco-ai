@@ -42,6 +42,75 @@ server.registerTool(
 );
 
 server.registerTool(
+  'get_collateral_package',
+  {
+    description:
+      'Tra cứu hồ sơ tài sản bảo đảm và tính LTV thực tế từ giá trị định giá hợp lệ gần nhất.',
+    inputSchema: {
+      customerNo: z.string().optional(),
+      customerId: z.string().optional(),
+      fullName: z.string().optional(),
+      bankCode: z.string().optional().default('SHB'),
+      requestedAmountVnd: z.number().optional(),
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false },
+  },
+  async (args) => {
+    const customer = await findCustomer(args);
+    if (!customer) {
+      return jsonResult({ error: 'customer_not_found', query: args });
+    }
+
+    const unsecured = /tín chấp/i.test(customer.loanCollateralType ?? '');
+    const appraisedValueVnd = Number(customer.appraisedValueVnd ?? 0);
+    const requestedAmountVnd = Number(
+      args.requestedAmountVnd ?? customer.requestedLoanVnd ?? 0,
+    );
+    const ltvActual =
+      appraisedValueVnd > 0 && requestedAmountVnd > 0
+        ? Number(((requestedAmountVnd / appraisedValueVnd) * 100).toFixed(2))
+        : null;
+    const appraisalDate = customer.appraisalDate
+      ? new Date(customer.appraisalDate)
+      : null;
+    const appraisalAgeMonths = appraisalDate
+      ? Math.max(
+          0,
+          Math.floor(
+            (Date.now() - appraisalDate.getTime()) /
+              (1000 * 60 * 60 * 24 * 30.44),
+          ),
+        )
+      : null;
+    const maxAgeMonths = /ô tô|máy móc|phương tiện/i.test(
+      customer.loanCollateralType ?? '',
+    )
+      ? 6
+      : 12;
+
+    return jsonResult({
+      customerNo: customer.customerNo,
+      collateralType: customer.loanCollateralType ?? null,
+      description: customer.collateralDescription ?? null,
+      appraisedValueVnd: appraisedValueVnd || null,
+      appraisalDate: customer.appraisalDate ?? null,
+      appraiser: customer.appraiser ?? null,
+      appraisalAgeMonths,
+      maxAgeMonths,
+      appraisalFresh:
+        unsecured ||
+        (appraisalAgeMonths !== null && appraisalAgeMonths <= maxAgeMonths),
+      ownershipStatus: customer.ownershipStatus ?? 'unknown',
+      securityRegistrationStatus:
+        customer.securityRegistrationStatus ?? 'unknown',
+      requestedAmountVnd: requestedAmountVnd || null,
+      ltvActual,
+      unsecured,
+    });
+  },
+);
+
+server.registerTool(
   'submit_loan_application',
   {
     description:

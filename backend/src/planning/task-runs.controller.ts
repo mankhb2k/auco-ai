@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Post,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -30,13 +29,11 @@ export class TaskRunsController {
       employeeId?: string;
       async?: boolean;
       mode?: 'multi' | 'single';
-      skipApprovalPropose?: boolean;
     },
   ) {
     if (!body?.goal?.trim()) {
       throw new BadRequestException('goal is required');
     }
-    // role.md R2 — luôn gắn employeeId từ actor demo, không tin body
     const employeeId = req.actor?.id ?? body.employeeId;
     return this.taskRuns.create({
       goal: body.goal,
@@ -44,14 +41,9 @@ export class TaskRunsController {
       employeeId,
       async: body.async === true,
       mode: body.mode,
-      skipApprovalPropose: body.skipApprovalPropose,
+      // One Job: assessment is read-only; maker-checker lives on LoanRequest.
+      skipApprovalPropose: true,
     });
-  }
-
-  @Get()
-  @RequireLayer('employee', 'manager', 'it_admin')
-  list(@Query('limit') limit?: string) {
-    return this.taskRuns.list(limit ? Number(limit) : 20);
   }
 
   @Get(':id')

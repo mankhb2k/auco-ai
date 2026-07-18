@@ -62,6 +62,27 @@ export class McpGatewayService implements OnModuleDestroy {
     return this.config.get<string>('MCP_SUITE_ENABLED', 'true') !== 'false';
   }
 
+  /** Timeout cho một lần gọi MCP tool để tránh step treo vô hạn khi child stdio không phản hồi. */
+  private get callTimeoutMs(): number {
+    return Number(this.config.get('MCP_CALL_TIMEOUT_MS') ?? 30_000);
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+    const ms = this.callTimeoutMs;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`MCP call timed out after ${ms}ms: ${label}`)),
+        ms,
+      );
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
   async onModuleDestroy() {
     for (const [key, s] of this.sessions) {
       try {
@@ -120,10 +141,13 @@ export class McpGatewayService implements OnModuleDestroy {
 
     const started = Date.now();
     const client = await this.getClient(bankCode, capability);
-    const raw = await client.callTool({
-      name: opts.tool,
-      arguments: opts.args ?? {},
-    });
+    const raw = await this.withTimeout(
+      client.callTool({
+        name: opts.tool,
+        arguments: opts.args ?? {},
+      }),
+      `${capability}.${opts.tool}`,
+    );
     const output = this.parseToolContent(raw);
     const latencyMs = Date.now() - started;
 
@@ -182,7 +206,7 @@ export class McpGatewayService implements OnModuleDestroy {
       { name: 'auco-mcp-gateway', version: '1.0.0' },
       { capabilities: {} },
     );
-    await client.connect(transport);
+    await this.withTimeout(client.connect(transport), `connect ${key}`);
     this.sessions.set(key, { client, transport });
     this.logger.log(`Connected MCP session ${key} via ${command} ${args.join(' ')}`);
     return client;

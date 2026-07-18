@@ -1,4 +1,10 @@
-export type AgentRole = "credit" | "legal" | "product" | "ops" | "planner";
+export type AgentRole =
+  | "credit"
+  | "legal"
+  | "collateral"
+  | "product"
+  | "ops"
+  | "planner";
 
 export type TaskRunStatus = "planning" | "running" | "done" | "failed";
 
@@ -136,6 +142,73 @@ export interface Customer {
 export interface CustomerPortfolio {
   employeeId: string;
   customerId: string;
+}
+
+export type LoanRequestStatus =
+  | "unassigned"
+  | "assigned"
+  | "assessing"
+  | "advised"
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "escalated"
+  | "needs_info"
+  | "failed";
+
+export type LoanDecision =
+  | "approved"
+  | "rejected"
+  | "returned"
+  | "escalated";
+
+export type LoanAssessmentTag =
+  | "recommend_approve"
+  | "manual_review"
+  | "needs_documents"
+  | "recommend_reject";
+
+export interface LoanRequestActor {
+  id: string;
+  displayName: string;
+  role: string;
+  branchCode: string | null;
+}
+
+export interface LoanRequest {
+  id: string;
+  bankCode: string;
+  externalRef: string;
+  customer: {
+    id: string;
+    customerNo: string;
+    fullName: string;
+    branchCode: string | null;
+  };
+  assignedTo: LoanRequestActor | null;
+  submittedBy: LoanRequestActor | null;
+  decidedBy: LoanRequestActor | null;
+  requestedAmountVnd: string;
+  loanPurpose: string;
+  requestedTermMonths: number;
+  declaredIncomeVnd: string | null;
+  collateralType: string | null;
+  estimatedCollateralVnd: string | null;
+  source: string;
+  note: string | null;
+  status: LoanRequestStatus;
+  assignedAt: string | null;
+  assessmentStartedAt: string | null;
+  assessmentTag: LoanAssessmentTag | null;
+  staffNote: string | null;
+  submittedAt: string | null;
+  decision: LoanDecision | null;
+  decisionNote: string | null;
+  decidedAt: string | null;
+  branchApprovalLimitVnd: string;
+  exceedsBranchLimit: boolean;
+  createdAt: string;
+  assessmentTaskRun: TaskRun | null;
 }
 
 

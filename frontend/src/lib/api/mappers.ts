@@ -1,14 +1,9 @@
-import type {
-  KnowledgeUiDocument,
-  KnowledgeUiOperation,
-  KnowledgeUiProposal,
-  McpUiSuite,
-  AuditUiEvent,
-} from "@/lib/mock/governance";
+import type { KnowledgeUiDocument } from "@/lib/mock/governance";
 import type {
   AgentRole,
-  CompareMetrics,
   Employee,
+  LoanRequest,
+  LoanRequestStatus,
   OrchestrationMode,
   RagCitation,
   ScenarioId,
@@ -22,6 +17,7 @@ import type {
 const AGENT_LABEL: Record<string, string> = {
   credit: "Tín dụng",
   legal: "Pháp lý / Tuân thủ",
+  collateral: "Tài sản bảo đảm",
   product: "Sản phẩm",
   ops: "Vận hành",
 };
@@ -143,7 +139,7 @@ export function mapTaskStep(raw: unknown): TaskStep {
   return {
     id: String(o.id ?? ""),
     taskRunId: String(o.taskRunId ?? ""),
-    agentRole: ["credit", "legal", "product", "ops"].includes(role)
+    agentRole: ["credit", "legal", "collateral", "product", "ops"].includes(role)
       ? role
       : "credit",
     mode: o.mode === "spawn_workers" ? "spawn_workers" : "direct",
@@ -225,17 +221,112 @@ export function mapTaskRun(raw: unknown): TaskRun {
   };
 }
 
-export function mapCompareMetrics(raw: unknown): CompareMetrics {
-  const o = asRecord(raw) ?? {};
+function mapLoanActor(raw: unknown) {
+  const actor = asRecord(raw);
+  if (!actor) return null;
   return {
-    mode: o.mode === "single" ? "single" : "multi",
-    latencyMs: typeof o.latencyMs === "number" ? o.latencyMs : 0,
-    toolAccuracy: typeof o.toolAccuracy === "number" ? o.toolAccuracy : 0,
-    citationCount: typeof o.citationCount === "number" ? o.citationCount : 0,
-    realActions: typeof o.realActions === "number" ? o.realActions : 0,
-    totalTokens: typeof o.totalTokens === "number" ? o.totalTokens : 0,
-    costUsd: typeof o.costUsd === "number" ? o.costUsd : 0,
-    notes: asArray(o.notes).map(String),
+    id: String(actor.id ?? ""),
+    displayName: String(actor.displayName ?? ""),
+    role: String(actor.role ?? ""),
+    branchCode:
+      actor.branchCode === null || actor.branchCode === undefined
+        ? null
+        : String(actor.branchCode),
+  };
+}
+
+export function mapLoanRequest(raw: unknown): LoanRequest {
+  const o = asRecord(raw) ?? {};
+  const customer = asRecord(o.customer) ?? {};
+  const rawStatus = String(o.status ?? "unassigned");
+  const status = (
+    [
+      "unassigned",
+      "assigned",
+      "assessing",
+      "advised",
+      "pending_approval",
+      "approved",
+      "rejected",
+      "escalated",
+      "needs_info",
+      "failed",
+    ].includes(rawStatus)
+      ? rawStatus
+      : "unassigned"
+  ) as LoanRequestStatus;
+  const rawDecision = o.decision == null ? null : String(o.decision);
+  const decision = (
+    rawDecision &&
+    ["approved", "rejected", "returned", "escalated"].includes(rawDecision)
+      ? rawDecision
+      : null
+  ) as LoanRequest["decision"];
+
+  return {
+    id: String(o.id ?? ""),
+    bankCode: String(o.bankCode ?? "SHB"),
+    externalRef: String(o.externalRef ?? ""),
+    customer: {
+      id: String(customer.id ?? ""),
+      customerNo: String(customer.customerNo ?? ""),
+      fullName: String(customer.fullName ?? ""),
+      branchCode:
+        customer.branchCode === null || customer.branchCode === undefined
+          ? null
+          : String(customer.branchCode),
+    },
+    assignedTo: mapLoanActor(o.assignedTo),
+    submittedBy: mapLoanActor(o.submittedBy),
+    decidedBy: mapLoanActor(o.decidedBy),
+    requestedAmountVnd: String(o.requestedAmountVnd ?? "0"),
+    loanPurpose: String(o.loanPurpose ?? ""),
+    requestedTermMonths: Number(o.requestedTermMonths ?? 0),
+    declaredIncomeVnd:
+      o.declaredIncomeVnd === null || o.declaredIncomeVnd === undefined
+        ? null
+        : String(o.declaredIncomeVnd),
+    collateralType:
+      o.collateralType === null || o.collateralType === undefined
+        ? null
+        : String(o.collateralType),
+    estimatedCollateralVnd:
+      o.estimatedCollateralVnd === null ||
+      o.estimatedCollateralVnd === undefined
+        ? null
+        : String(o.estimatedCollateralVnd),
+    source: String(o.source ?? "mobile_app"),
+    note: o.note === null || o.note === undefined ? null : String(o.note),
+    status,
+    assignedAt: iso(o.assignedAt) ?? null,
+    assessmentStartedAt: iso(o.assessmentStartedAt) ?? null,
+    assessmentTag: (
+      [
+        "recommend_approve",
+        "manual_review",
+        "needs_documents",
+        "recommend_reject",
+      ].includes(String(o.assessmentTag))
+        ? String(o.assessmentTag)
+        : null
+    ) as LoanRequest["assessmentTag"],
+    staffNote:
+      o.staffNote === null || o.staffNote === undefined
+        ? null
+        : String(o.staffNote),
+    submittedAt: iso(o.submittedAt) ?? null,
+    decision,
+    decisionNote:
+      o.decisionNote === null || o.decisionNote === undefined
+        ? null
+        : String(o.decisionNote),
+    decidedAt: iso(o.decidedAt) ?? null,
+    branchApprovalLimitVnd: String(o.branchApprovalLimitVnd ?? "5000000000"),
+    exceedsBranchLimit: Boolean(o.exceedsBranchLimit),
+    createdAt: iso(o.createdAt) ?? new Date().toISOString(),
+    assessmentTaskRun: o.assessmentTaskRun
+      ? mapTaskRun(o.assessmentTaskRun)
+      : null,
   };
 }
 
@@ -244,7 +335,7 @@ export function mapKnowledgeDoc(raw: unknown): KnowledgeUiDocument {
   const domain = String(o.domain ?? "credit");
   return {
     id: String(o.id ?? ""),
-    domain: (["credit", "legal", "product", "ops"].includes(domain)
+    domain: (["credit", "legal", "collateral", "product", "ops"].includes(domain)
       ? domain
       : "credit") as KnowledgeUiDocument["domain"],
     title: String(o.title ?? ""),
@@ -254,110 +345,5 @@ export function mapKnowledgeDoc(raw: unknown): KnowledgeUiDocument {
       : "draft") as KnowledgeUiDocument["status"],
     updatedAt: iso(o.updatedAt) ?? new Date().toISOString(),
     publishedAt: iso(o.publishedAt) ?? null,
-  };
-}
-
-function mapOperation(raw: unknown): KnowledgeUiOperation {
-  const o = asRecord(raw) ?? {};
-  return {
-    id: String(o.id ?? "op"),
-    type: (o.type as KnowledgeUiOperation["type"]) ?? "noop",
-    title: String(o.title ?? ""),
-    content: typeof o.content === "string" ? o.content : undefined,
-    targetDocId:
-      o.targetDocId === null || o.targetDocId === undefined
-        ? null
-        : String(o.targetDocId),
-    beforeExcerpt:
-      typeof o.beforeExcerpt === "string" ? o.beforeExcerpt : null,
-    afterExcerpt: typeof o.afterExcerpt === "string" ? o.afterExcerpt : null,
-    relationType:
-      (o.relationType as KnowledgeUiOperation["relationType"]) ?? null,
-    relationNote:
-      typeof o.relationNote === "string" ? o.relationNote : null,
-    selected: o.selected !== false,
-  };
-}
-
-export function mapKnowledgeProposal(raw: unknown): KnowledgeUiProposal {
-  const o = asRecord(raw) ?? {};
-  const job = asRecord(o.job);
-  const opsRaw = o.operationsJson ?? o.operations;
-  const warningsRaw = o.warningsJson ?? o.warnings;
-  const domain = String(o.domain ?? job?.domain ?? "credit");
-  const sourceType =
-    String(job?.sourceType ?? o.sourceType ?? "upload") === "url"
-      ? "url"
-      : "upload";
-  return {
-    id: String(o.id ?? ""),
-    jobId: String(o.jobId ?? job?.id ?? ""),
-    domain: (["credit", "legal", "product", "ops"].includes(domain)
-      ? domain
-      : "credit") as KnowledgeUiDocument["domain"],
-    status: (["pending_review", "approved", "rejected"].includes(
-      String(o.status),
-    )
-      ? String(o.status)
-      : "pending_review") as KnowledgeUiProposal["status"],
-    summary: String(o.summary ?? ""),
-    confidence: typeof o.confidence === "number" ? o.confidence : 0.5,
-    warnings: asArray(warningsRaw).map(String),
-    operations: asArray(opsRaw).map(mapOperation),
-    sourceType,
-    sourceLabel: String(
-      job?.fileName ?? job?.sourceUri ?? o.sourceLabel ?? "Nguồn tri thức",
-    ),
-    createdAt: iso(o.createdAt) ?? new Date().toISOString(),
-    reviewedAt: iso(o.reviewedAt) ?? null,
-  };
-}
-
-export function mapMcpSuite(raw: unknown): McpUiSuite {
-  const o = asRecord(raw) ?? {};
-  const connectors = asArray(o.connectors).map((c) => {
-    const r = asRecord(c) ?? {};
-    return {
-      capability: String(r.capability ?? "los") as McpUiSuite["connectors"][0]["capability"],
-      serverName: String(r.serverName ?? ""),
-      implementation:
-        r.implementation === "real" ? ("real" as const) : ("stub" as const),
-      enabled: r.enabled !== false,
-      status:
-        r.enabled === false ? ("disabled" as const) : ("enabled" as const),
-      tools: asArray(r.tools).map((t) => {
-        const tr = asRecord(t) ?? {};
-        return {
-          name: String(tr.name ?? ""),
-          mutates: tr.mutates === true,
-        };
-      }),
-    };
-  });
-  return {
-    suite: String(o.suite ?? "SHB MCP Suite"),
-    bankCode: String(o.bankCode ?? "SHB"),
-    connected: o.connected !== false,
-    connectorCount:
-      typeof o.connectorCount === "number"
-        ? o.connectorCount
-        : connectors.length,
-    enabledCount:
-      typeof o.enabledCount === "number"
-        ? o.enabledCount
-        : connectors.filter((c) => c.enabled).length,
-    connectors,
-  };
-}
-
-export function mapAuditEvent(raw: unknown): AuditUiEvent {
-  const o = asRecord(raw) ?? {};
-  return {
-    id: String(o.id ?? ""),
-    actorId: String(o.actorId ?? ""),
-    action: String(o.action ?? ""),
-    resource: String(o.resource ?? ""),
-    detailJson: asRecord(o.detailJson) ?? null,
-    createdAt: iso(o.createdAt) ?? new Date().toISOString(),
   };
 }

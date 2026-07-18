@@ -12,6 +12,16 @@ export class EmbeddingsService {
 
   constructor(private readonly config: ConfigService) {}
 
+  /** Timeout cho 1 truy vấn embedding (RAG hot path). */
+  private get queryTimeoutMs(): number {
+    return Number(this.config.get('EMBEDDING_TIMEOUT_MS') ?? 20_000);
+  }
+
+  /** Timeout cho embedding hàng loạt (ingest). */
+  private get batchTimeoutMs(): number {
+    return Number(this.config.get('EMBEDDING_BATCH_TIMEOUT_MS') ?? 60_000);
+  }
+
   get isConfigured(): boolean {
     return Boolean(
       this.config.get<string>('OPENAI_API_KEY')?.trim() ||
@@ -36,7 +46,12 @@ export class EmbeddingsService {
     try {
       const model = this.embeddingModel();
       if (!model) return null;
-      const { embedding } = await embed({ model, value: text });
+      const { embedding } = await embed({
+        model,
+        value: text,
+        maxRetries: 2,
+        abortSignal: AbortSignal.timeout(this.queryTimeoutMs),
+      });
       return this.padOrTrim(embedding);
     } catch (err) {
       this.logger.warn(
@@ -53,7 +68,12 @@ export class EmbeddingsService {
     try {
       const model = this.embeddingModel();
       if (!model) return texts.map(() => null);
-      const { embeddings } = await embedMany({ model, values: texts });
+      const { embeddings } = await embedMany({
+        model,
+        values: texts,
+        maxRetries: 2,
+        abortSignal: AbortSignal.timeout(this.batchTimeoutMs),
+      });
       return embeddings.map((e) => this.padOrTrim(e));
     } catch (err) {
       this.logger.warn(

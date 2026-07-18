@@ -253,7 +253,7 @@ Chat + Upload/URL → KnowledgeIngestJob → Knowledge Curator (tools)
 
 ## 8. Kịch bản demo giám khảo (5 phút)
 
-1. **Switch → Nhân viên tín dụng** → chat vay nhà → DAG Credit‖Legal→Product → citation RAG.  
+1. **Switch → Nhân viên tín dụng** → chat vay nhà → DAG Credit‖Legal‖Collateral→Product → citation RAG.  
 2. Hỏi KH **ngoài portfolio** → step `waiting_approval` / out_of_portfolio.  
 3. **Switch → Trưởng phòng** → Approvals → Duyệt.  
 4. Cùng Manager → Chat → đính nguồn / yêu cầu cập nhật → xem đề xuất Curator (diff) → Chấp thuận → nút **Xem nguồn**.  

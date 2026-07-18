@@ -4,6 +4,18 @@
 > Repo triển khai: `auco-ai/` (`frontend/` + `backend/`)  
 > Tài liệu này chỉ chứa **kiến trúc đã chốt**, **Q&A**, và **phần chưa chốt**.
 
+## Trạng thái sản phẩm hiện tại (One Job)
+
+Nguồn sự thật cho phạm vi đang chạy: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`backend/README.md`](backend/README.md), [`DEMO_RAG.md`](DEMO_RAG.md).
+
+App hiện chỉ làm **một việc**: đánh giá yêu cầu khoản vay → gợi ý cho nhân viên → gắn nhãn → trình Giám đốc.
+
+Public API còn lại: `/health`, `/api/actors`, `/api/loan-requests/**`, `POST/GET /api/task-runs/:id`, knowledge list/get/sync, `/api/bank-hq/knowledge`.
+
+Đã gỡ khỏi runtime: Automations, Compare, generic TaskStep approvals, WebSocket, public MCP/RAG/LLM/Audit admin, knowledge curator/authoring UI.
+
+Các mục bên dưới vẫn giữ lịch sử thiết kế ban đầu; nếu mâu thuẫn với One Job thì **ưu tiên ARCHITECTURE.md**.
+
 ### Ký hiệu trạng thái
 
 | Ký hiệu | Ý nghĩa |
@@ -24,7 +36,7 @@
 | 4 | **MCP là giao thức tool thật** (`@modelcontextprotocol/sdk`); sản phẩm gọi là **SHB MCP Suite**, bên trong chia capability/server (§3) | Đúng yêu cầu MCP; vừa kể được như feature kết nối SHB, vừa giữ isolation theo domain |
 | 5 | **Không có quyền truy cập hệ thống SHB thật** — mock bằng dữ liệu công khai (SBV, chính sách công khai SHB) | Không có sandbox API từ ban tổ chức |
 | 6 | Giữ **star topology qua Planner**, không mesh agent↔agent ở tầng cao — Specialist được **spawn worker tạm** trong phạm vi hẹp, có giới hạn (§2.3) | Tránh vòng lặp, dễ audit; vẫn đáp ứng “agent tự tạo multi-agent” |
-| 7 | **Chỉ 2 phần: `frontend/` + `backend/`** — không monorepo packages, không Turborepo/pnpm workspace | Team FE/BE làm độc lập; nối qua REST + WebSocket |
+| 7 | **Chỉ 2 phần: `frontend/` + `backend/`** — không monorepo packages, không Turborepo/pnpm workspace | Team FE/BE làm độc lập; nối qua REST (Ask AI polling TaskRun) |
 | 8 | **RAG: LlamaIndex.TS** trong `backend/src/rag/`, **Vercel AI SDK** cho agent loop | Tách trách nhiệm rõ |
 | 9 | **Không auth / không multi-user** trong bản demo — 1 phiên cố định, mở app là dùng | Không thuộc deliverable; dồn thời gian cho planner, MCP, RAG, Dashboard |
 | 10 | **Multi-agent 2 tầng:** (1) Planner chia việc cho Specialist; (2) Specialist tự tạo worker tạm rồi tự tổng hợp (§2.3) | Đúng yêu cầu “agent chuyên gia tự tạo multi-agent” |
@@ -32,20 +44,20 @@
 | 12 | **Automation lặp lịch:** Agent đề xuất → user duyệt → **user bật/tắt**; scheduler (cron) chạy graph đã pin — tách khỏi `TaskRun` ad-hoc (§2.6) | Nhân viên ngân hàng cần báo cáo định kỳ đúng ngày; không nhét việc lặp vào chat một lần |
 | 13 | **Không gộp tất cả tool vào một `shb-mcp` God service** — Suite = registry/gateway + nhiều MCP capability nhỏ | Bảo mật, audit side-effect, quyền hạn theo hệ thống; dễ plug connector ngân hàng khác |
 | 14 | **Approval: người thật bấm Duyệt / Từ chối** — không auto-approve trong demo chính (§6) | Đúng human-in-the-loop; giám khảo thấy approval thật trên Dashboard |
-| 15 | **DAG kịch bản demo: cố định 3 TaskStep chuyên gia** (ghim few-shot) — case ngoài kịch bản Planner vẫn `generateObject` động, có trần (§2.4) | Demo ổn định, đủ ≥2–3 chuyên gia theo đề bài; không để plan lệch lúc live |
+| 15 | **DAG đánh giá khoản vay: cố định 4 TaskStep chuyên gia** — Credit ‖ Legal ‖ Collateral → Product; case ngoài kịch bản Planner vẫn `generateObject` động, có trần (§2.4) | Demo ổn định, không để plan lệch lúc live |
 | 16 | **MCP ưu tiên implement thật: `mcp-los` + `mcp-compliance`**; `core-banking` / `product` / `ops` = mock nông cùng contract (§3) | Đủ minh họa side-effect + RAG/compliance; giảm scope triển khai |
 | 17 | **Planner điều phối theo Agent Catalog + Zod enum + validation + tool allowlist** — không “đoán tự do” (§2.5) | Tránh giao việc nhầm domain; sai routing bị chặn trước khi Specialist chạy |
 | 18 | **LLM: MỘT model mặc định (OpenAI) cho mọi agent** — env platform quản; **Gemini fallback** chỉ do gateway kích hoạt khi lỗi; nhân viên **không đổi model**, không BYOK (§5.4) | Đơn giản, audit nhất quán, đúng mô hình ngân hàng: model là hạ tầng được duyệt |
 | 19 | **Data scope theo nhân viên (mô phỏng nhẹ, không phải auth thật):** `Employee`/`Customer`/`CustomerPortfolio` + scope-check trước khi gọi MCP, tái dùng Approval khi ngoài danh mục (§2.7) | Đúng nguyên tắc need-to-know của ngân hàng; chi phí thấp vì tái dùng Approval có sẵn |
 | 20 | **`bankCode` là seam trên mọi model lõi** (TaskRun, Automation, KnowledgeDocument, Customer, Employee) — demo chỉ seed 1 giá trị `"SHB"`, không xây tenant-switcher UI (§9.5.2) | Sẵn sàng mở rộng nhiều ngân hàng mà không migrate lại schema; đúng tầm nhìn startup multi-bank |
-| 21 | **Agent × MCP là catalog ship sẵn (4 chuyên gia cấu hình đầy đủ)** — không có UI cho user cuối tự thêm/xóa tool; admin config = roadmap sau demo (§3.5) | Đúng tinh thần "dùng chuyên gia", không "lắp ráp agent"; giữ nguyên guardrail routing đã chốt ở §2.5 |
+| 21 | **Agent × MCP là catalog ship sẵn (5 chuyên gia cấu hình đầy đủ)** — không có UI cho user cuối tự thêm/xóa tool; admin config = roadmap sau demo (§3.5) | Đúng tinh thần "dùng chuyên gia", không "lắp ráp agent"; giữ nguyên guardrail routing đã chốt ở §2.5 |
 | 22 | **RAG nâng cấp "lite":** hybrid vector + Postgres full-text, bảng `DocumentRelation` (amends/supersedes), `effectiveFrom/To` versioning trên `KnowledgeDocument` — **không** xây Graph DB / BM25 engine / Conflict Detector NLP riêng (§4.3) | Giải đúng bài toán "quy định sửa đổi nhiều lần" với chi phí thấp, tránh rủi ro tích hợp hệ thống R&D riêng trong 48h |
-| 23 | **Không có Group / multi-session như Aucobot** — "session" = 1 `TaskRun`; chỉ cần 1 Planner (hạ tầng, ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) | Chọn chuyên gia là việc của Planner có kiểm soát, không phải user tự ráp bot; giữ UX tối giản đúng scope 48h |
+| 23 | **Không có Group / multi-session như Aucobot** — "session" = 1 `TaskRun`; chỉ cần 1 Planner (hạ tầng, ẩn) + 5 Specialist cố định, pipeline chính chạy 4 (§2.8) | Chọn chuyên gia là việc của Planner có kiểm soát, không phải user tự ráp bot; giữ UX tối giản đúng scope |
 | 24 | **Không cho user tự tạo session gọi thẳng 1 agent / chat trực tiếp bỏ qua Planner** — nhu cầu "hỏi nhanh 1 miền" giải bằng **Planner triage** (TaskPlan 1 step khi đơn miền); nhu cầu "chat bỏ qua Planner" giải bằng **lộ baseline single-agent (§8) thành toggle UI** (§2.9) | Giữ Planner là điểm vào duy nhất — đúng trọng tâm deliverable #2/#5; không xây thêm hệ thống session/agent-routing song song |
 | 25 | **Go-to-market sau demo: license / on-prem (single-tenant), không SaaS shared** — bank tự triển khai + tự gắn adapter MCP; dữ liệu nằm trong perimeter bank (§1.2, §9.5.4) | Ngân hàng lớn không chấp nhận shared DB đa tenant; kiến trúc registry + `bankCode` khớp bán phần mềm, không khóa SaaS |
 | 26 | **Expert ship sẵn = cấu hình (system prompt + catalog + MCP allowlist + RAG domain), không fine-tune / train model riêng** — mọi agent dùng chung 1 model nền (§3.5.1, §5.4D) | Nghiệp vụ nằm ngoài trọng số model; đủ cho demo; chừa chỗ fine-tune/private model sau |
-| 27 | **App/Planner tự điều phối từng yêu cầu; IT không vẽ DAG cho từng hồ sơ**. IT quản MCP connector và policy hạ tầng; Trưởng phòng/Knowledge Owner chỉ quản vòng đời tài liệu RAG; Nhân viên thực thi | Giữ Planner là giá trị cốt lõi, đồng thời tách đúng trách nhiệm kỹ thuật, nghiệp vụ và vận hành |
-| 28 | **4 Specialist là core platform ship sẵn** (`credit`, `legal`, `product`, `ops`). Phòng ban từng ngân hàng được map vào capability core; không cho Trưởng phòng sửa Agent Catalog/system prompt/tool allowlist trong demo | Các ngân hàng khác nhau chủ yếu ở tri thức, hệ thống tích hợp và policy — không cần viết lại Planner/agent core |
+| 27 | **App/Planner tự điều phối từng yêu cầu; IT không vẽ DAG cho từng hồ sơ**. IT quản MCP connector và policy hạ tầng; tri thức chuẩn hóa đồng bộ từ API ngân hàng; Nhân viên/Giám đốc chỉ tra cứu | Giữ Planner là giá trị cốt lõi, đồng thời tách đúng trách nhiệm kỹ thuật, nghiệp vụ và vận hành |
+| 28 | **5 Specialist là core platform ship sẵn** (`credit`, `legal`, `collateral`, `product`, `ops`). Ops ở ngoài pipeline thẩm định chính | Các ngân hàng khác nhau chủ yếu ở tri thức, hệ thống tích hợp và policy — không cần viết lại Planner/agent core |
 
 **Đã cân nhắc và loại bỏ:**
 
@@ -105,38 +117,39 @@ Khớp kiến trúc đã chốt: `bankCode` seam (§9.5.2) + Bank Connector Regi
 
 Topology: **planner-executor** + Specialist tự spawn worker. Hình sao lồng 1 cấp (fractal star) — không mesh.
 
-> **✅ Chốt UX gốc (áp dụng toàn bộ tài liệu):** User **chỉ chat với đúng 1 điểm vào — Planner/Orchestrator**. Bên trong, 4 Specialist (Credit/Legal/Product/Ops) đã **ship sẵn, cấu hình cố định** (§3.5) — user không thấy, không chọn, không tự thêm agent. Planner tự động điều phối 1 hoặc nhiều Specialist tuỳ độ phức tạp câu hỏi (§2.9), rồi trả **1 câu trả lời tổng hợp duy nhất**. Không có agent picker, không có session-per-agent, không có Group (§2.8).
+> **✅ Chốt UX gốc (áp dụng toàn bộ tài liệu):** User **chỉ chat với đúng 1 điểm vào — Planner/Orchestrator**. Bên trong, 5 Specialist (Credit/Legal/Collateral/Product/Ops) đã **ship sẵn, cấu hình cố định** (§3.5). Planner tự động điều phối và trả **1 câu trả lời tổng hợp duy nhất**. Không có agent picker, session-per-agent hay Group (§2.8).
 
 ```text
 User ←→ [ 1 Ô CHAT DUY NHẤT — Planner/Orchestrator ]
                         │
           tự động điều phối bên trong (ẩn với user)
                         │
-        ┌───────────────┼───────────────┬───────────────┐
-     Credit          Legal          Product           Ops
-   (ship sẵn)      (ship sẵn)      (ship sẵn)      (ship sẵn)
+      ┌───────────┬─────┼─────────┬───────────┐
+   Credit       Legal  Collateral Product    Ops
+  (ship sẵn) (ship sẵn) (ship sẵn) (ship sẵn) (ship sẵn)
 ```
 
 **Ví dụ demo chính:**
 
 > *"Khách hàng Nguyễn Văn A muốn vay 2 tỷ mua nhà, kiểm tra đủ điều kiện tín dụng không, có vướng quy định AML/tuân thủ không, sản phẩm vay nào phù hợp nhất, và tạo hồ sơ vận hành nếu đủ điều kiện."*
 
-**Kịch bản demo chính — DAG cố định 3 chuyên gia** (✅ đã chốt):
+**Kịch bản demo chính — DAG cố định 4 chuyên gia** (✅ đã chốt):
 
 ```text
-Planner nhận goal → TaskPlan ghim (few-shot), đúng 3 TaskStep:
+Planner nhận goal → TaskPlan ghim, đúng 4 TaskStep:
 
   Step 1 [Credit Agent]      — song song ──┐   (Credit tự spawn ≤3 worker bên trong)
-  Step 2 [Legal/Compliance]  — song song ──┘
+  Step 2 [Legal/Compliance]  — song song ──┤
+  Step 3 [Collateral Agent]  — song song ──┘
                          │
-                         ▼  (chờ Step 1+2 xong)
-  Step 3 [Product Agent]     — đề xuất sản phẩm phù hợp
+                         ▼  (chờ Step 1+2+3 xong)
+  Step 4 [Product Agent]     — đề xuất sản phẩm phù hợp
                          │
                          ▼
   Planner synthesize         — tổng hợp + citation (không tính là Specialist step)
 ```
 
-Ops / tạo hồ sơ vận hành: nếu còn thời gian demo, gắn vào **Approval sau Step 3** (side-effect qua `mcp-los` / ticket mock) — không phình DAG kịch bản chính lên 4–5 step.
+Ops / tạo hồ sơ vận hành nằm sau phê duyệt và không thuộc pipeline thẩm định chính.
 
 ### 2.1 Data model — `TaskRun` / `TaskStep`
 
@@ -215,7 +228,7 @@ Credit Agent nhận: "Đánh giá khả năng vay 2 tỷ của KH Nguyễn Văn 
 | Tên | Là gì | Sống bao lâu |
 |---|---|---|
 | **Planner** | Điều phối liên domain | Cả `TaskRun` |
-| **Specialist** | Chuyên gia cố định (Credit/Legal/Product/Ops) | Seed sẵn / cả `TaskRun` |
+| **Specialist** | Chuyên gia cố định (Credit/Legal/Collateral/Product/Ops) | Seed sẵn / cả `TaskRun` |
 | **Worker** | Agent tạm do Specialist tạo | **Chỉ trong 1 TaskStep** — xong thì huỷ |
 
 **Giới hạn cứng:**
@@ -234,7 +247,7 @@ Không mesh Specialist↔Specialist: Credit không gọi thẳng Legal.
 
 ```text
 1. Chọn cố định 1 goal chính cho demo (ví dụ đầu §2)
-2. TaskPlan demo: đúng 3 step — Credit ‖ Legal → Product
+2. TaskPlan demo: đúng 4 step — Credit ‖ Legal ‖ Collateral → Product
 3. Chạy thử Planner nhiều lần → validate ổn định
 4. Đưa TaskPlan đã validate vào few-shot system prompt
 5. Case ngoài kịch bản: Planner vẫn generateObject động, nhưng:
@@ -314,7 +327,7 @@ Specialist **không có tool** của domain khác → không thể “làm thay�
 
 #### (5) Demo: few-shot ghim plan 3 step
 
-Case live chính không phụ thuộc LLM tự nghĩ DAG mỗi lần — few-shot ép đúng Credit ‖ Legal → Product. Off-script dùng (1)–(4).
+Case live chính không phụ thuộc LLM tự nghĩ DAG mỗi lần — ghim đúng Credit ‖ Legal ‖ Collateral → Product. Off-script dùng (1)–(4).
 
 #### Tóm tắt trả lời giám khảo
 
@@ -480,8 +493,8 @@ Aucobot cho user **tự tay thêm nhiều bot vào 1 room** (group), rồi tự 
 
 ```text
 1 Planner    — hạ tầng điều phối, KHÔNG hiện diện như "1 bot" trong UI, không cần add vào group
-4 Specialist — Credit / Legal / Product / Ops, ship sẵn (§3.5)
-   Demo chính chạy 3 (Credit ‖ Legal → Product); Ops optional/off-script (§2.4)
+5 Specialist — Credit / Legal / Collateral / Product / Ops, ship sẵn (§3.5)
+   Demo chính chạy 4 (Credit ‖ Legal ‖ Collateral → Product); Ops optional/off-script (§2.4)
 Worker       — không phải "agent cố định" phải quản lý; chỉ sinh tạm trong 1 TaskStep rồi huỷ (§2.3)
 ```
 
@@ -494,7 +507,7 @@ Worker       — không phải "agent cố định" phải quản lý; chỉ sin
 
 #### Tóm tắt trả lời giám khảo
 
-> Hệ thống không có khái niệm "group" như nền tảng chat-bot thông thường — chọn chuyên gia là việc của Planner có kiểm soát, không phải người dùng tự lắp bot vào phòng. "Session" ở đây tương đương 1 `TaskRun`: gửi yêu cầu mới = tạo TaskRun mới, không cần hệ thống quản lý thread phức tạp. Toàn bộ demo chỉ cần 1 Planner (hạ tầng, ẩn) + 4 chuyên gia cố định, kịch bản chính chạy 3.
+> Hệ thống không có khái niệm "group" như nền tảng chat-bot thông thường — chọn chuyên gia là việc của Planner có kiểm soát. "Session" tương đương 1 `TaskRun`. Toàn bộ demo dùng 1 Planner (hạ tầng, ẩn) + 5 chuyên gia cố định; pipeline thẩm định chính chạy 4.
 
 ### 2.9 "User tạo nhiều session, mỗi session gọi thẳng 1 agent expert" — ❌ Phản biện
 
@@ -648,7 +661,7 @@ Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector �
 
 | Phương án | Đánh giá |
 |---|---|
-| **A. Ship sẵn 4 chuyên gia cố định** (catalog + allowlist hard-code) | ✅ **Chốt cho 48h** — nhất quán với Zod enum khóa `agentRole` (§2.5), an toàn, nhanh build |
+| **A. Ship sẵn 5 chuyên gia cố định** (catalog + allowlist hard-code) | ✅ **Đã chốt** — nhất quán với Zod enum khóa `agentRole` (§2.5), an toàn |
 | **B. Admin tự thêm/xóa tool cho từng agent qua UI** | 💡 Roadmap sau demo — cần policy engine + validate tool schema mỗi lần đổi, không rẻ |
 | **C. User cuối (nhân viên) tự chọn tool khi chat** | ❌ **Không làm** — sai mô hình; nhân viên dùng chuyên gia đã cấu hình sẵn, không lắp ráp agent |
 
@@ -662,7 +675,7 @@ Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector �
 
 #### 3.5.1 Chuyên gia “biết việc” thế nào? — Không train, cấu hình 4 lớp ✅
 
-**Không** fine-tune / train model riêng cho Credit/Legal/Product/Ops trong demo. Cả 4 dùng **cùng một model nền** (OpenAI; Gemini chỉ fallback gateway — §5.4). Khác biệt chuyên môn nằm ở cấu hình:
+**Không** fine-tune / train model riêng cho Credit/Legal/Collateral/Product/Ops trong demo. Cả 5 dùng **cùng một model nền** (OpenAI; Gemini chỉ fallback gateway — §5.4). Khác biệt chuyên môn nằm ở cấu hình:
 
 | Lớp | Nội dung | Nơi sống |
 |---|---|---|
@@ -672,7 +685,7 @@ Thông điệp: **không hard-code agent vào SHB; SHB MCP Suite là connector �
 | **4. RAG theo domain** | Tri thức SBV/SHB/sản phẩm + citation | `credit_kb_search` / `legal_kb_search` / … — §4 |
 
 ```text
-Sai:  "Huấn luyện" = fine-tune 4 model riêng cho 4 chuyên gia
+Sai:  "Huấn luyện" = fine-tune model riêng cho từng chuyên gia
 Đúng: "Ship sẵn" = 1 model nền + 4 bộ (prompt + catalog + tools + RAG)
 ```
 
@@ -680,11 +693,11 @@ Sai:  "Huấn luyện" = fine-tune 4 model riêng cho 4 chuyên gia
 
 #### Tóm tắt trả lời giám khảo
 
-> Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5) — không phải cấu hình rời. Về UX, chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**, nhân viên dùng ngay không cần setup. “Chuyên gia” không phải model đã train sẵn: cùng một model nền, khác nhau ở **system prompt + catalog + MCP + RAG**. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý sau demo, nhưng không phải việc của người dùng cuối, và không cần trong 48h vì có thể phá vỡ guardrail routing đã chốt.
+> Mỗi chuyên gia có allowlist tool cố định, khai báo trong Agent Catalog và ép bằng validation (§2.5). Về UX, hệ thống **ship sẵn 5 chuyên gia đã cấu hình đầy đủ**. “Chuyên gia” không phải model đã train riêng: cùng một model nền, khác nhau ở **system prompt + catalog + MCP + RAG**.
 
 #### 3.5.2 Ranh giới quản trị khi triển khai cho ngân hàng khác ✅
 
-Platform giữ **Planner + 4 Specialist + Agent Catalog + schema + tool allowlist** làm core ship sẵn. Từng ngân hàng không phải tự xây lại agent; họ cung cấp hai phần khác biệt: **connector MCP** tới hệ thống nội bộ và **tài liệu RAG** đã được duyệt.
+Platform giữ **Planner + 5 Specialist + Agent Catalog + schema + tool allowlist** làm core ship sẵn. Từng ngân hàng cung cấp **connector MCP** tới hệ thống nội bộ và **tài liệu RAG** chuẩn hóa.
 
 | Vai | Được quyết định | Không quyết định |
 |---|---|---|
@@ -1075,7 +1088,7 @@ Dữ liệu lấy từ `TaskRun`/`TaskStep` (+ `Automation` / `AutomationRun`). 
 
 ```text
 Baseline single-agent:  1 agent, full tool, KHÔNG planner
-Hệ thống multi-agent:   Planner + 4 Specialist
+Hệ thống multi-agent:   Planner + 5 Specialist
 
 Cùng bộ N câu hỏi cross-functional → so sánh:
   - Tỷ lệ gọi đúng tool / đúng domain
@@ -1279,7 +1292,7 @@ Giai đoạn 2: FE trỏ NEXT_PUBLIC_API_URL → backend thật
 
 | # | Câu hỏi | Trạng thái |
 |---|---|---|
-| 1 | Mức độ DAG kịch bản demo? | ✅ Đã chốt — **cố định 3** TaskStep: Credit ‖ Legal → Product (§2.4) |
+| 1 | Mức độ DAG kịch bản demo? | ✅ Đã chốt — **cố định 4** TaskStep: Credit ‖ Legal ‖ Collateral → Product (§2.4) |
 | 2 | Approval: người thật hay auto-approve? | ✅ Đã chốt — **người thật bấm duyệt** (§6) |
 | 3 | Multi-user/auth trong demo? | ✅ Đã chốt: **bỏ auth** |
 | 4 | Số MCP server dựng thật? | ✅ Đã chốt — **`mcp-los` + `mcp-compliance` thật**; 3 còn lại mock nông (§3) |
@@ -1303,9 +1316,9 @@ Giai đoạn 2: FE trỏ NEXT_PUBLIC_API_URL → backend thật
 | 22 | Nhân viên dùng data khách hàng nào — có cần trong track thi không? | ✅ Đã chốt — không bắt buộc nhưng **nên làm bản mô phỏng nhẹ**: Employee/Customer/Portfolio + scope-check tái dùng Approval (§2.7) |
 | 23 | Kiến trúc có sẵn sàng nhiều ngân hàng, không chỉ SHB? | ✅ Đã chốt — `bankCode` seam trên mọi model lõi; demo seed 1 giá trị, không xây UI đa tenant (§9.5.2) |
 | 24 | Có cần RBAC engine / auth thật để hỗ trợ data scope không? | ✅ Đã chốt — **không** trong 48h; scope-check + Approval là đủ cho demo (§9.5.1) |
-| 25 | Agent có quyền gọi API/tool nào — user tự cấu hình hay ship sẵn? | ✅ Đã chốt — **ship sẵn 4 chuyên gia cấu hình đầy đủ**; không có UI cấu hình cho end-user; admin config là roadmap (§3.5) |
+| 25 | Agent có quyền gọi API/tool nào — user tự cấu hình hay ship sẵn? | ✅ Đã chốt — **ship sẵn 5 chuyên gia cấu hình đầy đủ**; không có UI cấu hình cho end-user (§3.5) |
 | 26 | Có xây Graph DB / BM25 engine / Conflict Detector riêng cho văn bản sửa đổi không? | ✅ Đã chốt — **không**; dùng bản lite: Postgres full-text + `DocumentRelation` + versioning field + prompt engineering (§4.3) |
-| 27 | Có cần Group / multi-session như Aucobot không? | ✅ Đã chốt — **không**; "session" = 1 `TaskRun`; chỉ 1 Planner (ẩn) + 4 Specialist cố định, demo chạy 3 (§2.8) |
+| 27 | Có cần Group / multi-session như Aucobot không? | ✅ Đã chốt — **không**; "session" = 1 `TaskRun`; chỉ 1 Planner (ẩn) + 5 Specialist cố định, pipeline chính chạy 4 (§2.8) |
 | 28 | User tự tạo session gọi thẳng 1 agent, chat trực tiếp bỏ qua Planner? | ✅ Đã chốt — **không**; giải bằng Planner triage (1-step fast path) + lộ baseline single-agent (§8) thành toggle UI (§2.9) |
 | 29 | Sau demo bán SaaS shared hay phần mềm cho bank? | ✅ Đã chốt — **license / on-prem (single-tenant)**; bank tự triển khai + tự gắn adapter MCP; không SaaS shared DB (§1.2, §9.5.4) |
 | 30 | Expert ship sẵn huấn luyện thế nào — fine-tune hay prompt? | ✅ Đã chốt — **không fine-tune**; 4 lớp: system prompt + Agent Catalog + MCP allowlist + RAG domain; chung 1 model nền (§3.5.1) |
@@ -1362,7 +1375,7 @@ Ba tiêu chí nhấn mạnh:
 
 ### 12.10b “Trợ lý điều phối dựa vào đâu để không giao nhầm chuyên gia?”
 
-> Planner không đoán cảm tính. Nó đọc **Agent Catalog** (mission, intent, capability, MCP allowlist theo từng role), sinh **TaskPlan** với `agentRole` bị khóa bằng Zod enum, rồi **validation deterministic** trước khi dispatch (capability khớp role, dependsOn hợp lệ, trần số step). Mỗi Specialist chỉ được inject tool đúng domain — dù routing lệch cũng không gọi được MCP ngoài allowlist. Kịch bản demo còn **ghim cố định 3 step** (Credit ‖ Legal → Product) bằng few-shot.
+> Planner không đoán cảm tính. Nó đọc **Agent Catalog** (mission, intent, capability, MCP allowlist theo từng role), sinh **TaskPlan** với `agentRole` bị khóa bằng Zod enum, rồi **validation deterministic** trước khi dispatch (capability khớp role, dependsOn hợp lệ, trần số step). Mỗi Specialist chỉ được inject tool đúng domain — dù routing lệch cũng không gọi được MCP ngoài allowlist. Kịch bản demo còn **ghim cố định 4 step** (Credit ‖ Legal ‖ Collateral → Product).
 
 ### 12.11 “Tại sao Next.js thay vì React thuần?”
 
@@ -1414,7 +1427,7 @@ Ba tiêu chí nhấn mạnh:
 
 ### 12.16g “Agent có quyền gọi API/tool nào? Nhân viên có tự cấu hình được không?”
 
-> Mỗi chuyên gia có allowlist tool cố định trong Agent Catalog (§2.5, §3.5) — ví dụ Credit Agent chỉ gọi `mcp-core-banking` + `mcp-los`, Legal chỉ gọi `mcp-compliance`. Chúng tôi **ship sẵn 4 chuyên gia đã cấu hình đầy đủ**; nhân viên dùng ngay, không tự thêm/xóa tool. Cho phép admin ngân hàng tùy biến catalog qua một "Agent Studio" là hướng mở rộng hợp lý, nhưng không cần trong bản demo — thêm UI cấu hình lúc này có thể phá vỡ chính cơ chế chống điều phối nhầm đã dựng.
+> Mỗi chuyên gia có allowlist tool cố định trong Agent Catalog (§2.5, §3.5) — ví dụ Credit chỉ gọi `mcp-core-banking` + `mcp-los`, Legal chỉ gọi `mcp-compliance`, Collateral chỉ gọi `get_collateral_package`. Hệ thống **ship sẵn 5 chuyên gia đã cấu hình đầy đủ**; nhân viên dùng ngay, không tự thêm/xóa tool.
 
 ### 12.16l “Chuyên gia ship sẵn được huấn luyện thế nào — train model hay chỉ system prompt?”
 
@@ -1426,7 +1439,7 @@ Ba tiêu chí nhấn mạnh:
 
 ### 12.16i “Có cần chức năng Group hay tạo session mới như Aucobot không?”
 
-> Không. Aucobot cho user tự thêm nhiều bot vào 1 room (Group) và quản lý nhiều thread song song. Ở đây, chọn chuyên gia là việc của **Planner có kiểm soát** (§2, §2.5) — người dùng không tự lắp bot vào phòng, nên khái niệm Group không áp dụng. "Session" tương đương 1 `TaskRun`: gửi yêu cầu mới là tạo TaskRun mới, không cần hệ thống thread/rename/archive. Toàn bộ hệ thống chỉ cần dựng **1 Planner (hạ tầng, ẩn) + 4 Specialist cố định** (Credit/Legal/Product/Ops); kịch bản demo chính chạy 3 (Credit ‖ Legal → Product), Ops là off-script/optional (§2.8).
+> Không. Aucobot cho user tự thêm nhiều bot vào 1 room (Group) và quản lý nhiều thread song song. Ở đây, chọn chuyên gia là việc của **Planner có kiểm soát** (§2, §2.5) — người dùng không tự lắp bot vào phòng, nên khái niệm Group không áp dụng. "Session" tương đương 1 `TaskRun`: gửi yêu cầu mới là tạo TaskRun mới, không cần hệ thống thread/rename/archive. Toàn bộ hệ thống chỉ cần dựng **1 Planner (hạ tầng, ẩn) + 5 Specialist cố định** (Credit/Legal/Collateral/Product/Ops); kịch bản demo chính chạy 4 (Credit ‖ Legal ‖ Collateral → Product), Ops là off-script/optional (§2.8).
 
 ### 12.16j “Cho user tạo nhiều session, mỗi session chat thẳng với 1 agent expert — có nên không?”
 

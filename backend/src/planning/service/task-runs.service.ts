@@ -158,13 +158,4 @@ export class TaskRunsService {
     return task;
   }
 
-  async list(limit = 20) {
-    return this.prisma.taskRun.findMany({
-      take: Math.min(limit, 50),
-      orderBy: { createdAt: 'desc' },
-      include: {
-        steps: { select: { id: true, agentRole: true, status: true } },
-      },
-    });
-  }
 }

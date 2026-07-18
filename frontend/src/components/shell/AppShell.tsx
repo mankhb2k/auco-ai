@@ -1,11 +1,8 @@
 "use client";
 
-import { AuditPanel } from "@/components/audit/AuditPanel";
-import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
-import { ComparePanel } from "@/components/compare/ComparePanel";
-import { HistoryPanel } from "@/components/history/HistoryPanel";
+import { AskAiPanel } from "@/components/ask-ai/AskAiPanel";
 import { KnowledgePanel } from "@/components/knowledge/KnowledgePanel";
-import { McpSuitePanel } from "@/components/mcp/McpSuitePanel";
+import { LoanRequestsPanel } from "@/components/loan-requests/LoanRequestsPanel";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { AppTopbar } from "@/components/shell/AppTopbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -27,18 +24,12 @@ export function AppShell() {
         <AppSidebar />
         <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
           <AppTopbar />
-          {mainTab === "workspace" ? (
-            <ChatWorkspace />
-          ) : (
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              {mainTab === "history" ? <HistoryPanel /> : null}
-              {mainTab === "compare" ? <ComparePanel /> : null}
-              {mainTab === "knowledge" ? <KnowledgePanel /> : null}
-              {mainTab === "mcp" ? <McpSuitePanel /> : null}
-              {mainTab === "audit" ? <AuditPanel /> : null}
-            </div>
-          )}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            {mainTab === "loans" ? <LoanRequestsPanel /> : null}
+            {mainTab === "knowledge" ? <KnowledgePanel /> : null}
+          </div>
         </SidebarInset>
+        <AskAiPanel />
       </SidebarProvider>
     </TooltipProvider>
   );
