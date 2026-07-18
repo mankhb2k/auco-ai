@@ -18,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AGENT_LABEL, formatTime } from "@/lib/labels";
+import {
+  AGENT_LABEL,
+  AUTOMATION_STATUS_LABEL,
+  formatTime,
+  labelOf,
+  ON_OFF_LABEL,
+} from "@/lib/labels";
 import { useAppStore } from "@/stores/app.store";
 import { Play } from "lucide-react";
 import { toast } from "sonner";
@@ -33,9 +39,9 @@ export function AutomationsPanel() {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Automations</CardTitle>
+          <CardTitle className="text-base">Tự động hóa</CardTitle>
           <CardDescription>
-            Agent đề xuất · user duyệt · user bật/tắt — không tự bật
+            Chuyên gia đề xuất · người duyệt · người bật/tắt — không tự bật
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -49,10 +55,10 @@ export function AutomationsPanel() {
                 <Badge variant="secondary">{AGENT_LABEL[a.createdByAgentRole]}</Badge>
               </div>
               <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
-                <span>cron: {a.cronExpr ?? "—"}</span>
+                <span>Lịch: {a.cronExpr ?? "—"}</span>
                 <span>{a.timezone}</span>
-                <span>next: {formatTime(a.nextRunAt)}</span>
-                <span>last: {formatTime(a.lastRunAt)}</span>
+                <span>Lần tới: {formatTime(a.nextRunAt)}</span>
+                <span>Lần trước: {formatTime(a.lastRunAt)}</span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -60,18 +66,26 @@ export function AutomationsPanel() {
                     checked={a.enabled}
                     onCheckedChange={(checked) => {
                       toggleAutomation(a.id, checked);
-                      toast.message(checked ? "Automation đã bật" : "Automation đã tắt");
+                      toast.message(
+                        checked
+                          ? "Đã bật tự động hóa"
+                          : "Đã tắt tự động hóa",
+                      );
                     }}
                   />
-                  <span className="text-sm">{a.enabled ? "enabled" : "disabled"}</span>
+                  <span className="text-sm">
+                    {labelOf(ON_OFF_LABEL, a.enabled ? "enabled" : "disabled")}
+                  </span>
                 </div>
-                <Badge variant="outline">{a.status}</Badge>
+                <Badge variant="outline">
+                  {labelOf(AUTOMATION_STATUS_LABEL, a.status)}
+                </Badge>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
                     runAutomationNow(a.id);
-                    toast.success("Đang chạy thử (mock)");
+                    toast.success("Đang chạy thử (mô phỏng)");
                   }}
                 >
                   <Play className="size-4" />
@@ -85,8 +99,8 @@ export function AutomationsPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Lịch sử AutomationRun</CardTitle>
-          <CardDescription>Trace riêng từng lần chạy lịch</CardDescription>
+          <CardTitle className="text-base">Lịch sử chạy tự động</CardTitle>
+          <CardDescription>Nhật ký riêng từng lần chạy lịch</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -102,7 +116,9 @@ export function AutomationsPanel() {
                 <TableRow key={r.id}>
                   <TableCell className="text-xs">{formatTime(r.startedAt)}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{r.status}</Badge>
+                    <Badge variant="secondary">
+                      {labelOf(AUTOMATION_STATUS_LABEL, r.status)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="max-w-[280px] text-xs">
                     {r.resultSummary ?? "—"}

@@ -18,9 +18,9 @@ export function AppShell() {
 
   return (
     <TooltipProvider>
-      <SidebarProvider>
+      <SidebarProvider className="h-svh min-h-0">
         <AppSidebar />
-        <SidebarInset className="flex max-h-svh flex-col overflow-hidden">
+        <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
           <AppTopbar />
           {mainTab === "workspace" ? (
             <ChatWorkspace />

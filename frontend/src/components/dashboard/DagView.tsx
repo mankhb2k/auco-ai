@@ -69,7 +69,7 @@ function StepNode({ data }: NodeProps) {
       <p className="mt-1 line-clamp-2 text-xs leading-snug">{step.label}</p>
       {step.mode === "spawn_workers" && step.workers ? (
         <p className="text-muted-foreground mt-1 text-[10px]">
-          Workers: {step.workers.filter((w) => w.status === "done").length}/
+          Worker: {step.workers.filter((w) => w.status === "done").length}/
           {step.workers.length}
         </p>
       ) : null}
@@ -118,8 +118,10 @@ export function DagView() {
     return (
       <Card className="h-full">
         <CardHeader>
-          <CardTitle className="text-base">DAG</CardTitle>
-          <CardDescription>TaskStep graph sẽ hiện sau khi Planner lập kế hoạch.</CardDescription>
+          <CardTitle className="text-base">Sơ đồ bước</CardTitle>
+          <CardDescription>
+            Sơ đồ bước sẽ hiện sau khi bộ điều phối lập kế hoạch.
+          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -128,15 +130,15 @@ export function DagView() {
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">DAG · TaskStep</CardTitle>
+        <CardTitle className="text-base">Sơ đồ · Các bước</CardTitle>
         <CardDescription>
           {activeRun.mode === "multi"
             ? activeRun.scenario === "corporate"
-              ? "Credit ‖ Legal → Product · DN / TT39"
+              ? "Tín dụng ‖ Pháp lý → Sản phẩm · DN / TT39"
               : activeRun.scenario === "fx"
-                ? "Credit ‖ Legal → Product · FX / IMF"
-                : "Credit ‖ Legal → Product (Credit spawn ≤3 worker)"
-            : "Baseline single-agent — 1 step"}
+                ? "Tín dụng ‖ Pháp lý → Sản phẩm · FX / IMF"
+                : "Tín dụng ‖ Pháp lý → Sản phẩm (Tín dụng tạo ≤3 worker)"
+            : "Đối chứng một chuyên gia — 1 bước"}
         </CardDescription>
       </CardHeader>
       <CardContent className="min-h-[360px] flex-1 p-0">

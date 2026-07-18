@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AGENT_LABEL } from "@/lib/labels";
+import { AGENT_LABEL, APPROVAL_REASON_LABEL, labelOf } from "@/lib/labels";
 import { useAppStore } from "@/stores/app.store";
 import { Check, X } from "lucide-react";
 
@@ -25,9 +25,9 @@ export function ApprovalPanel() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Approval</CardTitle>
+        <CardTitle className="text-base">Duyệt yêu cầu</CardTitle>
         <CardDescription>
-          Người thật duyệt side-effect — không auto-approve
+          Người thật duyệt hành động có tác động hệ thống — không tự duyệt
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -40,7 +40,12 @@ export function ApprovalPanel() {
             <div key={step.id} className="space-y-3 rounded-lg border p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>{AGENT_LABEL[step.agentRole]}</Badge>
-                <Badge variant="outline">{step.approvalReason ?? "mutates"}</Badge>
+                <Badge variant="outline">
+                  {labelOf(
+                    APPROVAL_REASON_LABEL,
+                    step.approvalReason ?? "mutates",
+                  )}
+                </Badge>
               </div>
               <p className="text-sm">{step.approvalPreview ?? step.label}</p>
               <div className="flex gap-2">
@@ -48,7 +53,7 @@ export function ApprovalPanel() {
                   size="sm"
                   onClick={() => {
                     approveStep(step.id);
-                    toast.success("Đã duyệt — tool thực thi (mock)");
+                    toast.success("Đã duyệt — công cụ đã thực thi (mô phỏng)");
                   }}
                 >
                   <Check className="size-4" />
@@ -59,7 +64,7 @@ export function ApprovalPanel() {
                   variant="destructive"
                   onClick={() => {
                     rejectStep(step.id);
-                    toast.error("Đã từ chối — TaskRun dừng");
+                    toast.error("Đã từ chối — tác vụ dừng");
                   }}
                 >
                   <X className="size-4" />

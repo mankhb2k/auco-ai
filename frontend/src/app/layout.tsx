@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Expert Agents — SHB",
+  title: "Chuyên gia số — SHB",
   description:
-    "Dashboard multi-agent Planner + Specialist cho vận hành ngân hàng (mock demo)",
+    "Bảng điều khiển đa chuyên gia cho vận hành ngân hàng (bản demo mô phỏng)",
 };
 
 export default function RootLayout({
@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="vi"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="h-full overflow-hidden flex flex-col font-sans">
         {children}
         <Toaster richColors position="top-right" />
       </body>

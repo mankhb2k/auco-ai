@@ -97,7 +97,7 @@ export const seedKnowledgeDocuments: KnowledgeUiDocument[] = [
 ];
 
 export const seedMcpSuite: McpUiSuite = {
-  suite: "SHB MCP Suite",
+  suite: "Bộ kết nối MCP SHB",
   bankCode: "SHB",
   connected: true,
   connectorCount: 5,

@@ -276,7 +276,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 status: "done",
                 finishedAt: new Date().toISOString(),
                 resultSummary:
-                  "Chạy thử: đã tổng hợp rủi ro tín dụng tháng (mock) và gửi notification.",
+                  "Chạy thử: đã tổng hợp rủi ro tín dụng tháng (mô phỏng) và gửi thông báo.",
               }
             : r,
         ),

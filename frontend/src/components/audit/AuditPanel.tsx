@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AUDIT_ACTION_LABEL, labelOf } from "@/lib/labels";
 import { seedAuditEvents, type AuditUiEvent } from "@/lib/mock/governance";
 import { useAppStore } from "@/stores/app.store";
 import { ClipboardList, RefreshCw } from "lucide-react";
@@ -25,7 +26,7 @@ export function AuditPanel() {
 
   function resetMock() {
     setEvents(structuredClone(seedAuditEvents));
-    toast.success("Đã nạp lại audit mock");
+    toast.success("Đã nạp lại nhật ký mô phỏng");
   }
 
   if (actor?.accessLayer !== "manager" && actor?.accessLayer !== "it_admin") {
@@ -39,15 +40,15 @@ export function AuditPanel() {
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base">
               <ClipboardList className="size-4" />
-              Audit log (demo)
+              Nhật ký kiểm soát (demo)
             </CardTitle>
             <CardDescription>
-              Mock actorId · action · resource · at — đủ kể chuyện governance
-              khi test UI không cần backend.
+              Mô phỏng người thực hiện · hành động · tài nguyên · thời điểm —
+              đủ kể chuyện kiểm soát khi test giao diện không cần backend.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">Mock demo</Badge>
+            <Badge variant="outline">Mô phỏng</Badge>
             <Button variant="outline" size="sm" onClick={resetMock}>
               <RefreshCw className="size-4" />
               Làm mới
@@ -62,7 +63,9 @@ export function AuditPanel() {
             return (
               <div key={event.id} className="rounded-lg border p-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{event.action}</Badge>
+                  <Badge variant="secondary">
+                    {labelOf(AUDIT_ACTION_LABEL, event.action)}
+                  </Badge>
                   <span className="text-muted-foreground text-xs">
                     {new Date(event.createdAt).toLocaleString("vi-VN")}
                   </span>

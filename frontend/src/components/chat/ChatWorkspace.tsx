@@ -175,14 +175,15 @@ function DetailsSheet() {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="text-muted-foreground h-8 px-2 text-xs">
-          Chi tiết DAG · Trace · Cost
+          Chi tiết sơ đồ · Truy vết · Chi phí
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>Quan sát vận hành</SheetTitle>
           <SheetDescription>
-            DAG, timeline tool/citation và token — tách khỏi luồng chat chính.
+            Sơ đồ bước, dòng thời gian công cụ/trích dẫn và token — tách khỏi
+            luồng trò chuyện chính.
           </SheetDescription>
         </SheetHeader>
         <div className="mt-4 space-y-4">
@@ -205,11 +206,11 @@ function EmptyHero() {
         <Network className="size-5" />
       </div>
       <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
-        Hỏi Planner bất kỳ yêu cầu nghiệp vụ
+        Hỏi bộ điều phối bất kỳ yêu cầu nghiệp vụ
       </h2>
       <p className="text-muted-foreground mt-2 max-w-md text-center text-sm">
-        Một ô chat duy nhất. Chuyên gia Credit, Legal, Product được điều phối
-        tự động — bạn chỉ cần duyệt khi có side-effect.
+        Một ô trò chuyện duy nhất. Chuyên gia Tín dụng, Pháp lý, Sản phẩm được
+        điều phối tự động — bạn chỉ cần duyệt khi có tác động hệ thống.
       </p>
       <div className="mt-8 flex w-full flex-wrap justify-center gap-2">
         {SCENARIO_PRESETS.map((p) => (
@@ -262,7 +263,7 @@ function Conversation() {
         <div className="space-y-5">
           <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
             <Sparkles className="size-3.5" />
-            Planner
+            Bộ điều phối
             <Badge variant="outline" className="normal-case">
               {activeRun.scenario}
             </Badge>
@@ -473,7 +474,7 @@ function ChatComposer() {
                 >
                   <img
                     src={img.previewUrl}
-                    alt="Preview"
+                    alt="Xem trước"
                     className="size-full object-cover rounded-xl"
                   />
                   

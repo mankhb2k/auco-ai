@@ -48,15 +48,15 @@ export function AgentCoordinationProgress({
   const getAgentLabel = (role: string) => {
     switch (role) {
       case "credit":
-        return "Credit (Thẩm định)";
+        return "Tín dụng (Thẩm định)";
       case "legal":
-        return "Legal / Compliance (Pháp lý & Tuân thủ)";
+        return "Pháp lý / Tuân thủ";
       case "product":
-        return "Product (Phát triển sản phẩm)";
+        return "Sản phẩm";
       case "ops":
-        return "Operations (Vận hành)";
+        return "Vận hành";
       default:
-        return role.toUpperCase();
+        return role;
     }
   };
 
@@ -96,15 +96,14 @@ export function AgentCoordinationProgress({
     }
   };
 
-  // Extract the DAG pin path (e.g. Credit || Legal -> Product)
   const getDagPinText = () => {
     if (activeRun.scenario === "corporate") {
-      return "Credit || Legal ➔ Product (DN 50 tỷ / TT39)";
+      return "Tín dụng ‖ Pháp lý ➔ Sản phẩm (DN 50 tỷ / TT39)";
     }
     if (activeRun.scenario === "fx") {
-      return "Ops ➔ Legal (Mua bán ngoại tệ tệ / TT02)";
+      return "Vận hành ➔ Pháp lý (Mua bán ngoại tệ / TT02)";
     }
-    return "Credit ➔ Ops (Vay thế chấp / TT01)";
+    return "Tín dụng ➔ Vận hành (Vay thế chấp / TT01)";
   };
 
   return (
@@ -127,7 +126,7 @@ export function AgentCoordinationProgress({
             <div className="flex items-center gap-2">
               <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm tracking-tight flex items-center gap-1">
                 <Sparkles className="size-3.5 text-orange-500 fill-orange-500" />
-                SHB PLANNER ·
+                SHB ĐIỀU PHỐI ·
               </span>
               <span className="text-xs uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
                 {activeRun.scenario}
@@ -168,7 +167,7 @@ export function AgentCoordinationProgress({
             {/* Pinned DAG */}
             <div className="flex items-center gap-2 text-xs bg-orange-50/30 dark:bg-orange-950/10 border border-dashed border-orange-200/50 dark:border-orange-900/20 rounded-xl px-3 py-2 text-zinc-600 dark:text-zinc-400 font-mono">
               <Network className="size-3.5 text-orange-500" />
-              <span className="font-semibold text-zinc-400 dark:text-zinc-500">DAG ghim:</span>
+              <span className="font-semibold text-zinc-400 dark:text-zinc-500">Sơ đồ ghim:</span>
               <span className="text-zinc-800 dark:text-zinc-200 font-medium">{getDagPinText()}</span>
             </div>
 
@@ -274,7 +273,9 @@ export function AgentCoordinationProgress({
               <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-900/60 text-[11px] text-zinc-400 dark:text-zinc-500">
                 <div className="flex items-center gap-1 font-medium bg-zinc-50 dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-100 dark:border-zinc-800/50">
                   <Cpu className="size-3 text-zinc-400" />
-                  <span>{activeRun.usage.totalTokens.toLocaleString()} tokens</span>
+                  <span>
+                    {activeRun.usage.totalTokens.toLocaleString("vi-VN")} token
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 font-medium bg-zinc-50 dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-100 dark:border-zinc-800/50">
                   <DollarSign className="size-3 text-zinc-400" />

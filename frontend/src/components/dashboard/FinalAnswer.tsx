@@ -17,7 +17,9 @@ export function FinalAnswer() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Câu trả lời tổng hợp</CardTitle>
-          <CardDescription>Planner sẽ synthesize khi mọi step hoàn tất.</CardDescription>
+          <CardDescription>
+            Bộ điều phối sẽ tổng hợp khi mọi bước hoàn tất.
+          </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -27,7 +29,9 @@ export function FinalAnswer() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Câu trả lời tổng hợp</CardTitle>
-        <CardDescription>Một câu trả lời duy nhất từ Planner</CardDescription>
+        <CardDescription>
+          Một câu trả lời duy nhất từ bộ điều phối
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm leading-relaxed whitespace-pre-wrap">

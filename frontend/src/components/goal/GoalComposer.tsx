@@ -26,10 +26,10 @@ export function GoalComposer() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Gửi yêu cầu tới Planner</CardTitle>
+        <CardTitle className="text-base">Gửi yêu cầu tới bộ điều phối</CardTitle>
         <CardDescription>
           Không chọn chuyên gia — hệ thống tự điều phối
-          {mode === "single" ? " (baseline single-agent đang bật)" : ""}.
+          {mode === "single" ? " (chế độ một chuyên gia đang bật)" : ""}.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
