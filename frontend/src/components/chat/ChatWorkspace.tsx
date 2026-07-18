@@ -451,12 +451,12 @@ function ChatComposer() {
               {selectedImages.map((img) => (
                 <div
                   key={img.id}
-                  className="relative size-12 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-background group animate-in fade-in zoom-in-95 duration-150"
+                  className="relative size-12 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm bg-background group animate-in fade-in zoom-in-95 duration-150"
                 >
                   <img
                     src={img.previewUrl}
                     alt="Preview"
-                    className="size-full object-cover"
+                    className="size-full object-cover rounded-xl"
                   />
                   
                   {/* Close Button */}
