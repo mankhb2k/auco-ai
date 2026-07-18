@@ -13,10 +13,9 @@ import { useAppStore } from "@/stores/app.store";
 export function ComparePanel() {
   const compare = useAppStore((s) => s.compare);
   const mode = useAppStore((s) => s.mode);
-  const mcp = useAppStore((s) => s.mcp);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">So sánh Single vs Multi</CardTitle>
@@ -70,33 +69,6 @@ export function ComparePanel() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">SHB MCP Suite</CardTitle>
-          <CardDescription>Trạng thái connector (mock)</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {mcp.connectors.map((c) => (
-            <div
-              key={c.id}
-              className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
-            >
-              <div>
-                <p className="font-medium">{c.name}</p>
-                <p className="text-muted-foreground text-xs">{c.id}</p>
-              </div>
-              <div className="text-right">
-                <Badge variant={c.status === "connected" ? "default" : "secondary"}>
-                  {c.status}
-                </Badge>
-                {c.lastTool ? (
-                  <p className="text-muted-foreground mt-1 text-[10px]">{c.lastTool}</p>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }

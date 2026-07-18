@@ -24,6 +24,7 @@ export const employees: Employee[] = [
     bankCode: "SHB",
     displayName: "Nguyễn Thị B — Chuyên viên Tín dụng",
     role: "credit_officer",
+    accessLayer: "employee",
     branchCode: "CN_CAU_GIAY",
   },
   {
@@ -31,6 +32,7 @@ export const employees: Employee[] = [
     bankCode: "SHB",
     displayName: "Trần Văn C — Nhân viên Vận hành",
     role: "ops_officer",
+    accessLayer: "employee",
     branchCode: "CN_CAU_GIAY",
   },
   {
@@ -38,9 +40,27 @@ export const employees: Employee[] = [
     bankCode: "SHB",
     displayName: "Lê Minh D — Giám đốc chi nhánh",
     role: "branch_manager",
+    accessLayer: "manager",
     branchCode: "CN_CAU_GIAY",
   },
+  {
+    id: "emp-it-e",
+    bankCode: "SHB",
+    displayName: "Trần IT E — Quản trị Platform",
+    role: "it_admin",
+    accessLayer: "it_admin",
+    branchCode: null,
+  },
 ];
+
+export const ACCESS_LAYER_LABEL: Record<
+  Employee["accessLayer"],
+  string
+> = {
+  it_admin: "IT / Platform",
+  manager: "Trưởng phòng",
+  employee: "Nhân viên",
+};
 
 /** Full demo customer catalog (24 records). */
 export const customerCatalog = customersJson.customers;

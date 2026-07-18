@@ -3,7 +3,7 @@ import { McpClientModule } from '../mcp-client/mcp-client.module';
 import { PlanningModule } from '../planning/planning.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 import { ApprovalsController } from './approvals.controller';
-import { ApprovalsService } from './approvals.service';
+import { ApprovalsService } from './service/approvals.service';
 
 @Module({
   imports: [PlanningModule, McpClientModule, RealtimeModule],

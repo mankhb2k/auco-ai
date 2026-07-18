@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RealtimeGateway } from './realtime.gateway';
-import { RealtimeService } from './realtime.service';
+import { RealtimeService } from './service/realtime.service';
 
 @Module({
   providers: [RealtimeService, RealtimeGateway],

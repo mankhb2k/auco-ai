@@ -19,14 +19,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
+import { ACCESS_LAYER_LABEL } from "@/lib/mock/seed";
 import { useAppStore } from "@/stores/app.store";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, UserRound } from "lucide-react";
 
 export function AppTopbar() {
   const mainTab = useAppStore((s) => s.mainTab);
   const employees = useAppStore((s) => s.employees);
   const employeeId = useAppStore((s) => s.employeeId);
   const setEmployeeId = useAppStore((s) => s.setEmployeeId);
+  const currentEmployee =
+    employees.find((e) => e.id === employeeId) ?? employees[0];
   const mode = useAppStore((s) => s.mode);
   const setMode = useAppStore((s) => s.setMode);
   const outOfPortfolioDemo = useAppStore((s) => s.outOfPortfolioDemo);
@@ -41,7 +44,13 @@ export function AppTopbar() {
         ? "Automations"
         : mainTab === "history"
           ? "Lịch sử"
-          : "So sánh & MCP";
+          : mainTab === "knowledge"
+            ? "Knowledge Management"
+            : mainTab === "mcp"
+              ? "MCP Connector Management"
+              : mainTab === "audit"
+                ? "Audit Log"
+                : "So sánh Single vs Multi";
 
   return (
     <header className="bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b px-3 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -67,6 +76,33 @@ export function AppTopbar() {
         ) : null}
       </div>
 
+      {/* role.md R5 — banner + switcher luôn hiện, không phụ thuộc tab */}
+      <Badge variant="secondary" className="hidden items-center gap-1 md:inline-flex">
+        <UserRound className="size-3" />
+        <span className="max-w-44 truncate">{currentEmployee.displayName}</span>
+        <span className="text-muted-foreground">
+          · {ACCESS_LAYER_LABEL[currentEmployee.accessLayer]}
+        </span>
+      </Badge>
+
+      <Select value={employeeId} onValueChange={setEmployeeId}>
+        <SelectTrigger className="h-8 w-[9.5rem] sm:w-[13rem]">
+          <SelectValue placeholder="Đổi vai demo" />
+        </SelectTrigger>
+        <SelectContent>
+          {employees.map((e) => (
+            <SelectItem key={e.id} value={e.id}>
+              <span className="flex flex-col text-left">
+                <span>{e.displayName}</span>
+                <span className="text-muted-foreground text-xs">
+                  {ACCESS_LAYER_LABEL[e.accessLayer]}
+                </span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {mainTab === "workspace" ? (
         <>
           <DropdownMenu>
@@ -76,7 +112,7 @@ export function AppTopbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
-              <DropdownMenuLabel>Cài đặt phiên</DropdownMenuLabel>
+              <DropdownMenuLabel>Cài đặt phiên Workspace</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="space-y-3 p-2">
                 <div className="flex items-center justify-between gap-3">
@@ -93,18 +129,6 @@ export function AppTopbar() {
                     onCheckedChange={setOutOfPortfolioDemo}
                   />
                 </div>
-                <Select value={employeeId} onValueChange={setEmployeeId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Nhân viên" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

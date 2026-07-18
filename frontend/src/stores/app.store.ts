@@ -22,7 +22,32 @@ import type {
   TaskRun,
 } from "@/lib/types/domain";
 
-type MainTab = "workspace" | "automations" | "history" | "compare";
+type MainTab =
+  | "workspace"
+  | "automations"
+  | "history"
+  | "compare"
+  | "knowledge"
+  | "mcp"
+  | "audit";
+
+const TAB_LAYERS: Record<MainTab, Array<"employee" | "manager" | "it_admin">> = {
+  workspace: ["employee", "manager"],
+  automations: ["employee", "manager"],
+  history: ["employee", "manager"],
+  compare: ["employee"],
+  knowledge: ["manager"],
+  mcp: ["it_admin"],
+  audit: ["manager", "it_admin"],
+};
+
+function fallbackTabForLayer(
+  layer: "employee" | "manager" | "it_admin",
+): MainTab {
+  if (layer === "it_admin") return "mcp";
+  if (layer === "manager") return "knowledge";
+  return "workspace";
+}
 
 interface AppState {
   employeeId: string;
@@ -74,7 +99,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   isSimulating: false,
   outOfPortfolioDemo: false,
 
-  setEmployeeId: (id) => set({ employeeId: id }),
+  setEmployeeId: (id) =>
+    set((state) => {
+      const next = state.employees.find((employee) => employee.id === id);
+      const layer = next?.accessLayer ?? "employee";
+      const allowed = TAB_LAYERS[state.mainTab]?.includes(layer);
+      return {
+        employeeId: id,
+        // role.md R5 — đổi vai giữ banner; chỉ nhảy tab nếu tab hiện tại ngoài layer
+        mainTab: allowed ? state.mainTab : fallbackTabForLayer(layer),
+      };
+    }),
 
   setMode: (mode) =>
     set({
