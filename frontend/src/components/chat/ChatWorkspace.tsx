@@ -335,6 +335,15 @@ function ChatComposer() {
               toast.error(`Tệp "${file.name}" vượt quá giới hạn dung lượng 20MB!`);
               continue;
             }
+            const isDuplicate = selectedFiles.some(
+              (f) => f.file.name === file.name && f.file.size === file.size
+            ) || newFiles.some(
+              (f) => f.file.name === file.name && f.file.size === file.size
+            );
+            if (isDuplicate) {
+              toast.error(`Tài liệu "${file.name}" đã được đính kèm!`);
+              continue;
+            }
             const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
             newFiles.push({
               id: Math.random().toString(36).substring(7),
@@ -372,6 +381,15 @@ function ChatComposer() {
             }
             if (file.size > 20 * 1024 * 1024) {
               toast.error(`Hình ảnh "${file.name}" vượt quá giới hạn dung lượng 20MB!`);
+              continue;
+            }
+            const isDuplicate = selectedImages.some(
+              (img) => img.file.name === file.name && img.file.size === file.size
+            ) || newImages.some(
+              (img) => img.file.name === file.name && img.file.size === file.size
+            );
+            if (isDuplicate) {
+              toast.error(`Hình ảnh "${file.name}" đã được đính kèm!`);
               continue;
             }
             newImages.push({
