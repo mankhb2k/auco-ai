@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ApprovalsModule } from './approvals/approvals.module';
+import { AutomationsModule } from './automations/automations.module';
+import { CompareModule } from './compare/compare.module';
 import { HealthModule } from './health/health.module';
 import { LlmModule } from './llm/llm.module';
+import { McpClientModule } from './mcp-client/mcp-client.module';
+import { PlanningModule } from './planning/planning.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RagModule } from './rag/rag.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -15,8 +22,13 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
     HealthModule,
     LlmModule,
-    // Phase 4+: PlanningModule, AgentsModule, McpClientModule,
-    // RagModule, ApprovalsModule, AutomationsModule, RealtimeModule
+    McpClientModule,
+    RagModule,
+    RealtimeModule,
+    PlanningModule,
+    ApprovalsModule,
+    AutomationsModule,
+    CompareModule,
   ],
 })
 export class AppModule {}
