@@ -9,11 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isLiveApi } from "@/lib/api";
+import { listAuditEvents } from "@/lib/api/audit";
+import { ApiError } from "@/lib/api/client";
 import { AUDIT_ACTION_LABEL, labelOf } from "@/lib/labels";
 import { seedAuditEvents, type AuditUiEvent } from "@/lib/mock/governance";
 import { useAppStore } from "@/stores/app.store";
 import { ClipboardList, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function AuditPanel() {
@@ -23,11 +26,40 @@ export function AuditPanel() {
   const [events, setEvents] = useState<AuditUiEvent[]>(() =>
     structuredClone(seedAuditEvents),
   );
+  const [loading, setLoading] = useState(false);
+  const live = isLiveApi();
 
-  function resetMock() {
-    setEvents(structuredClone(seedAuditEvents));
-    toast.success("Đã nạp lại nhật ký mô phỏng");
-  }
+  const refresh = useCallback(async () => {
+    if (!live) {
+      setEvents(structuredClone(seedAuditEvents));
+      toast.success("Đã nạp lại nhật ký mô phỏng");
+      return;
+    }
+    setLoading(true);
+    try {
+      const rows = await listAuditEvents(employeeId, 50);
+      setEvents(rows);
+      toast.success("Đã làm mới nhật ký từ API");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? `Không tải audit: ${err.message}`
+          : "Không tải audit",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [live, employeeId]);
+
+  useEffect(() => {
+    if (
+      !live ||
+      (actor?.accessLayer !== "manager" && actor?.accessLayer !== "it_admin")
+    ) {
+      return;
+    }
+    void refresh();
+  }, [live, actor?.accessLayer, refresh]);
 
   if (actor?.accessLayer !== "manager" && actor?.accessLayer !== "it_admin") {
     return null;
@@ -40,22 +72,31 @@ export function AuditPanel() {
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base">
               <ClipboardList className="size-4" />
-              Nhật ký kiểm soát (demo)
+              Nhật ký kiểm soát
             </CardTitle>
             <CardDescription>
-              Mô phỏng người thực hiện · hành động · tài nguyên · thời điểm —
-              đủ kể chuyện kiểm soát khi test giao diện không cần backend.
+              {live
+                ? "GET /api/audit — actor · hành động · tài nguyên · thời điểm."
+                : "Mô phỏng — đủ kể chuyện kiểm soát khi test giao diện không cần backend."}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">Mô phỏng</Badge>
-            <Button variant="outline" size="sm" onClick={resetMock}>
+            <Badge variant="outline">{live ? "API" : "Mô phỏng"}</Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => void refresh()}
+            >
               <RefreshCw className="size-4" />
               Làm mới
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {events.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Chưa có sự kiện.</p>
+          ) : null}
           {events.map((event) => {
             const actorName =
               employees.find((e) => e.id === event.actorId)?.displayName ??

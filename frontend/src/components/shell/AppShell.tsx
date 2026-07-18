@@ -11,9 +11,15 @@ import { AppTopbar } from "@/components/shell/AppTopbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAppStore } from "@/stores/app.store";
+import { useEffect } from "react";
 
 export function AppShell() {
   const mainTab = useAppStore((s) => s.mainTab);
+  const bootstrap = useAppStore((s) => s.bootstrap);
+
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
 
   return (
     <TooltipProvider>

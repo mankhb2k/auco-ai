@@ -9,6 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { isLiveApi } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
+import { getMcpSuite, setMcpConnectorEnabled } from "@/lib/api/mcp";
 import {
   labelOf,
   MCP_CAPABILITY_LABEL,
@@ -22,7 +25,7 @@ import {
 } from "@/lib/mock/governance";
 import { useAppStore } from "@/stores/app.store";
 import { Cable, ShieldCheck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export function McpSuitePanel() {
@@ -35,6 +38,31 @@ export function McpSuitePanel() {
   const [busyCapability, setBusyCapability] = useState<McpUiCapability | null>(
     null,
   );
+  const [loading, setLoading] = useState(false);
+  const live = isLiveApi();
+
+  useEffect(() => {
+    if (!live || actor?.accessLayer !== "it_admin") return;
+    let cancelled = false;
+    setLoading(true);
+    void getMcpSuite(employeeId)
+      .then((next) => {
+        if (!cancelled) setSuite(next);
+      })
+      .catch((err) => {
+        toast.error(
+          err instanceof ApiError
+            ? `Không tải MCP suite: ${err.message}`
+            : "Không tải MCP suite",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [live, employeeId, actor?.accessLayer]);
 
   const summary = useMemo(() => {
     const enabledCount = suite.connectors.filter((c) => c.enabled).length;
@@ -46,11 +74,12 @@ export function McpSuitePanel() {
     };
   }, [suite]);
 
-  function setEnabled(capability: McpUiCapability, enabled: boolean) {
+  async function setEnabled(capability: McpUiCapability, enabled: boolean) {
     setBusyCapability(capability);
-    setSuite((prev) => ({
-      ...prev,
-      connectors: prev.connectors.map((connector) =>
+    const prev = suite;
+    setSuite((s) => ({
+      ...s,
+      connectors: s.connectors.map((connector) =>
         connector.capability === capability
           ? {
               ...connector,
@@ -61,10 +90,23 @@ export function McpSuitePanel() {
       ),
     }));
     const name = labelOf(MCP_CAPABILITY_LABEL, capability);
-    toast.success(
-      `${name}: ${enabled ? "đã bật" : "đã tắt"} (mô phỏng runtime)`,
-    );
-    setBusyCapability(null);
+    try {
+      if (live) {
+        await setMcpConnectorEnabled(capability, enabled, employeeId);
+      }
+      toast.success(
+        `${name}: ${enabled ? "đã bật" : "đã tắt"}${live ? "" : " (mô phỏng)"}`,
+      );
+    } catch (err) {
+      setSuite(prev);
+      toast.error(
+        err instanceof ApiError
+          ? `Đổi connector thất bại: ${err.message}`
+          : "Đổi connector thất bại",
+      );
+    } finally {
+      setBusyCapability(null);
+    }
   }
 
   if (actor?.accessLayer !== "it_admin") return null;
@@ -80,10 +122,13 @@ export function McpSuitePanel() {
             </CardTitle>
             <CardDescription>
               IT quản đường ống API; bộ điều phối vẫn tự chọn chuyên gia theo
-              mục tiêu. Công tắc mô phỏng trong bộ nhớ — không cần backend.
+              mục tiêu.
+              {live
+                ? " Đang đọc GET /api/mcp/suite — toggle PATCH (in-memory trên BE)."
+                : " Công tắc mô phỏng trong bộ nhớ — không cần backend."}
             </CardDescription>
           </div>
-          <Badge variant="outline">Mô phỏng</Badge>
+          <Badge variant="outline">{live ? (loading ? "Đang tải…" : "API") : "Mô phỏng"}</Badge>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap gap-2">
@@ -130,7 +175,7 @@ export function McpSuitePanel() {
                   checked={connector.enabled}
                   disabled={busyCapability === connector.capability}
                   onCheckedChange={(enabled) =>
-                    setEnabled(connector.capability, enabled)
+                    void setEnabled(connector.capability, enabled)
                   }
                   aria-label={`Bật tắt ${labelOf(MCP_CAPABILITY_LABEL, connector.capability)}`}
                 />
