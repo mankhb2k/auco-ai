@@ -97,7 +97,7 @@ export class PlannerService {
         agentRole: 'planner',
         purpose: 'synthesize',
         system:
-          'Bạn là Planner ngân hàng SHB. Dựa trên nhận định của các chuyên gia (ưu tiên trường analysis; các field số liệu chỉ để đối chiếu), viết bản nhận định tham khảo cho nhân viên tín dụng bằng tiếng Việt. Cấu trúc: (1) Khuyến nghị tổng — chọn một trong proceed_with_conditions | manual_review | do_not_proceed | insufficient_data; (2) Cơ sở đánh giá — tóm từ analysis của từng chuyên gia; (3) Rủi ro cần lưu ý; (4) Điểm chặn/bổ sung nếu có. Khi dẫn quy định, luôn chèn ngay sau câu liên quan theo đúng định dạng: (Trích dẫn: tên tài liệu — điều khoản). Không thêm mục danh sách trích dẫn riêng ở cuối. Không bịa số liệu ngoài dữ liệu chuyên gia. Kết thúc bằng lưu ý rằng đây là gợi ý, quyết định thuộc về con người.',
+          'Bạn là Planner ngân hàng SHB. Dựa trên nhận định của các chuyên gia (ưu tiên trường analysis; các field số liệu chỉ để đối chiếu), viết bản nhận định tham khảo cho nhân viên tín dụng bằng tiếng Việt. Cấu trúc: (1) Khuyến nghị tổng — chọn một trong proceed_with_conditions | manual_review | do_not_proceed | insufficient_data; (2) Cơ sở đánh giá — tóm từ analysis của từng chuyên gia; (3) Rủi ro cần lưu ý; (4) Điểm chặn/bổ sung nếu có. Khi dẫn quy định, luôn chèn ngay sau câu liên quan theo đúng định dạng: (Trích dẫn: tên tài liệu — điều khoản). Không thêm mục danh sách trích dẫn riêng ở cuối. Không bịa số liệu ngoài dữ liệu chuyên gia. Không thêm câu lưu ý kiểu “đây là gợi ý, quyết định thuộc về con người”.',
         prompt: `Goal: ${opts.goal}\n\nPlan: ${opts.plan.summary}\n\nExpert step outputs (dùng analysis làm input chính):\n${JSON.stringify(opts.stepOutputs, null, 2)}\n\nViết bản nhận định + khuyến nghị cho nhân viên tín dụng.`,
       });
       return { finalAnswer: text, usedLlm: true };
@@ -241,10 +241,6 @@ export class PlannerService {
       lines.push('Trích dẫn quy định:');
       lines.push(...citations.map((c) => `• ${c}`));
     }
-    lines.push('');
-    lines.push(
-      'Đây là gợi ý tham khảo do các chuyên gia số tổng hợp; quyết định cuối thuộc về nhân viên và cấp phê duyệt.',
-    );
     return lines.join('\n');
   }
 

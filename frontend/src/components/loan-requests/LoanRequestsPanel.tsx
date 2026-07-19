@@ -21,13 +21,17 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   approveLoanRequestApi,
   assignLoanRequestApi,
+  listAuditEventsApi,
   listLoanRequestsApi,
   rejectLoanRequestApi,
   returnLoanRequestApi,
+  revealCustomerPiiApi,
   startLoanAssessmentApi,
   submitLoanApprovalApi,
+  type RevealedCustomerPii,
 } from "@/lib/api";
 import type {
+  AuditEvent,
   LoanAssessmentTag,
   LoanRequest,
   LoanRequestStatus,
@@ -39,6 +43,8 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
+  Eye,
+  History,
   Loader2,
   RefreshCw,
   Send,
@@ -70,6 +76,24 @@ const ASSESSMENT_TAG_LABEL: Record<LoanAssessmentTag, string> = {
   recommend_reject: "Đề xuất từ chối",
 };
 
+const AUDIT_ACTION_LABEL: Record<string, string> = {
+  "loan_request.intake": "Tiếp nhận hồ sơ",
+  "loan_request.assign": "Phân bổ cho nhân viên",
+  "loan_request.assessment.start": "Bắt đầu đánh giá AI",
+  "loan_request.assessment.tag": "Gắn nhãn kết luận",
+  "loan_request.submit": "Trình giám đốc",
+  "loan_request.approve": "Phê duyệt",
+  "loan_request.escalate": "Chuyển cấp trên (vượt hạn mức)",
+  "loan_request.reject": "Từ chối",
+  "loan_request.return": "Trả bổ sung hồ sơ",
+  "loan_request.pii_reveal": "Xem dữ liệu nhạy cảm (CMND/số dư)",
+  "task_run.create": "Tạo phiên đánh giá",
+};
+
+function auditActionLabel(action: string): string {
+  return AUDIT_ACTION_LABEL[action] ?? action;
+}
+
 type AssessmentTagFilter = "all" | "untagged" | LoanAssessmentTag;
 
 type QueueFilter =
@@ -87,9 +111,37 @@ const MANAGER_FILTERS: Array<{ id: QueueFilter; label: string }> = [
   { id: "decided", label: "Đã quyết định" },
 ];
 
+const STAFF_TAG_FILTERS: Array<{ id: AssessmentTagFilter; label: string }> = [
+  { id: "all", label: "Tất cả" },
+  { id: "untagged", label: "Chưa gắn nhãn" },
+  ...Object.entries(ASSESSMENT_TAG_LABEL).map(([id, label]) => ({
+    id: id as LoanAssessmentTag,
+    label,
+  })),
+];
+
 function money(value: string | null): string {
   if (!value) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Number(value))} ₫`;
+}
+
+function dateTime(value?: string | null): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  }).format(new Date(value));
+}
+
+function assessmentFinishedAt(row: LoanRequest): string | null {
+  const timestamps =
+    row.assessmentTaskRun?.steps
+      .map((step) => step.finishedAt)
+      .filter((value): value is string => Boolean(value)) ?? [];
+  if (timestamps.length === 0) return null;
+  return timestamps.reduce((latest, current) =>
+    new Date(current) > new Date(latest) ? current : latest,
+  );
 }
 
 function assessmentPromptPreview(row: LoanRequest): string {
@@ -147,6 +199,12 @@ export function LoanRequestsPanel() {
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [tagFilter, setTagFilter] = useState<AssessmentTagFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [revealedPii, setRevealedPii] = useState<
+    Record<string, RevealedCustomerPii>
+  >({});
+  const [piiBusyId, setPiiBusyId] = useState<string | null>(null);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
 
   const load = useCallback(
     async (quiet = false) => {
@@ -179,6 +237,47 @@ export function LoanRequestsPanel() {
     const timer = setInterval(() => void load(true), 2000);
     return () => clearInterval(timer);
   }, [load, rows]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setAuditEvents([]);
+      return;
+    }
+    let cancelled = false;
+    setAuditLoading(true);
+    listAuditEventsApi({
+      employeeId,
+      resource: `LoanRequest:${selectedId}`,
+      limit: 50,
+    })
+      .then((events) => {
+        if (!cancelled) setAuditEvents(events);
+      })
+      .catch(() => {
+        if (!cancelled) setAuditEvents([]);
+      })
+      .finally(() => {
+        if (!cancelled) setAuditLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [employeeId, selectedId]);
+
+  async function revealPii(row: LoanRequest) {
+    setPiiBusyId(row.id);
+    try {
+      const pii = await revealCustomerPiiApi({ id: row.id, employeeId });
+      setRevealedPii((current) => ({ ...current, [row.id]: pii }));
+      toast.message("Đã ghi log truy cập dữ liệu nhạy cảm của khách hàng");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể hiện dữ liệu",
+      );
+    } finally {
+      setPiiBusyId(null);
+    }
+  }
 
   const visibleRows = useMemo(() => {
     const byStatus = isManager
@@ -366,9 +465,74 @@ export function LoanRequestsPanel() {
           </p>
         </div>
 
+        <div className="bg-muted/30 flex flex-wrap items-center gap-3 rounded-lg border p-3 text-xs">
+          <span className="text-muted-foreground">CMND/CCCD:</span>
+          <span className="font-mono">
+            {revealedPii[row.id]?.nationalId ??
+              row.customer.nationalIdMasked ??
+              "—"}
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground">Số dư khả dụng:</span>
+          <span className="font-mono">
+            {revealedPii[row.id]
+              ? money(String(revealedPii[row.id].availableBalanceVnd ?? ""))
+              : row.customer.availableBalanceMasked ?? "—"}
+          </span>
+          {!revealedPii[row.id] ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-6 px-2 text-[11px]"
+              disabled={piiBusyId === row.id}
+              onClick={() => void revealPii(row)}
+            >
+              {piiBusyId === row.id ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Eye />
+              )}
+              Hiện đầy đủ
+            </Button>
+          ) : (
+            <span className="text-muted-foreground ml-auto text-[11px]">
+              Đã ghi log truy cập
+            </span>
+          )}
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Thông tin khoản vay</CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="text-base">Thông tin khoản vay</CardTitle>
+              {!isManager &&
+              ["assigned", "failed", "advised", "needs_info"].includes(
+                row.status,
+              ) ? (
+                <Select
+                  value={assessmentTags[row.id] ?? row.assessmentTag ?? ""}
+                  onValueChange={(value) =>
+                    setAssessmentTags((current) => ({
+                      ...current,
+                      [row.id]: value as LoanAssessmentTag,
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Chọn nhãn kết luận thẩm định" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ASSESSMENT_TAG_LABEL).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : null}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -469,6 +633,7 @@ export function LoanRequestsPanel() {
                 assessmentTag={
                   assessmentTags[row.id] ?? row.assessmentTag ?? ""
                 }
+                showTagSelect={false}
                 onAssessmentTagChange={(value) =>
                   setAssessmentTags((current) => ({
                     ...current,
@@ -487,6 +652,80 @@ export function LoanRequestsPanel() {
               />
             )}
           </CardFooter>
+        </Card>
+
+        {row.assessmentTaskRun?.status === "done" &&
+        row.assessmentTaskRun.finalAnswer ? (
+          <Card>
+            <CardHeader className="gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Bot className="size-4" />
+                    Kết quả đánh giá AI
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Lưu theo hồ sơ {row.externalRef}
+                  </CardDescription>
+                </div>
+                <div className="text-muted-foreground space-y-1 text-right text-xs">
+                  <p>Bắt đầu: {dateTime(row.assessmentStartedAt)}</p>
+                  <p>Hoàn tất: {dateTime(assessmentFinishedAt(row))}</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="whitespace-pre-line text-sm leading-6">
+                {row.assessmentTaskRun.finalAnswer}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <History className="size-4" />
+              Lịch sử xử lý
+            </CardTitle>
+            <CardDescription>
+              Toàn bộ hành động đã ghi audit trên hồ sơ {row.externalRef}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {auditLoading ? (
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Loader2 className="size-4 animate-spin" />
+                Đang tải lịch sử…
+              </div>
+            ) : auditEvents.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Chưa có sự kiện nào được ghi nhận.
+              </p>
+            ) : (
+              <ol className="space-y-3">
+                {auditEvents.map((event) => (
+                  <li
+                    key={event.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-2 text-sm last:border-b-0 last:pb-0"
+                  >
+                    <div>
+                      <span className="font-medium">
+                        {auditActionLabel(event.action)}
+                      </span>
+                      <span className="text-muted-foreground ml-2 text-xs">
+                        {employees.find((e) => e.id === event.actorId)
+                          ?.displayName ?? event.actorId}
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground text-xs">
+                      {dateTime(event.createdAt)}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
         </Card>
       </div>
     );
@@ -536,30 +775,34 @@ export function LoanRequestsPanel() {
             </Button>
           ))}
         </div>
-      ) : null}
-
-      <div className="flex items-center gap-2">
-        <span className="text-muted-foreground text-sm">Lọc theo nhãn:</span>
-        <Select
-          value={tagFilter}
-          onValueChange={(value) =>
-            setTagFilter(value as AssessmentTagFilter)
-          }
-        >
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả nhãn</SelectItem>
-            <SelectItem value="untagged">Chưa gắn nhãn</SelectItem>
-            {Object.entries(ASSESSMENT_TAG_LABEL).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {STAFF_TAG_FILTERS.map((item) => {
+            const count =
+              item.id === "all"
+                ? rows.length
+                : item.id === "untagged"
+                  ? rows.filter((row) => !row.assessmentTag).length
+                  : rows.filter((row) => row.assessmentTag === item.id)
+                      .length;
+            return (
+              <Button
+                key={item.id}
+                size="sm"
+                variant={tagFilter === item.id ? "default" : "outline"}
+                onClick={() => setTagFilter(item.id)}
+              >
+                {item.label}
+                {item.id !== "all" ? (
+                  <span className="text-muted-foreground ml-1 text-xs">
+                    {count}
+                  </span>
+                ) : null}
+              </Button>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-muted-foreground flex min-h-48 items-center justify-center gap-2">
@@ -643,6 +886,59 @@ export function LoanRequestsPanel() {
                   </p>
                 )}
               </CardContent>
+              {!isManager ? (
+                <CardFooter
+                  className="flex flex-col gap-2 border-t bg-transparent px-4 py-3"
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  {row.status === "assessing" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => openAssessmentInAi(row)}
+                    >
+                      <Loader2 className="animate-spin" />
+                      Xem AI đang đánh giá
+                    </Button>
+                  ) : (
+                    <div className="flex w-full gap-2">
+                      {row.assessmentTaskRun ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="min-w-0 flex-1"
+                          onClick={() => openAssessmentInAi(row)}
+                        >
+                          <Bot />
+                          Kết quả AI
+                        </Button>
+                      ) : null}
+                      {row.status === "assigned" ||
+                      row.status === "failed" ||
+                      row.status === "needs_info" ||
+                      row.status === "advised" ? (
+                        <Button
+                          size="sm"
+                          className="min-w-0 flex-1"
+                          disabled={busyId === row.id}
+                          onClick={() => void startAssessment(row)}
+                        >
+                          {busyId === row.id ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <ShieldCheck />
+                          )}
+                          {row.assessmentTaskRun
+                            ? "Đánh giá lại"
+                            : "Đánh giá AI"}
+                        </Button>
+                      ) : null}
+                    </div>
+                  )}
+                </CardFooter>
+              ) : null}
             </Card>
           ))}
         </div>
@@ -750,6 +1046,7 @@ function StaffActions({
   busy,
   staffNote,
   assessmentTag,
+  showTagSelect = true,
   onAssessmentTagChange,
   onStaffNoteChange,
   onStartAssessment,
@@ -760,6 +1057,7 @@ function StaffActions({
   busy: boolean;
   staffNote: string;
   assessmentTag: LoanAssessmentTag | "";
+  showTagSelect?: boolean;
   onAssessmentTagChange: (value: LoanAssessmentTag) => void;
   onStaffNoteChange: (value: string) => void;
   onStartAssessment: () => void;
@@ -796,28 +1094,30 @@ function StaffActions({
           </p>
         ) : null}
 
-        <div className="space-y-1.5">
-          <p className="text-sm font-medium">
-            Kết luận thẩm định của nhân viên
-          </p>
-          <Select
-            value={assessmentTag}
-            onValueChange={(value) =>
-              onAssessmentTagChange(value as LoanAssessmentTag)
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Chọn nhãn trước khi trình duyệt" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(ASSESSMENT_TAG_LABEL).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {showTagSelect ? (
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">
+              Kết luận thẩm định của nhân viên
+            </p>
+            <Select
+              value={assessmentTag}
+              onValueChange={(value) =>
+                onAssessmentTagChange(value as LoanAssessmentTag)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn nhãn trước khi trình duyệt" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ASSESSMENT_TAG_LABEL).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
         <Textarea
           value={staffNote}
           onChange={(e) => onStaffNoteChange(e.target.value)}
@@ -826,30 +1126,25 @@ function StaffActions({
         />
 
         <div className="flex flex-wrap gap-2">
-          {row.status === "assigned" || row.status === "failed" ? (
-            <Button
-              variant="outline"
-              onClick={onStartAssessment}
-              disabled={busy}
-            >
-              {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-              Đánh giá bằng Trợ lý AI
-            </Button>
-          ) : null}
           {row.assessmentTaskRun ? (
             <Button variant="outline" onClick={onOpenAssessment} disabled={busy}>
               <Bot />
-              Mở kết quả trong Trợ lý AI
+              Mở kết quả AI
             </Button>
           ) : null}
-          {row.status === "needs_info" ? (
+          {row.status === "assigned" ||
+          row.status === "failed" ||
+          row.status === "needs_info" ||
+          row.status === "advised" ? (
             <Button
               variant="outline"
               onClick={onStartAssessment}
               disabled={busy}
             >
               {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-              Chạy lại bằng AI
+              {row.assessmentTaskRun
+                ? "Đánh giá lại bằng AI"
+                : "Đánh giá bằng Trợ lý AI"}
             </Button>
           ) : null}
           <Button
@@ -858,7 +1153,7 @@ function StaffActions({
             disabled={busy || !assessmentTag}
           >
             {busy ? <Loader2 className="animate-spin" /> : <Send />}
-            Trình duyệt
+            Trình hồ sơ
           </Button>
         </div>
       </>

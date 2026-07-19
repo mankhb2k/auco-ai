@@ -35,7 +35,7 @@ const TAB_LAYERS: Record<MainTab, Array<"employee" | "manager" | "it_admin">> = 
 function fallbackTabForLayer(
   layer: "employee" | "manager" | "it_admin",
 ): MainTab {
-  return layer === "it_admin" ? "knowledge" : "loans";
+  return "loans";
 }
 
 interface AppState {

@@ -1,4 +1,4 @@
-/** role.md §1 — 3 lớp quyền demo (không phải auth thật). */
+/** Phân lớp quyền demo (không phải auth thật) — xem ARCHITECTURE.md. */
 export type AccessLayer = 'it_admin' | 'manager' | 'employee';
 
 export const ACCESS_LAYERS: readonly AccessLayer[] = [
@@ -26,5 +26,5 @@ export type DemoActor = {
 
 export const DEMO_EMPLOYEE_HEADER = 'x-demo-employee-id';
 
-/** Fallback khi FE chưa gửi header — nhân viên tín dụng seed (role.md §2). */
+/** Fallback khi FE chưa gửi header — nhân viên tín dụng seed. */
 export const DEFAULT_DEMO_EMPLOYEE_ID = 'emp-credit-b';

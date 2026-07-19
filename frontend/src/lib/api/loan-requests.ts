@@ -102,6 +102,25 @@ export async function rejectLoanRequestApi(opts: {
   );
 }
 
+export type RevealedCustomerPii = {
+  nationalId: string | null;
+  bankAccountNumber: string | null;
+  availableBalanceVnd: number | null;
+};
+
+export async function revealCustomerPiiApi(opts: {
+  id: string;
+  employeeId: string;
+}): Promise<RevealedCustomerPii> {
+  return apiFetch<RevealedCustomerPii>(
+    `/api/loan-requests/${opts.id}/reveal-customer-pii`,
+    {
+      method: "POST",
+      employeeId: opts.employeeId,
+    },
+  );
+}
+
 export async function returnLoanRequestApi(opts: {
   id: string;
   employeeId: string;

@@ -10,7 +10,7 @@ import {
 export class ActorsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Danh sách employee seed cho FE role switcher (role.md §5.1). */
+  /** Danh sách employee seed cho FE role switcher. */
   async list(bankCode = 'SHB'): Promise<DemoActor[]> {
     const employees = await this.prisma.employee.findMany({
       where: { bankCode },
@@ -39,7 +39,7 @@ export class ActorsService {
     return this.toActor(employee);
   }
 
-  /** Portfolio scope của actor — demo need-to-know (role.md §5.1, README §2.7). */
+  /** Portfolio scope của actor — demo need-to-know. */
   async portfolio(employeeId: string) {
     const employee = await this.prisma.employee.findUnique({
       where: { id: employeeId },

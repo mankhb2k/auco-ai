@@ -87,7 +87,7 @@ function loadJson<T>(relativePath: string): T {
 }
 
 async function seedEmployees(bankCode: string) {
-  // role.md §7 — 3 lớp quyền demo: employee | manager | it_admin
+  // One Job demo: 3 chuyên viên tín dụng + 1 giám đốc chi nhánh
   const rows = [
     {
       id: "emp-credit-b",
@@ -111,27 +111,41 @@ async function seedEmployees(bankCode: string) {
       branchCode: "CN_CAU_GIAY",
     },
     {
-      id: "emp-ops-c",
-      displayName: "Trần Văn C — Nhân viên Vận hành",
-      role: "ops_officer",
-      accessLayer: "employee",
-      branchCode: "CN_CAU_GIAY",
-    },
-    {
       id: "emp-mgr-d",
       displayName: "Lê Minh D — Giám đốc chi nhánh",
       role: "branch_manager",
       accessLayer: "manager",
       branchCode: "CN_CAU_GIAY",
     },
-    {
-      id: "emp-it-e",
-      displayName: "Trần IT E — Quản trị Platform",
-      role: "it_admin",
-      accessLayer: "it_admin",
-      branchCode: null,
-    },
   ] as const;
+
+  // Gỡ actor thừa của kiến trúc cũ (Ops / IT) — không còn màn hình nghiệp vụ.
+  const retiredIds = ["emp-ops-c", "emp-it-e"];
+  await prisma.loanRequest.updateMany({
+    where: { assignedToId: { in: retiredIds } },
+    data: { assignedToId: null },
+  });
+  await prisma.loanRequest.updateMany({
+    where: { submittedById: { in: retiredIds } },
+    data: { submittedById: null },
+  });
+  await prisma.loanRequest.updateMany({
+    where: { decidedById: { in: retiredIds } },
+    data: { decidedById: null },
+  });
+  await prisma.loanRequest.updateMany({
+    where: { createdById: { in: retiredIds } },
+    data: { createdById: null },
+  });
+  await prisma.taskRun.deleteMany({
+    where: { employeeId: { in: retiredIds } },
+  });
+  await prisma.customerPortfolio.deleteMany({
+    where: { employeeId: { in: retiredIds } },
+  });
+  await prisma.employee.deleteMany({
+    where: { id: { in: retiredIds } },
+  });
 
   for (const row of rows) {
     await prisma.employee.upsert({
@@ -186,13 +200,12 @@ async function seedCustomers(bankCode: string) {
 }
 
 async function seedPortfolios(bankCode: string, customers: CustomerMock[]) {
-  // CN Cầu Giấy: 3 chuyên viên tín dụng + ops — KH Hà Đông (ngoài danh mục) không gán
+  // CN Cầu Giấy: 3 chuyên viên tín dụng — KH Hà Đông (ngoài danh mục) không gán
   const inPortfolio = customers.filter((c) => c.branchCode === "CN_CAU_GIAY");
   const employeeIds = [
     "emp-credit-b",
     "emp-credit-f",
     "emp-credit-g",
-    "emp-ops-c",
   ] as const;
 
   let count = 0;
@@ -291,6 +304,7 @@ type SeedLoanRow = {
   status: string;
   assignedToId: string | null;
   assignedAt: Date | null;
+  assessmentTag?: string | null;
   staffNote?: string | null;
   submittedAt?: Date | null;
   submittedById?: string | null;
@@ -299,6 +313,57 @@ type SeedLoanRow = {
   decidedAt?: Date | null;
   decidedById?: string | null;
 };
+
+/** Phân bổ nhãn demo theo thứ tự hồ sơ — đủ mẫu cho filter UI. */
+function demoTagPlan(index: number, total: number): {
+  assessmentTag: string | null;
+  status: string;
+  staffNote: string | null;
+} {
+  // ~1/3 chưa gắn nhãn (để test AI / gắn thủ công)
+  const untaggedCount = Math.max(8, Math.floor(total / 3));
+  if (index < untaggedCount) {
+    return { assessmentTag: null, status: "assigned", staffNote: null };
+  }
+
+  const taggedIndex = index - untaggedCount;
+  const taggedTotal = total - untaggedCount;
+  // Trong phần đã gắn nhãn: 40% approve · 25% review · 20% docs · 15% reject
+  const approveEnd = Math.floor(taggedTotal * 0.4);
+  const reviewEnd = approveEnd + Math.floor(taggedTotal * 0.25);
+  const docsEnd = reviewEnd + Math.floor(taggedTotal * 0.2);
+
+  if (taggedIndex < approveEnd) {
+    return {
+      assessmentTag: "recommend_approve",
+      status: "advised",
+      staffNote:
+        "Hồ sơ đủ điều kiện theo CIC/DTI/LTV; đề xuất phê duyệt trong hạn mức.",
+    };
+  }
+  if (taggedIndex < reviewEnd) {
+    return {
+      assessmentTag: "manual_review",
+      status: "advised",
+      staffNote:
+        "Cần rà soát thêm dòng tiền / lịch sử quan hệ tín dụng trước khi trình.",
+    };
+  }
+  if (taggedIndex < docsEnd) {
+    return {
+      assessmentTag: "needs_documents",
+      status: "advised",
+      staffNote:
+        "Thiếu giấy tờ chứng minh thu nhập hoặc hồ sơ TSĐB — yêu cầu KH bổ sung.",
+    };
+  }
+  return {
+    assessmentTag: "recommend_reject",
+    status: "advised",
+    staffNote:
+      "Rủi ro tín dụng/AML hoặc LTV vượt ngưỡng — đề xuất từ chối ở bước này.",
+  };
+}
 
 async function seedLoanRequests(bankCode: string) {
   const rows: SeedLoanRow[] = [
@@ -864,10 +929,150 @@ async function seedLoanRequests(bankCode: string) {
       assignedToId: null,
       assignedAt: null,
     },
+    {
+      id: "loan-req-home-036",
+      externalRef: "MOBILE-2026-0036",
+      customerId: "cus-016",
+      requestedAmountVnd: "1800000000",
+      loanPurpose: "Mua căn hộ chung cư",
+      requestedTermMonths: 240,
+      declaredIncomeVnd: "25000000",
+      collateralType: "Bất động sản hình thành trong tương lai",
+      estimatedCollateralVnd: "2500000000",
+      status: "assigned",
+      assignedToId: "emp-credit-b",
+      assignedAt: new Date("2026-07-18T07:00:00.000Z"),
+    },
+    {
+      id: "loan-req-car-037",
+      externalRef: "MOBILE-2026-0037",
+      customerId: "cus-017",
+      requestedAmountVnd: "650000000",
+      loanPurpose: "Mua ô tô gia đình",
+      requestedTermMonths: 72,
+      declaredIncomeVnd: "36000000",
+      collateralType: "Ô tô",
+      estimatedCollateralVnd: "850000000",
+      status: "assigned",
+      assignedToId: "emp-credit-f",
+      assignedAt: new Date("2026-07-18T07:10:00.000Z"),
+    },
+    {
+      id: "loan-req-edu-038",
+      externalRef: "MOBILE-2026-0038",
+      customerId: "cus-018",
+      requestedAmountVnd: "400000000",
+      loanPurpose: "Học phí du học thạc sĩ",
+      requestedTermMonths: 60,
+      declaredIncomeVnd: "42000000",
+      collateralType: null,
+      estimatedCollateralVnd: null,
+      status: "assigned",
+      assignedToId: "emp-credit-g",
+      assignedAt: new Date("2026-07-18T07:20:00.000Z"),
+    },
+    {
+      id: "loan-req-renov-039",
+      externalRef: "MOBILE-2026-0039",
+      customerId: "cus-019",
+      requestedAmountVnd: "900000000",
+      loanPurpose: "Cải tạo nhà phố kinh doanh",
+      requestedTermMonths: 120,
+      declaredIncomeVnd: "48000000",
+      collateralType: "Bất động sản",
+      estimatedCollateralVnd: "3200000000",
+      status: "assigned",
+      assignedToId: "emp-credit-b",
+      assignedAt: new Date("2026-07-18T07:30:00.000Z"),
+    },
+    {
+      id: "loan-req-sme-040",
+      externalRef: "MOBILE-2026-0040",
+      customerId: "cus-020",
+      requestedAmountVnd: "8000000000",
+      loanPurpose: "Mua sắm thiết bị sản xuất",
+      requestedTermMonths: 48,
+      declaredIncomeVnd: "2200000000",
+      collateralType: "Máy móc thiết bị",
+      estimatedCollateralVnd: "9500000000",
+      status: "assigned",
+      assignedToId: "emp-credit-f",
+      assignedAt: new Date("2026-07-18T07:40:00.000Z"),
+    },
+    {
+      id: "loan-req-medical-041",
+      externalRef: "MOBILE-2026-0041",
+      customerId: "cus-021",
+      requestedAmountVnd: "280000000",
+      loanPurpose: "Chi phí điều trị y tế",
+      requestedTermMonths: 36,
+      declaredIncomeVnd: "22000000",
+      collateralType: null,
+      estimatedCollateralVnd: null,
+      status: "assigned",
+      assignedToId: "emp-credit-g",
+      assignedAt: new Date("2026-07-18T07:50:00.000Z"),
+    },
+    {
+      id: "loan-req-agri-042",
+      externalRef: "MOBILE-2026-0042",
+      customerId: "cus-022",
+      requestedAmountVnd: "1200000000",
+      loanPurpose: "Mở rộng trang trại chăn nuôi",
+      requestedTermMonths: 60,
+      declaredIncomeVnd: "65000000",
+      collateralType: "Quyền sử dụng đất nông nghiệp",
+      estimatedCollateralVnd: "1800000000",
+      status: "assigned",
+      assignedToId: "emp-credit-b",
+      assignedAt: new Date("2026-07-18T08:00:00.000Z"),
+    },
+    {
+      id: "loan-req-franchise-043",
+      externalRef: "MOBILE-2026-0043",
+      customerId: "cus-023",
+      requestedAmountVnd: "2500000000",
+      loanPurpose: "Nhượng quyền chuỗi F&B",
+      requestedTermMonths: 84,
+      declaredIncomeVnd: "90000000",
+      collateralType: "Bất động sản + hợp đồng nhượng quyền",
+      estimatedCollateralVnd: "3500000000",
+      status: "assigned",
+      assignedToId: "emp-credit-f",
+      assignedAt: new Date("2026-07-18T08:10:00.000Z"),
+    },
+    {
+      id: "loan-req-solar-044",
+      externalRef: "MOBILE-2026-0044",
+      customerId: "cus-024",
+      requestedAmountVnd: "4500000000",
+      loanPurpose: "Lắp điện mặt trời mái nhà xưởng",
+      requestedTermMonths: 96,
+      declaredIncomeVnd: "1800000000",
+      collateralType: "Nhà xưởng + thiết bị năng lượng",
+      estimatedCollateralVnd: "6000000000",
+      status: "assigned",
+      assignedToId: "emp-credit-g",
+      assignedAt: new Date("2026-07-18T08:20:00.000Z"),
+    },
+    {
+      id: "loan-req-wedding-045",
+      externalRef: "MOBILE-2026-0045",
+      customerId: "cus-014",
+      requestedAmountVnd: "350000000",
+      loanPurpose: "Chi phí cưới hỏi và trang trí nhà",
+      requestedTermMonths: 36,
+      declaredIncomeVnd: "28000000",
+      collateralType: null,
+      estimatedCollateralVnd: null,
+      status: "assigned",
+      assignedToId: "emp-credit-b",
+      assignedAt: new Date("2026-07-18T08:30:00.000Z"),
+    },
   ];
 
-  // Seed ở trạng thái test sạch: chia đều toàn bộ hồ sơ cho 3 chuyên viên,
-  // chưa chạy AI và chưa đi qua maker-checker để người dùng test từng hồ sơ.
+  // Seed: chia đều cho 3 chuyên viên; phân bổ nhãn demo hợp lý
+  // (một phần chưa gắn nhãn để test AI / gắn thủ công).
   const creditOfficerIds = ["emp-credit-b", "emp-credit-f", "emp-credit-g"];
   await prisma.loanRequest.updateMany({
     where: { bankCode },
@@ -877,17 +1082,18 @@ async function seedLoanRequests(bankCode: string) {
 
   for (const [index, row] of rows.entries()) {
     const assignedToId = creditOfficerIds[index % creditOfficerIds.length];
-    const assignedAt = new Date(
-      Date.UTC(2026, 6, 18, 1, index),
-    );
-    const cleanWorkflow = {
-      status: "assigned",
+    const assignedAt = new Date(Date.UTC(2026, 6, 18, 1, index));
+    const tagPlan = demoTagPlan(index, rows.length);
+    const workflow = {
+      status: tagPlan.status,
       assignedToId,
       assignedAt,
       assessmentTaskRunId: null,
-      assessmentStartedAt: null,
-      assessmentTag: null,
-      staffNote: null,
+      assessmentStartedAt: tagPlan.assessmentTag
+        ? new Date(Date.UTC(2026, 6, 18, 2, index))
+        : null,
+      assessmentTag: tagPlan.assessmentTag,
+      staffNote: tagPlan.staffNote,
       submittedAt: null,
       submittedById: null,
       decision: null,
@@ -905,7 +1111,7 @@ async function seedLoanRequests(bankCode: string) {
         declaredIncomeVnd: row.declaredIncomeVnd,
         collateralType: row.collateralType,
         estimatedCollateralVnd: row.estimatedCollateralVnd,
-        ...cleanWorkflow,
+        ...workflow,
       },
       create: {
         id: row.id,
@@ -917,7 +1123,7 @@ async function seedLoanRequests(bankCode: string) {
         declaredIncomeVnd: row.declaredIncomeVnd,
         collateralType: row.collateralType,
         estimatedCollateralVnd: row.estimatedCollateralVnd,
-        ...cleanWorkflow,
+        ...workflow,
         bankCode,
         source: "mobile_app",
         note: "Yêu cầu vay giả lập nhận từ API ứng dụng ngân hàng",

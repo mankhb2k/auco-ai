@@ -43,6 +43,8 @@ Dữ liệu bổ sung được lấy từ hệ thống hoặc dữ liệu mô ph
 
 Nếu thiếu dữ liệu quan trọng, hệ thống phải trả về `insufficient_data` và nêu rõ cần bổ sung gì; không được tự suy đoán.
 
+CMND/CCCD và số dư khả dụng của khách hàng **che theo mặc định** khi trả về `LoanRequestsController` (`nationalIdMasked`, `availableBalanceMasked` — xem `LoanRequestsService.toView()`); Expert/MCP nội bộ vẫn đọc dữ liệu gốc từ `Customer.profileJson` để tính toán (need-to-know ở tầng logic, không ảnh hưởng phân tích), chỉ tầng hiển thị cho người là bị che. Nhân viên/Giám đốc chủ động bấm "Hiện đầy đủ" (`POST /:id/reveal-customer-pii`) mới thấy số thật — hành động này luôn ghi `AuditEvent` (`loan_request.pii_reveal`).
+
 ### UX chạy đánh giá
 
 Nhân viên không phải nhập câu chat “đánh giá khách hàng A”. Từ hồ sơ đã được giao, nút **Chạy đánh giá** tự động:
@@ -278,13 +280,24 @@ HITL chính thức là maker–checker trên `LoanRequest`:
 2. Nhân viên trình Giám đốc (`pending_approval`).
 3. Giám đốc phê duyệt / từ chối / trả bổ sung; vượt 5 tỷ VND → `escalated`.
 
+Nhãn AI đề xuất (`TaskRun.suggestedAssessmentTag`) **không chỉ do LLM tự chọn chữ** trong `finalAnswer` — sau khi Credit/Compliance/Collateral chạy xong, một policy gate deterministic (`backend/src/planning/service/policy-gate.ts`) đọc trực tiếp field số liệu (`ltvWithinPolicy`, `amlStatus`, `eligible`) và ép nhãn theo rule cứng trước khi LLM có cơ hội viết `finalAnswer`:
+
+- AML `block` → luôn `recommend_reject`.
+- AML khác `clear`, hoặc LTV thực vượt `policyMaxLtv` → luôn `manual_review`, không thể là `recommend_approve`.
+- Thiếu hồ sơ TSĐB → `needs_documents`.
+- Credit không đạt điều kiện sơ bộ → `recommend_reject`.
+- Không vi phạm rule nào → suy luận mặc định `recommend_approve` (không phải rule cứng, `policyGateReasons` rỗng).
+
+`policyGateReasons[]` được trả kèm để UI hiển thị rõ "rule nào đã ép nhãn" — tách bạch với phần diễn giải tự do của LLM.
+
 ## 7.1 Public API One Job
 
 Giữ:
 
 - `/health`
 - `/api/actors`
-- `/api/loan-requests/**`
+- `/api/loan-requests/**` (bao gồm `/:id/reveal-customer-pii`)
+- `GET /api/audit-events` — lọc theo `resource=LoanRequest:<id>` hoặc `actorId`; nhân viên chỉ xem log của chính mình, Giám đốc xem toàn bộ
 - `POST /api/task-runs`, `GET /api/task-runs/:id`
 - `/api/knowledge/documents` (list/get/sync)
 - `GET /api/bank-hq/knowledge`
@@ -292,10 +305,10 @@ Giữ:
 Đã loại khỏi sản phẩm:
 
 - Automations, Compare, generic Approvals, WebSocket realtime
-- Public `/api/rag/*`, `/api/mcp/*`, `/api/llm/*`, `/api/audit`
+- Public `/api/rag/*`, `/api/mcp/*`, `/api/llm/*`
 - Knowledge authoring / curator ingest proposals
 
-MCP, RAG, LLM và Audit vẫn chạy nội bộ cho Expert và sync HQ.
+MCP, RAG và LLM vẫn chạy nội bộ cho Expert và sync HQ (không có admin API public). Audit ghi nội bộ ở mọi mutation nhưng có **1 endpoint đọc** (`GET /api/audit-events`) đã public có kiểm soát để nhân viên/Giám đốc xem lịch sử xử lý — không phải audit admin API tổng quát.
 
 ## 8. Ngoài phạm vi
 
@@ -323,6 +336,8 @@ Những phần này không được đưa vào luồng chính cho đến khi vi�
 6. Model không được gọi tool ngoài quyền của Expert.
 7. Không thực hiện side-effect trong luồng đánh giá.
 8. Ưu tiên luồng cố định, dễ test trước khi dùng Planner động.
+9. Nhãn đề xuất cuối cùng đi qua policy gate deterministic (§7); LLM diễn giải, không được override rule cứng.
+10. Mọi hành động ghi/xem dữ liệu nhạy cảm trên `LoanRequest` phải ghi `AuditEvent`, kể cả khi chỉ đọc (ví dụ `pii_reveal`).
 
 ## 10. Thứ tự xây dựng
 

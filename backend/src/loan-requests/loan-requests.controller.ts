@@ -163,4 +163,11 @@ export class LoanRequestsController {
   get(@Req() req: RequestWithActor, @Param('id') id: string) {
     return this.loanRequests.get(req.actor!, id);
   }
+
+  /** Hiện CMND/số dư đầy đủ — mỗi lần gọi đều ghi AuditEvent pii_reveal. */
+  @Post(':id/reveal-customer-pii')
+  @RequireLayer('employee', 'manager')
+  revealCustomerPii(@Req() req: RequestWithActor, @Param('id') id: string) {
+    return this.loanRequests.revealCustomerPii(req.actor!, id);
+  }
 }

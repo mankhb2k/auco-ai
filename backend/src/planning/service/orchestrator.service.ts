@@ -8,6 +8,7 @@ import { SpecialistService } from '../../agents/service/specialist.service';
 import { PrismaService } from '../../prisma/service/prisma.service';
 import { readySteps } from '../plan-validator';
 import { PlannerService } from './planner.service';
+import { computePolicyGate } from './policy-gate';
 import type { TaskPlan, TaskStepPlan } from '../task-plan.schema';
 
 const CONCURRENCY = 3;
@@ -162,11 +163,23 @@ export class OrchestratorService implements OnApplicationBootstrap {
         stepOutputs,
       });
 
+      // Deterministic policy gate — chạy độc lập với LLM synthesize ở trên.
+      // LTV vượt ngưỡng / AML không sạch sẽ luôn ép manual_review/reject dù
+      // finalAnswer viết gì (xem policy-gate.ts).
+      const gate = computePolicyGate(stepOutputs);
+
       await this.prisma.taskRun.update({
         where: { id: taskRunId },
-        data: { status: 'done', finalAnswer },
+        data: {
+          status: 'done',
+          finalAnswer,
+          suggestedAssessmentTag: gate.suggestedAssessmentTag,
+          policyGateReasons: gate.reasons,
+        },
       });
-      this.logger.log(`TaskRun ${taskRunId} done`);
+      this.logger.log(
+        `TaskRun ${taskRunId} done — policyGate=${gate.suggestedAssessmentTag}${gate.reasons.length ? ` (${gate.reasons.length} hard rule(s))` : ''}`,
+      );
     } catch (err) {
       this.logger.error(
         `TaskRun ${taskRunId} failed: ${err instanceof Error ? err.message : err}`,

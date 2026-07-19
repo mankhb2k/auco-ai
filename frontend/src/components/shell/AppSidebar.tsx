@@ -39,7 +39,7 @@ const NAV: Array<{
     title: "Tri thức",
     description: "Chuẩn hóa từ Hội sở · Tra cứu RAG",
     icon: BookOpenCheck,
-    layers: ["employee", "manager", "it_admin"],
+    layers: ["employee", "manager"],
   },
 ];
 

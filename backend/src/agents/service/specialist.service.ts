@@ -52,7 +52,7 @@ export class SpecialistService {
       skipApprovalPropose?: boolean;
       /** Phase 9 baseline: one generalist with full tools, no Planner */
       baseline?: boolean;
-      /** Actor tạo TaskRun — scope portfolio (role.md R2 / README §2.7) */
+      /** Actor tạo TaskRun — scope portfolio */
       employeeId?: string;
       /** CustomerNo đã được manager cấp quyền ngoài danh mục */
       portfolioGrants?: string[];
