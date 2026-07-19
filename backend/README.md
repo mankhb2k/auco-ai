@@ -1,6 +1,6 @@
 # Auco AI — NestJS Backend (One Job)
 
-Backend cho app **đánh giá yêu cầu khoản vay**: LoanRequest → TaskRun (Credit ‖ Legal ‖ Collateral → Product) → nhân viên gắn nhãn/trình → Giám đốc quyết định. MCP/RAG/LLM/Audit là **internal providers**, không còn public admin API.
+Backend cho app **đánh giá yêu cầu khoản vay**: LoanRequest → TaskRun (Credit ‖ Legal ‖ Collateral → Product) → nhân viên gắn nhãn/trình → Giám đốc quyết định. MCP/RAG/LLM là **internal providers**, không có public admin API. Audit chỉ có 1 endpoint đọc có kiểm soát (`GET /api/audit-events`), không có admin API tổng quát.
 
 ## Local
 
@@ -30,6 +30,8 @@ Health: [http://localhost:8387/health](http://localhost:8387/health)
 | `POST` | `/api/loan-requests/:id/approve` | Phê duyệt / escalate >5 tỷ |
 | `POST` | `/api/loan-requests/:id/reject` | Từ chối |
 | `POST` | `/api/loan-requests/:id/return-for-info` | Trả bổ sung |
+| `POST` | `/api/loan-requests/:id/reveal-customer-pii` | Hiện CMND/số dư đầy đủ — luôn ghi `AuditEvent` |
+| `GET` | `/api/audit-events` | Lịch sử theo `resource=LoanRequest:<id>` hoặc `actorId` (employee chỉ xem của mình) |
 | `POST` | `/api/task-runs` | Ask AI / assessment (luôn `skipApprovalPropose`) |
 | `GET` | `/api/task-runs/:id` | Polling tiến trình DAG |
 | `GET` | `/api/knowledge/documents` | Tra cứu tri thức |
@@ -42,7 +44,7 @@ Health: [http://localhost:8387/health](http://localhost:8387/health)
 - Automations + scheduler
 - Compare single vs multi
 - Generic TaskStep approvals + WebSocket
-- Public `/api/rag/*`, `/api/mcp/*`, `/api/llm/*`, `/api/audit`
+- Public `/api/rag/*`, `/api/mcp/*`, `/api/llm/*`
 - Knowledge create/update/publish + curator/ingest proposals
 
 Maker–checker chính thức nằm trên **LoanRequest**, không còn HITL generic trên TaskStep.
@@ -51,7 +53,8 @@ Maker–checker chính thức nằm trên **LoanRequest**, không còn HITL gene
 
 - `SpecialistService` → MCP gateway + RAG `kbTool`
 - `KnowledgeSyncService` → `IngestService` (pgvector)
-- `AuditService.recordSafe` khi tạo TaskRun / quyết định hồ sơ / sync HQ
+- `computePolicyGate()` (`planning/service/policy-gate.ts`) — rule cứng LTV/AML ép `TaskRun.suggestedAssessmentTag`, chạy độc lập với LLM synthesize
+- `AuditService.recordSafe` khi tạo TaskRun / quyết định hồ sơ / sync HQ / xem PII (`pii_reveal`) — đọc qua `GET /api/audit-events`
 - `LlmGatewayService` cho Planner synthesize (fallback deterministic)
 
 ## MCP servers (stdio)

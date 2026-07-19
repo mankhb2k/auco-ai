@@ -18,6 +18,13 @@ model TaskRun {
   status      String // planning | running | done | failed
   planJson    Json
   finalAnswer String?      @db.Text
+  /// Nhãn đề xuất tính deterministic từ policy gate (LTV/AML) sau khi có đủ
+  /// output 3 expert — không phải LLM tự đoán từ finalAnswer. Xem
+  /// PlannerService.computePolicyGate().
+  suggestedAssessmentTag String?
+  /// Lý do policy gate ép nhãn (ví dụ "LTV 82% vượt ngưỡng 75%") — rỗng nếu
+  /// không có rule nào bị vi phạm.
+  policyGateReasons      String[] @default([])
   createdAt   DateTime     @default(now())
   steps       TaskStep[]
   loanRequest LoanRequest?

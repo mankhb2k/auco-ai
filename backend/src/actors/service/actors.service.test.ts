@@ -23,13 +23,13 @@ describe('ActorsService', () => {
     bankCode: 'SHB',
     branchCode: 'CN_CAU_GIAY',
   };
-  const itEmployee = {
-    id: 'emp-it-e',
-    displayName: 'Trần IT E — Quản trị Platform',
-    role: 'it_admin',
-    accessLayer: 'it_admin',
+  const managerEmployee = {
+    id: 'emp-mgr-d',
+    displayName: 'Lê Minh D — Giám đốc chi nhánh',
+    role: 'branch_manager',
+    accessLayer: 'manager',
     bankCode: 'SHB',
-    branchCode: null,
+    branchCode: 'CN_CAU_GIAY',
   };
 
   let service: ActorsService;
@@ -43,7 +43,7 @@ describe('ActorsService', () => {
     it('returns actors for bank with mapped accessLayer', async () => {
       (prisma.employee.findMany as jest.Mock).mockResolvedValue([
         creditEmployee,
-        itEmployee,
+        managerEmployee,
       ]);
 
       const actors = await service.list('SHB');
@@ -61,7 +61,7 @@ describe('ActorsService', () => {
         bankCode: 'SHB',
         branchCode: 'CN_CAU_GIAY',
       });
-      expect(actors[1]?.accessLayer).toBe('it_admin');
+      expect(actors[1]?.accessLayer).toBe('manager');
     });
 
     it('coerces unknown accessLayer to employee', async () => {
@@ -77,14 +77,14 @@ describe('ActorsService', () => {
 
   describe('resolveActor', () => {
     it('resolves actor by header id', async () => {
-      (prisma.employee.findUnique as jest.Mock).mockResolvedValue(itEmployee);
+      (prisma.employee.findUnique as jest.Mock).mockResolvedValue(managerEmployee);
 
-      const actor = await service.resolveActor('emp-it-e');
+      const actor = await service.resolveActor('emp-mgr-d');
 
       expect(prisma.employee.findUnique).toHaveBeenCalledWith({
-        where: { id: 'emp-it-e' },
+        where: { id: 'emp-mgr-d' },
       });
-      expect(actor.accessLayer).toBe('it_admin');
+      expect(actor.accessLayer).toBe('manager');
     });
 
     it('falls back to default employee when header is missing', async () => {

@@ -30,6 +30,32 @@ const ASSESSMENT_TAGS = new Set([
   'recommend_reject',
 ]);
 
+/** Che dữ liệu nhạy cảm cho hiển thị mặc định — giữ vài ký tự cuối để nhận diện. */
+function maskKeepLast(value: unknown, keep = 4): string | null {
+  const str = typeof value === 'string' ? value.trim() : '';
+  if (!str) return null;
+  if (str.length <= keep) return '•'.repeat(str.length);
+  return '•'.repeat(str.length - keep) + str.slice(-keep);
+}
+
+type CustomerProfileFields = {
+  nationalId?: string;
+  bankAccountNumber?: string;
+  monthlyIncomeVnd?: number;
+};
+
+function readProfile(profileJson: unknown): CustomerProfileFields {
+  if (!profileJson || typeof profileJson !== 'object') return {};
+  return profileJson;
+}
+
+/** Cùng công thức mock với mcp-core-banking.get_account_balance (demo). */
+function estimateAvailableBalanceVnd(profile: CustomerProfileFields): number | null {
+  const income = Number(profile.monthlyIncomeVnd ?? 0);
+  if (!income) return null;
+  return Math.round(income * 2.4);
+}
+
 const employeeSelect = {
   id: true,
   displayName: true,
@@ -44,6 +70,9 @@ const loanRequestInclude = {
       customerNo: true,
       fullName: true,
       branchCode: true,
+      // Chỉ dùng nội bộ ở toView()/revealCustomerPii() để mask trước khi trả
+      // FE — không bao giờ trả thẳng profileJson ra API.
+      profileJson: true,
     },
   },
   assignedTo: { select: employeeSelect },
@@ -214,33 +243,24 @@ export class LoanRequestsService {
         'Only the assigned credit officer can start assessment',
       );
     }
-    const previousAssessmentFailed =
-      row.assessmentTaskRun?.status === 'failed';
-    if (
-      row.assessmentTaskRun &&
-      row.status !== 'needs_info' &&
-      !previousAssessmentFailed
-    ) {
-      return this.toView(row);
+    if (row.status === 'assessing') {
+      throw new ConflictException('Assessment is already running');
     }
-    if (
-      row.status !== 'assigned' &&
-      row.status !== 'needs_info' &&
-      !previousAssessmentFailed
-    ) {
+    const canStart =
+      row.status === 'assigned' ||
+      row.status === 'needs_info' ||
+      row.status === 'advised' ||
+      row.status === 'failed';
+    if (!canStart) {
       throw new ConflictException(
-        `Loan request status is ${row.status}, expected assigned or needs_info`,
+        `Loan request status is ${row.status}, expected assigned, advised, needs_info or failed`,
       );
     }
 
     const reserved = await this.prisma.loanRequest.updateMany({
       where: {
         id,
-        status: {
-          in: previousAssessmentFailed
-            ? ['assigned', 'needs_info', 'assessing']
-            : ['assigned', 'needs_info'],
-        },
+        status: { in: ['assigned', 'needs_info', 'advised', 'failed'] },
       },
       data: {
         status: 'assessing',
@@ -286,7 +306,7 @@ export class LoanRequestsService {
         bankCode: actor.bankCode,
         action: 'loan_request.assessment.start',
         resource: `LoanRequest:${id}`,
-        detail: { taskRunId: taskRun.id },
+        detail: { taskRunId: taskRun.id, rerun: Boolean(row.assessmentTaskRunId) },
       });
       return this.toView(updated);
     } catch (error) {
@@ -527,9 +547,39 @@ export class LoanRequestsService {
     return row.status;
   }
 
+  /**
+   * Trả CMND và số dư khả dụng dạng đầy đủ cho một hồ sơ — chỉ khi nhân
+   * viên/giám đốc chủ động bấm "Hiện đầy đủ". Mọi lần gọi đều ghi AuditEvent
+   * (`loan_request.pii_reveal`) để có vết truy cập dữ liệu nhạy cảm.
+   */
+  async revealCustomerPii(actor: DemoActor, id: string) {
+    const row = await this.findVisible(actor, id);
+    const profile = readProfile(row.customer.profileJson);
+
+    this.audit.recordSafe({
+      actorId: actor.id,
+      bankCode: actor.bankCode,
+      action: 'loan_request.pii_reveal',
+      resource: `LoanRequest:${id}`,
+      detail: {
+        customerId: row.customer.id,
+        fields: ['nationalId', 'bankAccountNumber', 'availableBalanceVnd'],
+      },
+    });
+
+    return {
+      nationalId: profile.nationalId ?? null,
+      bankAccountNumber: profile.bankAccountNumber ?? null,
+      availableBalanceVnd: estimateAvailableBalanceVnd(profile),
+    };
+  }
+
   private toView(row: LoanRequestRow) {
     const status = this.effectiveStatus(row);
     const amount = row.requestedAmountVnd.toString();
+    const profile = readProfile(row.customer.profileJson);
+    const { profileJson: _profileJson, ...customerPublic } = row.customer;
+    void _profileJson;
     return {
       ...row,
       status,
@@ -539,6 +589,13 @@ export class LoanRequestsService {
         row.estimatedCollateralVnd?.toString() ?? null,
       branchApprovalLimitVnd: BRANCH_APPROVAL_LIMIT_VND.toString(),
       exceedsBranchLimit: BigInt(amount) > BRANCH_APPROVAL_LIMIT_VND,
+      customer: {
+        ...customerPublic,
+        nationalIdMasked: maskKeepLast(profile.nationalId),
+        bankAccountNumberMasked: maskKeepLast(profile.bankAccountNumber),
+        availableBalanceMasked:
+          estimateAvailableBalanceVnd(profile) !== null ? '••• ₫' : null,
+      },
     };
   }
 }

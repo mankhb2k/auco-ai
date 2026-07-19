@@ -1,6 +1,7 @@
 import type { KnowledgeUiDocument } from "@/lib/mock/governance";
 import type {
   AgentRole,
+  AuditEvent,
   Employee,
   LoanRequest,
   LoanRequestStatus,
@@ -207,6 +208,19 @@ export function mapTaskRun(raw: unknown): TaskRun {
     },
     finalAnswer:
       typeof o.finalAnswer === "string" ? o.finalAnswer : undefined,
+    suggestedAssessmentTag: (
+      [
+        "recommend_approve",
+        "manual_review",
+        "needs_documents",
+        "recommend_reject",
+      ].includes(String(o.suggestedAssessmentTag))
+        ? String(o.suggestedAssessmentTag)
+        : null
+    ) as TaskRun["suggestedAssessmentTag"],
+    policyGateReasons: asArray(o.policyGateReasons).filter(
+      (x): x is string => typeof x === "string",
+    ),
     citations: allCitations,
     usage: {
       promptTokens: 0,
@@ -275,6 +289,21 @@ export function mapLoanRequest(raw: unknown): LoanRequest {
         customer.branchCode === null || customer.branchCode === undefined
           ? null
           : String(customer.branchCode),
+      nationalIdMasked:
+        customer.nationalIdMasked === null ||
+        customer.nationalIdMasked === undefined
+          ? null
+          : String(customer.nationalIdMasked),
+      bankAccountNumberMasked:
+        customer.bankAccountNumberMasked === null ||
+        customer.bankAccountNumberMasked === undefined
+          ? null
+          : String(customer.bankAccountNumberMasked),
+      availableBalanceMasked:
+        customer.availableBalanceMasked === null ||
+        customer.availableBalanceMasked === undefined
+          ? null
+          : String(customer.availableBalanceMasked),
     },
     assignedTo: mapLoanActor(o.assignedTo),
     submittedBy: mapLoanActor(o.submittedBy),
@@ -327,6 +356,18 @@ export function mapLoanRequest(raw: unknown): LoanRequest {
     assessmentTaskRun: o.assessmentTaskRun
       ? mapTaskRun(o.assessmentTaskRun)
       : null,
+  };
+}
+
+export function mapAuditEvent(raw: unknown): AuditEvent {
+  const o = asRecord(raw) ?? {};
+  return {
+    id: String(o.id ?? ""),
+    actorId: String(o.actorId ?? ""),
+    action: String(o.action ?? ""),
+    resource: String(o.resource ?? ""),
+    detail: asRecord(o.detailJson),
+    createdAt: iso(o.createdAt) ?? new Date().toISOString(),
   };
 }
 

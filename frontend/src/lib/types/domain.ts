@@ -113,13 +113,16 @@ export interface TaskRun {
   scenario: ScenarioId;
   planJson: { summary: string };
   finalAnswer?: string;
+  /** Deterministic policy gate (LTV/AML) — xem backend policy-gate.ts. */
+  suggestedAssessmentTag?: LoanAssessmentTag | null;
+  policyGateReasons?: string[];
   citations: RagCitation[];
   usage: RunUsageSummary;
   createdAt: string;
   steps: TaskStep[];
 }
 
-/** role.md §1 — 3 lớp quyền demo. */
+/** Phân lớp quyền demo — xem ARCHITECTURE.md. */
 export type AccessLayer = "it_admin" | "manager" | "employee";
 
 export interface Employee {
@@ -184,6 +187,10 @@ export interface LoanRequest {
     customerNo: string;
     fullName: string;
     branchCode: string | null;
+    /** Che sẵn ở BE (LoanRequestsService.toView) — chỉ hiện đầy đủ qua reveal-customer-pii. */
+    nationalIdMasked: string | null;
+    bankAccountNumberMasked: string | null;
+    availableBalanceMasked: string | null;
   };
   assignedTo: LoanRequestActor | null;
   submittedBy: LoanRequestActor | null;
@@ -211,7 +218,14 @@ export interface LoanRequest {
   assessmentTaskRun: TaskRun | null;
 }
 
-
+export interface AuditEvent {
+  id: string;
+  actorId: string;
+  action: string;
+  resource: string;
+  detail: Record<string, unknown> | null;
+  createdAt: string;
+}
 
 export interface McpConnector {
   id: string;

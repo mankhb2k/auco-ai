@@ -52,7 +52,15 @@ const ASSESSMENT_TAG_LABEL: Record<LoanAssessmentTag, string> = {
   recommend_reject: "Đề xuất từ chối",
 };
 
+/**
+ * Nhãn đề xuất ưu tiên lấy từ policy gate deterministic của backend
+ * (`TaskRun.suggestedAssessmentTag` — LTV/AML rule cứng, xem
+ * backend/src/planning/service/policy-gate.ts). Chỉ soi chữ trong
+ * finalAnswer khi backend chưa có field này (run cũ trước migration).
+ */
 function inferAssessmentTag(run: TaskRun): LoanAssessmentTag {
+  if (run.suggestedAssessmentTag) return run.suggestedAssessmentTag;
+
   const answer = run.finalAnswer?.toLowerCase() ?? "";
   if (answer.includes("do_not_proceed")) return "recommend_reject";
   if (answer.includes("insufficient_data")) return "needs_documents";
@@ -485,6 +493,7 @@ export function AskAiPanel() {
                       loanRequestId={m.loanRequestId}
                       employeeId={employeeId}
                       suggestedTag={inferAssessmentTag(m.run)}
+                      policyGateReasons={m.run.policyGateReasons}
                       appliedTag={m.appliedAssessmentTag}
                       submitted={m.submitted === true}
                       onApplied={(tag, submitted) =>
@@ -576,10 +585,6 @@ export function AskAiPanel() {
             )}
           </Button>
         </form>
-        <p className="text-muted-foreground mt-2 text-center text-[11px]">
-          Trả lời do multi-agent tổng hợp từ CIC/AML mock + RAG, có thể sai —
-          quyết định cuối thuộc về nhân viên.
-        </p>
       </footer>
     </aside>
   );
@@ -589,6 +594,7 @@ function AssessmentAction({
   loanRequestId,
   employeeId,
   suggestedTag,
+  policyGateReasons,
   appliedTag,
   submitted,
   onApplied,
@@ -596,6 +602,7 @@ function AssessmentAction({
   loanRequestId: string;
   employeeId: string;
   suggestedTag: LoanAssessmentTag;
+  policyGateReasons?: string[];
   appliedTag?: LoanAssessmentTag;
   submitted: boolean;
   onApplied: (tag: LoanAssessmentTag, submitted: boolean) => void;
@@ -669,6 +676,16 @@ function AssessmentAction({
           Nhân viên xác nhận hoặc đổi nhãn trước khi lưu.
         </p>
       </div>
+      {policyGateReasons && policyGateReasons.length > 0 ? (
+        <div className="space-y-1 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-700 dark:text-amber-300">
+          <p className="font-semibold">
+            Rule cứng đã ép nhãn (không phải LLM suy đoán):
+          </p>
+          {policyGateReasons.map((reason, i) => (
+            <p key={i}>• {reason}</p>
+          ))}
+        </div>
+      ) : null}
       <Select
         value={selectedTag}
         onValueChange={(value) =>

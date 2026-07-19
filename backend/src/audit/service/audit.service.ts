@@ -34,15 +34,25 @@ export class AuditService {
     void this.record(input).catch(() => undefined);
   }
 
-  list(opts?: { bankCode?: string; limit?: number; action?: string }) {
+  list(opts?: {
+    bankCode?: string;
+    limit?: number;
+    action?: string;
+    resource?: string;
+    actorId?: string;
+  }) {
     const bankCode = opts?.bankCode?.trim() || 'SHB';
     const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 100);
     const action = opts?.action?.trim();
+    const resource = opts?.resource?.trim();
+    const actorId = opts?.actorId?.trim();
 
     return this.prisma.auditEvent.findMany({
       where: {
         bankCode,
         ...(action ? { action } : {}),
+        ...(resource ? { resource } : {}),
+        ...(actorId ? { actorId } : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

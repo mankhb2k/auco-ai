@@ -6,7 +6,7 @@ import {
   type DemoActor,
 } from '../actors/actor.types';
 
-/** Request đã gắn actor demo (không phải auth thật — role.md §4). */
+/** Request đã gắn actor demo (không phải auth thật). */
 export type RequestWithActor = Request & { actor?: DemoActor };
 
 @Injectable()
